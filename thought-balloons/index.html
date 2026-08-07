@@ -1,15 +1,1456 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Thought Balloons — Experience Portal</title>
-</head>
-<body style="margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#fde6ee; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#212121; text-align:center; padding:24px;">
-  <div>
-    <h1 style="font-family:Georgia,'Times New Roman',serif; color:#ab125e; margin-bottom:8px;">Thought Balloons</h1>
-    <p style="color:#777;">This experience is on its way. Check back soon.</p>
-    <p><a href="../" style="color:#ab125e;">&larr; Back to the Portal</a></p>
+<title>Thought Balloons — an experience about letting go</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#E8EFF2">
+<style>
+  :root{
+    --sky-high:#B7D4E9;
+    --sky-mid:#E8EFF2;
+    --sky-low:#FCF3E6;
+    --ink:#3B4954;
+    --ink-soft:#788894;
+    --ink-faint:#9DAAB4;
+    --thread:#93A3AE;
+    --serif:"Constantia","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --round:ui-rounded,"SF Pro Rounded","Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--sky-mid);
+    color:var(--ink);
+    font-family:var(--serif);
+    overflow:hidden;
+    -webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:none;
+    overscroll-behavior:none;
+  }
+  #stage{position:fixed;inset:0;width:100%;height:100%;display:block;}
+
+  /* ---------- shared UI atoms ---------- */
+  .label{
+    font-family:var(--round);
+    font-size:10.5px;letter-spacing:.3em;text-transform:lowercase;
+    color:var(--ink-faint);
+  }
+  button{font-family:var(--round);cursor:pointer;color:inherit;}
+  .pill{
+    font-size:12px;letter-spacing:.22em;text-transform:lowercase;
+    color:var(--ink);
+    background:rgba(255,255,255,.55);
+    border:1px solid rgba(59,73,84,.18);
+    border-radius:999px;
+    padding:1.05em 2.4em 1em;
+    transition:background .35s,border-color .35s,transform .35s;
+  }
+  .pill:hover,.pill:focus-visible{background:rgba(255,255,255,.9);border-color:rgba(59,73,84,.38);outline:none;}
+  .pill:focus-visible{box-shadow:0 0 0 3px rgba(120,150,175,.35);}
+  .pill:active{transform:scale(.97);}
+  .quiet{
+    background:none;border:none;
+    font-size:11px;letter-spacing:.24em;text-transform:lowercase;
+    color:var(--ink-faint);padding:1em;
+    transition:color .35s;
+  }
+  .quiet:hover,.quiet:focus-visible{color:var(--ink);outline:none;}
+  .quiet:focus-visible{text-decoration:underline;text-underline-offset:4px;}
+
+  /* ---------- corners ---------- */
+  .mark{
+    position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);left:0;right:0;
+    text-align:center;pointer-events:none;z-index:4;
+    font-family:var(--round);font-size:10px;letter-spacing:.42em;text-transform:lowercase;
+    color:rgba(120,136,148,.8);
+    transition:opacity 1.2s;
+  }
+  #snd{
+    position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:6px;z-index:5;
+    background:none;border:none;font-size:9.5px;letter-spacing:.26em;text-transform:lowercase;
+    color:var(--ink-faint);padding:1em;transition:color .35s,opacity .8s;
+  }
+  #snd:hover,#snd:focus-visible{color:var(--ink);outline:none;}
+  #restart{
+    position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 4px);left:4px;z-index:5;
+    opacity:0;pointer-events:none;transition:opacity .8s;
+  }
+  #restart.on{opacity:1;pointer-events:auto;}
+
+  /* ---------- veils (intro / ending) ---------- */
+  .veil{
+    position:fixed;inset:0;z-index:6;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:9vh 8vw 11.5vh;
+    background:linear-gradient(180deg,rgba(232,239,242,.80),rgba(252,243,230,.90));
+    opacity:0;pointer-events:none;visibility:hidden;
+    transition:opacity 1.1s ease, visibility 0s linear 1.1s;
+  }
+  .veil.on{opacity:1;pointer-events:auto;visibility:visible;transition:opacity 1.1s ease, visibility 0s;}
+  .eyebrow{
+    font-family:var(--round);font-size:10px;letter-spacing:.4em;text-transform:lowercase;
+    color:var(--ink-faint);margin-bottom:3em;
+  }
+  h1{
+    font-weight:400;font-size:clamp(30px,7.6vw,50px);line-height:1.16;
+    letter-spacing:-.01em;margin:0 0 .7em;max-width:16ch;text-wrap:balance;
+  }
+  h1 em{font-style:italic;color:#6E8AA0;}
+  .thesis{
+    font-size:clamp(15.5px,4.1vw,18px);line-height:1.85;
+    max-width:32ch;margin:0 auto;color:var(--ink-soft);
+  }
+  .thesis strong{font-weight:400;color:var(--ink);}
+  .choices{display:flex;flex-direction:column;align-items:center;gap:1.1em;margin-top:3.2em;}
+  .opts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+  .opt{
+    font-size:11px;letter-spacing:.18em;text-transform:lowercase;
+    color:var(--ink-soft);
+    background:rgba(255,255,255,.4);
+    border:1px solid rgba(59,73,84,.16);
+    border-radius:999px;padding:.85em 1.5em .8em;
+    transition:background .3s,border-color .3s,color .3s;
+  }
+  .opt:hover,.opt:focus-visible{border-color:rgba(59,73,84,.38);color:var(--ink);outline:none;}
+  .opt:focus-visible{box-shadow:0 0 0 3px rgba(120,150,175,.3);}
+  .opt[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#FBF6EC;}
+  .veil .pill{margin-top:2.4em;}
+  .fine{margin-top:1.6em;font-family:var(--round);font-size:9.5px;letter-spacing:.24em;color:var(--ink-faint);}
+  .credit{
+    position:absolute;left:0;right:0;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 2.6vh);
+    text-align:center;pointer-events:none;
+    font-family:var(--round);font-size:9.5px;letter-spacing:.22em;
+    color:var(--ink-faint);
+  }
+  #letgo{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:.55em 1.1em;
+    max-width:30ch;margin:2.2em auto 0;
+  }
+  /* each one keeps the colour of the balloon that took it */
+  #letgo span{
+    font-style:italic;font-size:clamp(16px,4.3vw,20px);
+    color:var(--w,#6E8AA0);
+    text-shadow:0 0 10px var(--g1,transparent), 0 0 26px var(--g2,transparent);
+    animation:kindle 5s ease-in-out infinite;
+  }
+  #letgo span::after{
+    content:"·";margin-left:1.1em;color:var(--ink-faint);
+    text-shadow:none;
+  }
+  #letgo span:last-child::after{content:"";}
+  @keyframes kindle{
+    0%,100%{opacity:.82;}
+    50%    {opacity:1;}
+  }
+
+  /* ---------- naming sheet ---------- */
+  #sheet{
+    position:fixed;inset:0;z-index:7;
+    display:flex;align-items:flex-end;justify-content:center;
+    background:rgba(59,73,84,.16);
+    opacity:0;pointer-events:none;visibility:hidden;
+    transition:opacity .4s ease, visibility 0s linear .4s;
+  }
+  #sheet.on{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .4s ease, visibility 0s;}
+  .card{
+    width:min(430px,100%);
+    background:linear-gradient(180deg,#FDFAF4,#F6F1E8);
+    border-radius:26px 26px 0 0;
+    padding:2.4em 2em calc(2.2em + env(safe-area-inset-bottom,0px));
+    display:flex;flex-direction:column;align-items:center;gap:0;
+    box-shadow:0 -18px 50px rgba(59,73,84,.14);
+    transform:translateY(14px);transition:transform .4s cubic-bezier(.2,.8,.3,1);
+  }
+  #sheet.on .card{transform:translateY(0);}
+  @media(min-width:640px){
+    #sheet{align-items:center;}
+    .card{border-radius:22px;box-shadow:0 24px 60px rgba(59,73,84,.16);}
+  }
+  .cardtitle{font-size:19px;font-style:italic;color:var(--ink);margin-bottom:1.5em;text-align:center;}
+  #word{
+    font-family:var(--serif);font-size:24px;font-style:italic;
+    color:var(--ink);background:none;border:none;
+    border-bottom:1.5px solid rgba(59,73,84,.2);
+    outline:none;text-align:center;width:100%;
+    padding:.35em .2em .5em;caret-color:#6E8AA0;
+  }
+  #word::placeholder{color:rgba(157,170,180,.85);}
+  #word:focus{border-bottom-color:#6E8AA0;}
+  .cardcount{margin-top:.9em;font-family:var(--round);font-size:9.5px;letter-spacing:.24em;color:var(--ink-faint);}
+  #sheet .pill{margin-top:2em;width:100%;text-align:center;}
+  #sheet .quiet{margin-top:.5em;}
+
+  /* ---------- tangle layer ---------- */
+  #tui{
+    position:fixed;inset:0;z-index:5;
+    display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+    padding:calc(env(safe-area-inset-top,0px) + 7vh) 8vw calc(env(safe-area-inset-bottom,0px) + 4vh);
+    text-align:center;pointer-events:none;
+    opacity:0;visibility:hidden;transition:opacity .5s ease, visibility 0s linear .5s;
+  }
+  #tui.on{opacity:1;visibility:visible;transition:opacity .5s ease, visibility 0s;}
+  #tuiTop{display:flex;flex-direction:column;align-items:center;gap:.9em;}
+  #tuiWord{
+    font-family:var(--serif);font-size:clamp(21px,5.6vw,28px);font-style:italic;color:var(--ink);
+    background:none;border:none;padding:.15em .3em;pointer-events:auto;
+    border-bottom:1px dotted rgba(59,73,84,.32);
+    transition:border-color .3s,color .3s;
+  }
+  #tuiWord:hover,#tuiWord:focus-visible{border-bottom-color:var(--ink);outline:none;}
+  #tuiBottom{display:flex;flex-direction:column;align-items:center;gap:.2em;}
+  #tuiHint{
+    font-size:clamp(14px,3.8vw,16px);line-height:1.7;color:var(--ink-soft);
+    max-width:26ch;min-height:3.4em;transition:color .3s;
+  }
+  #tuiHint.stray{color:#C08A6A;}
+  #tui .quiet{pointer-events:auto;}
+  #tui:not(.on) *{pointer-events:none;}   /* nothing clickable while it fades out */
+
+  /* ---------- scene hint ---------- */
+  /* sits under the header, where the sitter and the restart link can't reach it */
+  #hint{
+    position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 52px);
+    text-align:center;padding:0 12vw;z-index:3;pointer-events:none;
+    font-size:clamp(14px,3.8vw,16.5px);font-style:italic;color:var(--ink-soft);
+    text-shadow:0 1px 12px rgba(252,243,230,.9);
+    opacity:0;transition:opacity 1.1s ease;
+  }
+  #hint.on{opacity:1;}
+
+  /* on a phone the centred title and the sound toggle collide — give the
+     title the left edge and let the toggle keep the right */
+  @media (max-width:640px){
+    .mark{left:16px;right:auto;text-align:left;letter-spacing:.3em;}
+    #hint{top:calc(env(safe-area-inset-top,0px) + 48px);padding:0 8vw;}
+  }
+  @media (max-height:700px){
+    .veil{padding:5vh 8vw 7.5vh;}
+    .eyebrow{margin-bottom:1.8em;}
+    .choices{margin-top:2em;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition-duration:.01ms !important;}
+    #letgo span{animation:none;opacity:1;}
+  }
+</style>
+
+<canvas id="stage" aria-hidden="true"></canvas>
+
+<div class="mark" id="mark">thought balloons</div>
+<button id="snd" aria-pressed="false">sound · off</button>
+<button id="restart" class="quiet">← back to start</button>
+
+<p id="hint"></p>
+
+<!-- intro -->
+<section class="veil on" id="intro">
+  <div class="eyebrow">an experience about letting go</div>
+  <h1>Everything you carry is tied to <em>your hand</em>.</h1>
+  <p class="thesis">One knot each. Give a balloon a word, then follow its tangle
+  to the end — slowly, with one finger.
+  <strong>The knot comes undone, and what it held is free to leave.</strong></p>
+  <div class="choices">
+    <span class="label">how many to carry</span>
+    <div class="opts" data-opts>
+      <button class="opt" data-n="3" aria-pressed="false">three</button>
+      <button class="opt" data-n="5" aria-pressed="false">five</button>
+      <button class="opt" data-n="0" aria-pressed="true">as many as fit</button>
+    </div>
   </div>
-</body>
-</html>
+  <button class="pill" id="begin">begin</button>
+  <div class="fine">nothing is saved · nothing is sent</div>
+  <div class="credit">Made with love by AI with Fey</div>
+</section>
+
+<!-- ending -->
+<section class="veil" id="ending">
+  <div class="eyebrow">an open hand</div>
+  <h1>Nothing is tied to you anymore.</h1>
+  <p class="thesis" id="endLine"></p>
+  <div id="letgo"></div>
+  <div class="choices">
+    <span class="label">how many next time</span>
+    <div class="opts" data-opts>
+      <button class="opt" data-n="3" aria-pressed="false">three</button>
+      <button class="opt" data-n="5" aria-pressed="false">five</button>
+      <button class="opt" data-n="0" aria-pressed="true">as many as fit</button>
+    </div>
+  </div>
+  <button class="pill" id="again">again</button>
+  <div class="credit">Made with love by AI with Fey</div>
+</section>
+
+<!-- naming sheet -->
+<div id="sheet">
+  <div class="card">
+    <div class="cardtitle" id="cardTitle">what is this one carrying?</div>
+    <input id="word" maxlength="22" placeholder="a word or two" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+    <div class="cardcount">a word or two is enough</div>
+    <button class="pill" id="untangleBtn">untangle it</button>
+    <button class="quiet" id="keepBtn">keep it for now</button>
+  </div>
+</div>
+
+<!-- tangle overlay text -->
+<div id="tui">
+  <div id="tuiTop">
+    <div class="label">the knot beneath</div>
+    <button id="tuiWord" title="tap to change the word"></button>
+  </div>
+  <div id="tuiBottom">
+    <p id="tuiHint">press the glowing dot, then follow the line to its end without lifting</p>
+    <button class="quiet" id="notYet">not yet</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================ setup ============================ */
+const cv = document.getElementById('stage');
+const ctx = cv.getContext('2d');
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FONT_STACK = getComputedStyle(document.body).fontFamily;
+
+let W = 0, H = 0, DPR = 1;
+let mode = 'intro';           // intro | scene | tangle | end
+let t = 0;                    // seconds
+let last = performance.now();
+
+const anchor = {x:0, y:0};
+let balloons = [];
+let motes = [];
+let clouds = [];
+let particles = [];
+const released = [];          // words that flew away
+let unnamedGone = 0;
+
+/* nine pastels — saturation stays high and lightness carries the softness,
+   so they stay vivid without going candy-shop loud. per-hue sat because
+   yellow and green read far more intense than blue at the same number. */
+const HUES = [  6, 26, 44,  96, 168, 200, 232, 268, 336];
+const SAT  = [ 88, 92, 86,  60,  58,  80,  74,  64,  84];
+const LMID = [ 80, 79, 74,  76,  74,  78,  80,  81,  82];
+
+const rnd = (a,b) => a + Math.random()*(b-a);
+const clamp = (v,a,b) => v<a?a:(v>b?b:v);
+const lerp = (a,b,k) => a + (b-a)*k;
+const ease = k => k<.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;
+
+function mulberry(seed){
+  return function(){
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let x = Math.imul(seed ^ seed>>>15, 1|seed);
+    x = x + Math.imul(x ^ x>>>7, 61|x) ^ x;
+    return ((x ^ x>>>14)>>>0) / 4294967296;
+  };
+}
+
+/* ============================ sound ============================ */
+const S = {on:false, ac:null, wind:null, windGain:null};
+function audioInit(){
+  if(S.ac) { S.ac.resume(); return; }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if(!AC) return;
+  S.ac = new AC();
+  // soft looping wind bed
+  const len = S.ac.sampleRate * 3;
+  const buf = S.ac.createBuffer(1, len, S.ac.sampleRate);
+  const d = buf.getChannelData(0);
+  let v = 0;
+  for(let i=0;i<len;i++){ v = (v*0.94) + (Math.random()*2-1)*0.06; d[i] = v; }
+  const src = S.ac.createBufferSource(); src.buffer = buf; src.loop = true;
+  const lp = S.ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=420;
+  const g = S.ac.createGain(); g.gain.value = 0;
+  src.connect(lp).connect(g).connect(S.ac.destination); src.start();
+  S.wind = src; S.windGain = g;
+}
+function windLevel(x){
+  if(!S.windGain) return;
+  S.windGain.gain.cancelScheduledValues(S.ac.currentTime);
+  S.windGain.gain.linearRampToValueAtTime(x, S.ac.currentTime + 1.2);
+}
+function blip(freq, dur, type, vol){
+  if(!S.on || !S.ac) return;
+  const o = S.ac.createOscillator(), g = S.ac.createGain();
+  o.type = type||'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, S.ac.currentTime);
+  g.gain.linearRampToValueAtTime(vol||0.05, S.ac.currentTime + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, S.ac.currentTime + dur);
+  o.connect(g).connect(S.ac.destination);
+  o.start(); o.stop(S.ac.currentTime + dur + .05);
+}
+function sweep(f0, f1, dur, vol){
+  if(!S.on || !S.ac) return;
+  const o = S.ac.createOscillator(), g = S.ac.createGain();
+  o.type='sine';
+  o.frequency.setValueAtTime(f0, S.ac.currentTime);
+  o.frequency.exponentialRampToValueAtTime(f1, S.ac.currentTime + dur);
+  g.gain.setValueAtTime(0, S.ac.currentTime);
+  g.gain.linearRampToValueAtTime(vol, S.ac.currentTime + .08);
+  g.gain.exponentialRampToValueAtTime(0.0001, S.ac.currentTime + dur);
+  o.connect(g).connect(S.ac.destination);
+  o.start(); o.stop(S.ac.currentTime + dur + .05);
+}
+function puff(){
+  if(!S.on || !S.ac) return;
+  const len = S.ac.sampleRate * 0.7;
+  const b = S.ac.createBuffer(1, len, S.ac.sampleRate);
+  const d = b.getChannelData(0);
+  for(let i=0;i<len;i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, 2.2);
+  const src = S.ac.createBufferSource(); src.buffer = b;
+  const bp = S.ac.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=.8;
+  bp.frequency.setValueAtTime(1800, S.ac.currentTime);
+  bp.frequency.exponentialRampToValueAtTime(300, S.ac.currentTime + .6);
+  const g = S.ac.createGain(); g.gain.value = 0.22;
+  src.connect(bp).connect(g).connect(S.ac.destination);
+  src.start();
+}
+
+/* ============================ layout ============================ */
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  W = Math.round(window.innerWidth); H = Math.round(window.innerHeight);
+  cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+  cv.style.width = W+'px'; cv.style.height = H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  layout();
+  buildBackdrop();
+  if(mode === 'tangle' && active) fitTangle(active, true);
+}
+
+let chosenCount = 0;          // 0 = however many fit the screen
+function idealCount(){
+  return chosenCount || clamp(Math.round((W*H)/55000), 5, 8);
+}
+function balloonRadius(){
+  return clamp(Math.min(W*0.115, H*0.078), 30, 54);
+}
+
+function layout(){
+  anchor.x = W/2;
+  anchor.y = H - clamp(H*0.19, 118, 178);   // room for the sitter below the hand
+  const r = balloonRadius();
+  const n = balloons.length;
+  const reach = Math.min(H*0.80, W*1.30);
+  for(let i=0;i<n;i++){
+    const b = balloons[i];
+    b.r = r;
+    const u = n===1 ? .5 : i/(n-1);
+    const ang = (-1 + 2*u) * (Math.PI*0.42);
+    const rad = (0.40 + 0.16*Math.sin(u*Math.PI)) * reach;
+    b.hx = anchor.x + Math.sin(ang)*rad*0.86 + b.jx*20;
+    b.hy = anchor.y - Math.cos(ang)*rad + b.jy*24;
+  }
+  // gentle relaxation so nothing overlaps
+  for(let pass=0; pass<40; pass++){
+    for(let i=0;i<n;i++){
+      for(let j=i+1;j<n;j++){
+        const a=balloons[i], c=balloons[j];
+        let dx=c.hx-a.hx, dy=(c.hy-a.hy)*0.9;
+        let d=Math.hypot(dx,dy)||.01;
+        const min=(a.r+c.r)*1.12;
+        if(d<min){
+          const push=(min-d)/2/d;
+          a.hx-=dx*push; a.hy-=dy*push;
+          c.hx+=dx*push; c.hy+=dy*push;
+        }
+      }
+    }
+    for(const b of balloons){
+      b.hx = clamp(b.hx, b.r+12, W-b.r-12);
+      b.hy = clamp(b.hy, b.r*1.35 + 66, anchor.y - b.r*1.5 - 40);
+    }
+  }
+  for(const b of balloons){ if(!b.released){ b.x=b.hx; b.y=b.hy; } b._fitKey=null; }
+}
+
+function buildBackdrop(){
+  clouds = [];
+  for(let i=0;i<4;i++){
+    clouds.push({
+      x: rnd(0,W), y: rnd(H*0.08, H*0.52),
+      r: rnd(W*0.24, W*0.5), v: rnd(1.4, 4.2), a: rnd(.16,.38)
+    });
+  }
+  motes = [];
+  const m = Math.round(clamp(W*H/26000, 14, 40));
+  for(let i=0;i<m;i++){
+    motes.push({x:rnd(0,W), y:rnd(0,H), r:rnd(.7,2.1), v:rnd(3,11), s:rnd(0,6.28), a:rnd(.12,.34)});
+  }
+}
+
+/* ============================ balloons ============================ */
+function makeBalloons(){
+  const n = idealCount();
+  const order = HUES.map((_,i)=>i).sort(()=>Math.random()-.5);
+  balloons = [];
+  sitter.init = false;
+  for(let i=0;i<n;i++){
+    const hi = order[i % order.length];
+    balloons.push({
+      id:i,
+      hue: HUES[hi], sat: SAT[hi], lmid: LMID[hi],
+      word:'',
+      x:0,y:0,hx:0,hy:0,r:40,
+      jx: rnd(-1,1), jy: rnd(-1,1),
+      phase: rnd(0, Math.PI*2),
+      released:false, vx:0, vy:0, scale:1, alpha:1,
+      tangleSeed: (Math.random()*1e9)|0,
+      tangleKind: (Math.random()*3)|0,
+      born: t,
+      _fit:null, _fitKey:null
+    });
+  }
+  layout();
+}
+
+function col(b, l, alpha){
+  return `hsla(${b.hue},${b.sat}%,${l}%,${alpha===undefined?1:alpha})`;
+}
+/* shades quoted relative to the hue's own mid lightness, so every balloon
+   gets the same *relationship* between highlight, body and edge */
+function cl(b, d, alpha){
+  return col(b, clamp(b.lmid + d, 8, 97), alpha);
+}
+
+function balloonPath(r){
+  const w = r*0.84;
+  ctx.beginPath();
+  ctx.moveTo(0, r);
+  ctx.bezierCurveTo(-w*0.70, r*0.74, -w*1.14, r*0.06, -w, -r*0.24);
+  ctx.bezierCurveTo(-w*0.92, -r*0.98,  w*0.92, -r*0.98,  w, -r*0.24);
+  ctx.bezierCurveTo( w*1.14, r*0.06,  w*0.70, r*0.74, 0, r);
+  ctx.closePath();
+}
+
+function fitWord(b){
+  const key = b.word + '|' + Math.round(b.r);
+  if(b._fitKey === key) return b._fit;
+  const maxW = b.r*1.34, maxSize = b.r*0.44;
+  const words = b.word.split(/\s+/).filter(Boolean);
+  const f = s => `italic ${s}px ${FONT_STACK}`;
+  let out = {size:10, lines:[b.word]};
+  for(let s=maxSize; s>=9; s-=1){
+    ctx.font = f(s);
+    if(words.length<=1){
+      if(ctx.measureText(words[0]||'').width <= maxW){ out={size:s, lines:words}; break; }
+    } else {
+      if(ctx.measureText(b.word).width <= maxW && s >= maxSize*0.72){ out={size:s, lines:[b.word]}; break; }
+      let best=null;
+      for(let k=1;k<words.length;k++){
+        const a=words.slice(0,k).join(' '), c=words.slice(k).join(' ');
+        const ww=Math.max(ctx.measureText(a).width, ctx.measureText(c).width);
+        if(!best || ww<best.w) best={w:ww,a,c};
+      }
+      if(best && best.w<=maxW){ out={size:s, lines:[best.a,best.c]}; break; }
+    }
+  }
+  b._fitKey = key; b._fit = out;
+  return out;
+}
+
+function drawBalloon(b, x, y, r, alpha){
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(x, y);
+
+  // body
+  const g = ctx.createRadialGradient(-r*0.30, -r*0.36, r*0.08, 0, 0, r*1.32);
+  g.addColorStop(0,   cl(b, 13));
+  g.addColorStop(.42, cl(b, 0));
+  g.addColorStop(1,   cl(b, -16));
+  ctx.fillStyle = g;
+  ctx.shadowColor = cl(b, -32, .26);
+  ctx.shadowBlur = r*0.5;
+  ctx.shadowOffsetY = r*0.14;
+  balloonPath(r);
+  ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = cl(b, -22, .32);
+  ctx.stroke();
+
+  // specular highlight
+  ctx.save();
+  ctx.translate(-r*0.34, -r*0.40);
+  ctx.rotate(-0.4);
+  const hg = ctx.createRadialGradient(0,0,0,0,0,r*0.36);
+  hg.addColorStop(0,'rgba(255,255,255,.72)');
+  hg.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle = hg;
+  ctx.beginPath(); ctx.ellipse(0,0,r*0.26,r*0.34,0,0,6.284); ctx.fill();
+  ctx.restore();
+
+  // knot
+  ctx.fillStyle = cl(b, -13);
+  ctx.beginPath();
+  ctx.moveTo(-r*0.11, r*0.99);
+  ctx.lineTo( r*0.11, r*0.99);
+  ctx.lineTo( 0,      r*1.17);
+  ctx.closePath(); ctx.fill();
+
+  // word
+  if(b.word){
+    const fit = fitWord(b);
+    ctx.font = `italic ${fit.size}px ${FONT_STACK}`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle = col(b, 27, .94);
+    const lh = fit.size*1.16;
+    const y0 = -(fit.lines.length-1)*lh/2 - r*0.05;
+    fit.lines.forEach((ln,i)=> ctx.fillText(ln, 0, y0 + i*lh));
+  }
+  ctx.restore();
+}
+
+/* string from anchor to a balloon's knot, as a sagging quadratic */
+function stringPoints(b){
+  const x2 = b.x, y2 = b.y + b.r*1.17;
+  const sway = Math.sin(t*0.55 + b.phase)*(REDUCED?3:11);
+  const cx = (anchor.x + x2)/2 + sway;
+  const cy = (anchor.y + y2)/2 + Math.abs(anchor.y-y2)*0.10 + 14;
+  return {x1:anchor.x, y1:anchor.y, cx, cy, x2, y2};
+}
+function quadAt(s, k){
+  const m = 1-k;
+  return {
+    x: m*m*s.x1 + 2*m*k*s.cx + k*k*s.x2,
+    y: m*m*s.y1 + 2*m*k*s.cy + k*k*s.y2
+  };
+}
+
+function drawKnotGlyph(x, y, b, pulse){
+  const s = 8.5 + pulse*1.6;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(Math.sin(t*0.5 + b.phase)*0.25);
+  ctx.strokeStyle = cl(b, -28, .85);
+  ctx.lineWidth = 2;
+  ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.arc(-s*0.30, 0, s*0.42, 0.6, 5.6);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc( s*0.30, 0, s*0.42, 3.7, 2.7);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-s*0.72, -s*0.34);
+  ctx.quadraticCurveTo(0, s*0.62, s*0.72, -s*0.34);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ============================ tangle ============================ */
+let active = null;   // balloon being untangled
+let tangle = null;   // {pts, idx, off, done, burstT}
+let finale = null;   // the closing sequence, once nothing is tied
+
+function catmull(p, k){
+  const out=[];
+  const n=p.length;
+  for(let i=0;i<n-1;i++){
+    const p0=p[i-1<0?0:i-1], p1=p[i], p2=p[i+1], p3=p[i+2>n-1?n-1:i+2];
+    for(let j=0;j<k;j++){
+      const s=j/k, s2=s*s, s3=s2*s;
+      out.push([
+        0.5*((2*p1[0])+(-p0[0]+p2[0])*s+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*s2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*s3),
+        0.5*((2*p1[1])+(-p0[1]+p2[1])*s+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*s2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*s3)
+      ]);
+    }
+  }
+  out.push(p[n-1]);
+  return out;
+}
+
+function rawTangle(kind, seed){
+  const R = mulberry(seed);
+  const raw = [];
+  const N = 700;
+  if(kind === 0){                      // lissajous — many honest crossings
+    const pairs = [[3,2],[5,3],[5,4],[4,3],[7,4]];
+    const [a,b] = pairs[(R()*pairs.length)|0];
+    const ph = R()*Math.PI;
+    for(let i=0;i<=N;i++){
+      const u = (0.03 + 0.94*i/N) * Math.PI*2;
+      raw.push([Math.sin(a*u + ph), Math.sin(b*u)]);
+    }
+  } else if(kind === 1){               // wobbled rose — petals that loop through the middle
+    const k = 3 + ((R()*4)|0);
+    const wob = 0.18 + R()*0.16;
+    const span = (k%2 ? 1 : 2) * Math.PI;
+    for(let i=0;i<=N;i++){
+      const u = (0.02 + 0.96*i/N) * span;
+      const r = Math.cos(k*u) + wob*Math.sin(3.3*u + 1.1);
+      raw.push([r*Math.cos(u), r*Math.sin(u)]);
+    }
+  } else {                             // free-drawn loop — the messiest of the three
+    const m = 7 + ((R()*4)|0);
+    const ctl = [];
+    for(let i=0;i<m;i++){
+      const ang = (i/m)*Math.PI*2 + (R()-.5)*1.15;
+      const rad = 0.30 + R()*0.72;
+      ctl.push([Math.cos(ang)*rad, Math.sin(ang)*rad]);
+    }
+    ctl.push([ctl[0][0]*0.55, ctl[0][1]*0.55 - 0.25]);
+    const sm = catmull(ctl, 34);
+    for(const p of sm) raw.push(p);
+  }
+  return raw;
+}
+
+/* preserve is only ever true on a resize — carrying progress into a *new* knot
+   would hand it the old one's finished state and leave a dead screen */
+function fitTangle(b, preserve){
+  const step = Math.max(3, Math.min(W,H)/170);
+  const minLen = clamp(Math.min(W,H)*3.2, 950, 1500);
+  // some curves barely wind at all — re-roll (deterministically) until the trace is worth doing
+  let pts = null;
+  for(let attempt=0; attempt<8; attempt++){
+    pts = samplePath((b.tangleKind + attempt) % 3, b.tangleSeed + attempt*7919, step);
+    if(pts.length*step >= minLen) break;
+  }
+
+  // keep every tangle to a comparable trace length — some curves wind far more than others
+  const maxLen = clamp(Math.min(W,H)*4.5, 1100, 2200);
+  const maxPts = Math.round(maxLen/step);
+  if(pts.length > maxPts) pts.length = maxPts;
+
+  const keep = (preserve && tangle) ? {idx:tangle.idx, done:tangle.done, burstT:tangle.burstT, fade:tangle.fade} : null;
+  tangle = {
+    pts, idx: 0, off:false, tracing:false, done:false, burstT:0, fade:0, lastTick:0
+  };
+  if(keep){ tangle.idx = Math.min(keep.idx, pts.length-1); tangle.done = keep.done; tangle.burstT = keep.burstT; tangle.fade = keep.fade; }
+}
+
+function samplePath(kind, seed, step){
+  const raw = rawTangle(kind, seed);
+  let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+  for(const p of raw){
+    if(p[0]<minx)minx=p[0]; if(p[0]>maxx)maxx=p[0];
+    if(p[1]<miny)miny=p[1]; if(p[1]>maxy)maxy=p[1];
+  }
+  const boxW = Math.min(W*0.80, 520);
+  const boxH = Math.min(H*0.44, 520);
+  const sc = Math.min(boxW/Math.max(maxx-minx,.001), boxH/Math.max(maxy-miny,.001));
+  const cx = W/2 - ((minx+maxx)/2)*sc;
+  const cy = H*0.48 - ((miny+maxy)/2)*sc;
+
+  // resample by arc length so progress maps evenly
+  const pts = [];
+  let prev = [raw[0][0]*sc+cx, raw[0][1]*sc+cy];
+  pts.push(prev);
+  let carry = 0;
+  for(let i=1;i<raw.length;i++){
+    const cur = [raw[i][0]*sc+cx, raw[i][1]*sc+cy];
+    let dx=cur[0]-prev[0], dy=cur[1]-prev[1];
+    let d=Math.hypot(dx,dy);
+    while(carry + d >= step){
+      const need = step - carry;
+      const k = need/d;
+      prev = [prev[0]+dx*k, prev[1]+dy*k];
+      pts.push(prev);
+      dx=cur[0]-prev[0]; dy=cur[1]-prev[1]; d=Math.hypot(dx,dy);
+      carry = 0;
+    }
+    carry += d;
+    prev = cur;
+  }
+  pts.push(prev);
+  return pts;
+}
+
+function tangleTolerance(){
+  return (matchMedia('(pointer: coarse)').matches ? 38 : 30);
+}
+
+function traceAt(px, py){
+  if(!tangle || tangle.done) return;
+  const p = tangle.pts, n = p.length;
+  const back = 10, fwd = 70;
+  const from = Math.max(0, tangle.idx - back);
+  const to   = Math.min(n-1, tangle.idx + fwd);
+  let bi = -1, bd = 1e9;
+  for(let i=from;i<=to;i++){
+    const d = (p[i][0]-px)*(p[i][0]-px) + (p[i][1]-py)*(p[i][1]-py);
+    if(d < bd){ bd = d; bi = i; }
+  }
+  const tol = tangleTolerance();
+  if(bd <= tol*tol){
+    tangle.off = false;
+    if(bi > tangle.idx){
+      const jumped = bi - tangle.idx;
+      tangle.idx = bi;
+      tangle.lastTick += jumped;
+      if(tangle.lastTick > 14){
+        tangle.lastTick = 0;
+        blip(300 + 520*(tangle.idx/(n-1)), 0.07, 'triangle', 0.03);
+      }
+      // sparks off the freshly-traced part
+      for(let s=0;s<jumped;s+=3){
+        const q = p[Math.min(n-1, tangle.idx - s)];
+        particles.push({
+          x:q[0], y:q[1], vx:rnd(-.3,.3), vy:rnd(-.5,-.05),
+          life:1, decay:rnd(.012,.03), r:rnd(.8,2), hue:active.hue, sat:active.sat, l:active.lmid+rnd(-6,10)
+        });
+      }
+      if(tangle.idx >= n-1) completeTangle();
+    }
+  } else {
+    tangle.off = true;
+  }
+  updateTangleHint();
+}
+
+function completeTangle(){
+  tangle.done = true;
+  tangle.burstT = 0;
+  const p = tangle.pts;
+  for(let i=0;i<p.length;i+=2){
+    const nx = p[Math.min(p.length-1,i+1)][0]-p[i][0];
+    const ny = p[Math.min(p.length-1,i+1)][1]-p[i][1];
+    const len = Math.hypot(nx,ny)||1;
+    const perp = [-ny/len, nx/len];
+    const sp = rnd(0.5, 2.6);
+    particles.push({
+      x:p[i][0], y:p[i][1],
+      vx: perp[0]*sp*(Math.random()<.5?-1:1) + rnd(-.4,.4),
+      vy: perp[1]*sp*(Math.random()<.5?-1:1) + rnd(-.9,.1),
+      life:1, decay:rnd(.006,.016), r:rnd(1.2,3.4),
+      hue:active.hue, sat:active.sat, l:active.lmid+rnd(-12,12)
+    });
+  }
+  puff();
+  sweep(240, 900, 1.4, 0.06);
+  tuiHint.textContent = 'the knot is gone';
+  tuiHint.classList.remove('stray');
+  setTimeout(()=>{ if(mode==='tangle') letItGo(); }, 900);
+}
+
+function letItGo(){
+  const b = active;
+  if(!b) return;
+  b.released = true;
+  b.vx = rnd(-.35,.35);
+  b.vy = -0.9;
+  b.relY = b.y;
+  b.releaseT = t;
+  if(b.word) released.push({word:b.word, hue:b.hue, sat:b.sat, lmid:b.lmid}); else unnamedGone++;
+  active = null;
+  tangle = null;
+  mode = 'scene';
+  tuiEl.classList.remove('on');
+  setHint();
+  restartBtn.classList.add('on');
+  markEl.style.opacity = '';
+  setTimeout(checkEnd, 5200);   // the last one clears the sky first
+}
+
+function checkEnd(){
+  if(mode !== 'scene' || finale) return;
+  if(balloons.some(b=>!b.released)) return;
+  beginFinale();
+}
+
+/* the payoff: they stand, then the light they've been sitting under
+   turns out to be coming from them */
+function beginFinale(){
+  finale = {t:0, stood:false, shone:false, ended:false};
+  mode = 'finale';
+  restartBtn.classList.remove('on');
+  hintEl.classList.remove('on');
+  markEl.style.opacity = '0';
+}
+
+const F_STAND = 0.8, F_STAND_END = 2.4, F_GLOW = 2.9, F_END = 4.5;
+
+function runFinale(){
+  finale.t += dt;
+  if(!finale.stood && finale.t >= F_STAND){
+    finale.stood = true;
+    blip(392, 1.6, 'sine', .045);          // a fifth, opening up
+    blip(588, 1.8, 'sine', .032);
+  }
+  if(!finale.shone && finale.t >= F_GLOW){
+    finale.shone = true;
+    sweep(330, 1320, 2.2, .05);
+  }
+  if(!finale.ended && finale.t >= F_END){
+    finale.ended = true;
+    showEnding();
+  }
+}
+
+function standAmount(){
+  return finale ? ease(clamp((finale.t - F_STAND)/(F_STAND_END - F_STAND), 0, 1)) : 0;
+}
+
+function showEnding(){
+  mode = 'end';
+  const n = released.length, m = unnamedGone;
+  let line;
+  if(n && m)      line = `These left your hand — along with ${m} you didn't need to name.`;
+  else if(n)      line = `These left your hand.`;
+  else            line = `${m} thing${m>1?'s':''} left your hand. You never had to name ${m>1?'them':'it'}.`;
+  endLine.textContent = line;
+
+  letgoEl.innerHTML = '';
+  released.forEach((r, i)=>{
+    const s = document.createElement('span');
+    s.textContent = r.word;
+    // each word keeps the colour of the balloon that carried it off
+    s.style.setProperty('--w',  `hsl(${r.hue},${Math.min(r.sat,86)}%,${clamp(r.lmid-34,26,50)}%)`);
+    s.style.setProperty('--g1', `hsla(${r.hue},${r.sat}%,${r.lmid}%,.75)`);
+    s.style.setProperty('--g2', `hsla(${r.hue},${r.sat}%,${clamp(r.lmid+8,0,95)}%,.45)`);
+    s.style.animationDelay = (i*0.38) + 's';
+    letgoEl.appendChild(s);
+  });
+  endingEl.classList.add('on');
+}
+
+/* the bloom: starts at their chest and takes the whole screen */
+function drawRadiance(){
+  if(!finale) return;
+  const bloom = clamp((finale.t - F_GLOW)/1.6, 0, 1);
+  if(bloom <= 0) return;
+  const settle = clamp((finale.t - F_END - 0.5)/1.8, 0, 1);
+  const fade = lerp(1, 0.16, ease(settle));      // peaks, then leaves an afterglow
+
+  // the light coming off them, spreading
+  const a = ease(bloom) * fade;
+  const R = lerp(sitter.glowR*0.8, Math.hypot(W,H)*1.05, ease(bloom));
+  const g = ctx.createRadialGradient(sitter.glowX, sitter.glowY, 0, sitter.glowX, sitter.glowY, R);
+  g.addColorStop(0,   `rgba(255,253,247,${a})`);
+  g.addColorStop(.45, `rgba(255,250,238,${a*0.80})`);
+  g.addColorStop(.80, `rgba(255,245,228,${a*0.35})`);
+  g.addColorStop(1,   'rgba(255,245,228,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+
+  // the radial alone can never reach the corners — this is what actually fills the screen
+  const wash = ease(clamp((bloom - 0.45)/0.55, 0, 1)) * fade;
+  if(wash > 0.001){
+    ctx.fillStyle = `rgba(255,252,245,${wash})`;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  // motes lifting off them while it builds
+  if(bloom < 1 && Math.random() < 0.6){
+    particles.push({
+      x: sitter.glowX + rnd(-26,26), y: sitter.glowY + rnd(-18,26),
+      vx: rnd(-.28,.28), vy: rnd(-1.5,-.5),
+      life:1, decay:rnd(.006,.014), r:rnd(1,2.8), hue:38, sat:85, l:76
+    });
+  }
+}
+
+/* ============================ drawing ============================ */
+function drawSky(){
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0, '#B7D4E9');
+  g.addColorStop(.46,'#E8EFF2');
+  g.addColorStop(1,  '#FCF3E6');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+
+  // low warm sun glow
+  const sg = ctx.createRadialGradient(W*0.72, H*0.14, 0, W*0.72, H*0.14, Math.max(W,H)*0.5);
+  sg.addColorStop(0,'rgba(255,246,226,.55)');
+  sg.addColorStop(1,'rgba(255,246,226,0)');
+  ctx.fillStyle = sg; ctx.fillRect(0,0,W,H);
+
+  for(const c of clouds){
+    c.x += c.v * dt * (REDUCED?0.2:1);
+    if(c.x - c.r > W + 40) c.x = -c.r - 40;
+    const cg = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r);
+    cg.addColorStop(0, `rgba(255,255,255,${c.a})`);
+    cg.addColorStop(.55, `rgba(255,255,255,${c.a*0.42})`);
+    cg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = cg;
+    ctx.beginPath(); ctx.ellipse(c.x, c.y, c.r, c.r*0.42, 0, 0, 6.284); ctx.fill();
+  }
+  for(const m of motes){
+    m.y -= m.v*dt*(REDUCED?0.2:1);
+    if(m.y < -6){ m.y = H+6; m.x = rnd(0,W); }
+    const x = m.x + Math.sin(t*0.4 + m.s)*9;
+    ctx.fillStyle = `rgba(255,255,255,${m.a})`;
+    ctx.beginPath(); ctx.arc(x, m.y, m.r, 0, 6.284); ctx.fill();
+  }
+}
+
+/* The strings aren't tied to a stone. They're tied to you.
+   Someone sitting, holding the whole bunch — curled forward while everything
+   is still attached, opening up as each one goes, and finally lowering the
+   hand it was holding them with. */
+const sitter = {hx:0, hy:0, init:false, glowX:0, glowY:0, glowR:40};
+
+function drawSitter(){
+  const total = balloons.length || 1;
+  const tied = balloons.filter(b=>!b.released).length;
+  const open = 1 - tied/total;                    // 0 = all tied, 1 = nothing left
+  const up = standAmount();                       // 0 = seated, 1 = on their feet
+  const h = clamp(Math.min(W,H)*0.105, 50, 78);
+
+  const ox = anchor.x - h*0.52;                   // where they meet the ground
+  const oy = anchor.y + h*0.92;
+
+  // seated — curled forward while everything is still attached, opening as it goes
+  const sHip  = [ox,                              oy - h*0.06];
+  const sSh   = [ox + lerp(h*0.07, -h*0.10, open), oy - lerp(h*0.46, h*0.57, open)];
+  const sHead = [sSh[0] + lerp(h*0.11, -h*0.03, open), sSh[1] - lerp(h*0.15, h*0.20, open)];
+  const sKnee = [ox + h*0.36, oy - h*0.26];
+  const sFoot = [ox + h*0.30, oy];
+  const sRest = [sSh[0] + h*0.34, sSh[1] + h*0.46];
+
+  // standing — straightened, arm open and lifted
+  const tHip  = [ox + h*0.12, oy - h*0.50];
+  const tSh   = [ox + h*0.06, oy - h*0.88];
+  const tHead = [ox + h*0.09, oy - h*1.06];
+  const tKnee = [ox + h*0.14, oy - h*0.25];
+  const tFoot = [ox + h*0.16, oy];
+  const tRest = [ox + h*0.46, oy - h*1.00];
+
+  const mix = (a,b) => [lerp(a[0],b[0],up), lerp(a[1],b[1],up)];
+  const hip = mix(sHip,tHip), sh = mix(sSh,tSh), head = mix(sHead,tHead);
+  const knee = mix(sKnee,tKnee), foot = mix(sFoot,tFoot), rest = mix(sRest,tRest);
+
+  // the holding hand: at the strings while anything is tied, then it comes down
+  const want = tied ? [anchor.x, anchor.y] : rest;
+  if(!sitter.init){ sitter.hx = want[0]; sitter.hy = want[1]; sitter.init = true; }
+  const k = 1 - Math.pow(0.28, dt);
+  sitter.hx = lerp(sitter.hx, want[0], k);
+  sitter.hy = lerp(sitter.hy, want[1], k);
+  sitter.glowX = sh[0]; sitter.glowY = sh[1] + h*0.22; sitter.glowR = h;
+
+  ctx.save();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+  ctx.fillStyle = `rgba(59,73,84,${0.09 - 0.03*up})`;
+  ctx.beginPath(); ctx.ellipse(ox + h*(0.14 + 0.04*up), oy + h*0.05, h*(0.46 - 0.16*up), h*0.07, 0, 0, 6.284); ctx.fill();
+
+  const ink = 'rgba(68,83,95,.78)';
+  ctx.strokeStyle = ink; ctx.fillStyle = ink;
+
+  ctx.lineWidth = h*0.20;                          // thigh, then shin
+  ctx.beginPath(); ctx.moveTo(hip[0], hip[1] - h*0.02); ctx.lineTo(knee[0], knee[1]); ctx.stroke();
+  ctx.lineWidth = h*0.16;
+  ctx.beginPath(); ctx.moveTo(knee[0], knee[1]); ctx.lineTo(foot[0], foot[1]); ctx.stroke();
+
+  ctx.lineWidth = h*0.30;                          // torso
+  ctx.beginPath(); ctx.moveTo(hip[0], hip[1]); ctx.lineTo(sh[0], sh[1]); ctx.stroke();
+
+  ctx.lineWidth = h*0.115;                         // the arm that was holding them
+  ctx.beginPath(); ctx.moveTo(sh[0], sh[1]); ctx.lineTo(sitter.hx, sitter.hy); ctx.stroke();
+
+  ctx.beginPath(); ctx.arc(head[0], head[1], h*0.155, 0, 6.284); ctx.fill();
+
+  ctx.restore();
+}
+
+function drawScene(){
+  // strings first, then balloons on top
+  for(const b of balloons){
+    if(b.released) continue;
+    const s = stringPoints(b);
+    ctx.strokeStyle = 'rgba(147,163,174,.62)';
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(s.x1,s.y1);
+    ctx.quadraticCurveTo(s.cx,s.cy,s.x2,s.y2);
+    ctx.stroke();
+    const k = quadAt(s, 0.52);
+    b.knotX = k.x; b.knotY = k.y;
+    drawKnotGlyph(k.x, k.y, b, (Math.sin(t*1.6 + b.phase)+1)/2);
+  }
+  drawSitter();
+
+  for(const b of balloons){
+    if(b.released) continue;
+    const bob = REDUCED ? 0 : Math.sin(t*0.62 + b.phase)*6;
+    const swy = REDUCED ? 0 : Math.sin(t*0.39 + b.phase*1.7)*9;
+    b.x = b.hx + swy;
+    b.y = b.hy + bob;
+    const grow = clamp((t - b.born)/0.9, 0, 1);
+    drawBalloon(b, b.x, b.y, b.r*ease(grow), grow);
+  }
+
+  // freed balloons
+  for(const b of balloons){
+    if(!b.released) continue;
+    b.vy = Math.max(-3.6, b.vy - 0.6*dt);
+    b.x += (b.vx + Math.sin(t*0.8 + b.phase)*0.42) * dt*60;
+    b.y += b.vy * dt*60;
+    const climb = clamp((b.relY - b.y) / (b.relY + b.r*2), 0, 1);
+    b.scale = 1 - 0.6*climb;
+    b.alpha = clamp((b.y + b.r*2)/(H*0.28), 0, 1);
+    if(b.alpha <= 0.01) continue;
+    // trailing cut string
+    ctx.strokeStyle = `rgba(147,163,174,${.5*b.alpha})`;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    const r = b.r*b.scale;
+    ctx.moveTo(b.x, b.y + r*1.17);
+    for(let i=1;i<=6;i++){
+      const k=i/6;
+      ctx.lineTo(b.x + Math.sin(t*3 + k*4 + b.phase)*7*k, b.y + r*1.17 + k*r*1.7);
+    }
+    ctx.stroke();
+    drawBalloon(b, b.x, b.y, r, b.alpha);
+  }
+}
+
+function drawTangle(){
+  if(!tangle || !active) return;
+  const p = tangle.pts, n = p.length;
+  const a = tangle.fade;
+
+  // scrim
+  ctx.fillStyle = `rgba(250,247,240,${0.90*a})`;
+  ctx.fillRect(0,0,W,H);
+  if(tangle.done && tangle.burstT > 0.35) return;
+
+  ctx.save();
+  ctx.globalAlpha = a * (tangle.done ? clamp(1 - tangle.burstT/0.35, 0, 1) : 1);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+
+  // the channel
+  ctx.beginPath();
+  ctx.moveTo(p[0][0],p[0][1]);
+  for(let i=1;i<n;i++) ctx.lineTo(p[i][0],p[i][1]);
+  ctx.strokeStyle = 'rgba(59,73,84,.10)';
+  ctx.lineWidth = 15;
+  ctx.stroke();
+  ctx.setLineDash([1, 9]);
+  ctx.strokeStyle = 'rgba(59,73,84,.30)';
+  ctx.lineWidth = 2.4;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // traced portion
+  if(tangle.idx > 0){
+    ctx.beginPath();
+    ctx.moveTo(p[0][0],p[0][1]);
+    for(let i=1;i<=tangle.idx;i++) ctx.lineTo(p[i][0],p[i][1]);
+    ctx.strokeStyle = cl(active, -14, .95);
+    ctx.lineWidth = 11;
+    ctx.shadowColor = cl(active, -8, .55);
+    ctx.shadowBlur = 16;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = cl(active, 10, .85);
+    ctx.lineWidth = 3.5;
+    ctx.stroke();
+  }
+
+  // end marker
+  const e = p[n-1];
+  const near = tangle.idx/(n-1);
+  ctx.strokeStyle = cl(active, -20, .35 + near*0.6);
+  ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.arc(e[0], e[1], 12 + Math.sin(t*3)*1.2, 0, 6.284); ctx.stroke();
+
+  // start dot / travelling bead
+  const c = p[Math.min(tangle.idx, n-1)];
+  const pulse = (Math.sin(t*3.2)+1)/2;
+  if(!tangle.tracing && tangle.idx === 0){
+    ctx.strokeStyle = cl(active, -17, .35 - pulse*0.25);
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(c[0], c[1], 15 + pulse*13, 0, 6.284); ctx.stroke();
+  }
+  ctx.fillStyle = tangle.off ? 'rgba(150,162,172,.95)' : cl(active, -17);
+  ctx.beginPath(); ctx.arc(c[0], c[1], 10, 0, 6.284); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.95)';
+  ctx.beginPath(); ctx.arc(c[0], c[1], 4.2, 0, 6.284); ctx.fill();
+
+  ctx.restore();
+}
+
+function drawParticles(){
+  for(let i=particles.length-1;i>=0;i--){
+    const q = particles[i];
+    q.x += q.vx*dt*60; q.y += q.vy*dt*60;
+    q.vy -= 0.012*dt*60;      // they rise
+    q.vx *= 0.985; q.vy *= 0.99;
+    q.life -= q.decay*dt*60;
+    if(q.life <= 0){ particles.splice(i,1); continue; }
+    ctx.fillStyle = `hsla(${q.hue},${q.sat}%,${q.l}%,${clamp(q.life,0,1)*.85})`;
+    ctx.beginPath(); ctx.arc(q.x, q.y, q.r*clamp(q.life,0,1), 0, 6.284); ctx.fill();
+  }
+}
+
+/* ============================ loop ============================ */
+let dt = 0.016;
+function frame(now){
+  // one bad frame must never stop the clock — a thrown draw used to take the
+  // whole loop down with it and leave the screen frozen mid-experience
+  try{
+    dt = clamp((now-last)/1000, 0, 0.05); last = now; t += dt;
+
+    // a resize event isn't guaranteed — a page that starts life in a collapsed
+    // iframe or a hidden tab would otherwise stay laid out at zero forever
+    if(Math.round(window.innerWidth) !== W || Math.round(window.innerHeight) !== H) resize();
+
+    drawSky();
+    drawScene();
+
+    if(tangle){
+      tangle.fade = clamp(tangle.fade + (mode==='tangle' ? dt/0.45 : -dt/0.5), 0, 1);
+      if(tangle.done) tangle.burstT += dt;
+      drawTangle();
+    }
+    if(finale) runFinale();
+    drawRadiance();
+    drawParticles();   // motes ride on top of the light, not under it
+  }catch(err){
+    if(!frame.warned){ frame.warned = true; console.error('thought balloons — frame:', err); }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ============================ interaction ============================ */
+const introEl = document.getElementById('intro');
+const endingEl = document.getElementById('ending');
+const endLine = document.getElementById('endLine');
+const letgoEl = document.getElementById('letgo');
+const sheetEl = document.getElementById('sheet');
+const wordEl = document.getElementById('word');
+const cardTitle = document.getElementById('cardTitle');
+const tuiEl = document.getElementById('tui');
+const tuiWord = document.getElementById('tuiWord');
+const tuiHint = document.getElementById('tuiHint');
+const hintEl = document.getElementById('hint');
+const markEl = document.getElementById('mark');
+const restartBtn = document.getElementById('restart');
+const sndBtn = document.getElementById('snd');
+
+let sheetTarget = null;
+
+function setHint(){
+  if(mode !== 'scene'){ hintEl.classList.remove('on'); return; }
+  const tied = balloons.filter(b=>!b.released);
+  if(!tied.length){ hintEl.classList.remove('on'); return; }
+  let msg;
+  if(released.length || unnamedGone) msg = '';
+  else if(tied.some(b=>b.word)) msg = 'tap it again to follow its tangle';
+  else msg = 'tap a balloon — name what it carries';
+  hintEl.textContent = msg;
+  hintEl.classList.toggle('on', !!msg);
+}
+
+function hitBalloon(x,y){
+  let best=null, bd=1e9;
+  for(const b of balloons){
+    if(b.released) continue;
+    const dx=(x-b.x)/(b.r*0.95), dy=(y-b.y)/(b.r*1.08);
+    const d = dx*dx+dy*dy;
+    if(d < 1.25 && d < bd){ bd=d; best=b; }
+    if(b.knotX !== undefined){
+      const kd = Math.hypot(x-b.knotX, y-b.knotY);
+      if(kd < 26 && kd/26 < bd){ bd = kd/26; best = b; }
+    }
+  }
+  return best;
+}
+
+function openSheet(b){
+  sheetTarget = b;
+  wordEl.value = b.word;
+  cardTitle.textContent = b.word ? 'still carrying this one?' : 'what is this one carrying?';
+  sheetEl.classList.add('on');
+  setTimeout(()=>{ wordEl.focus(); wordEl.select(); }, 260);
+}
+function closeSheet(save){
+  if(save && sheetTarget){
+    sheetTarget.word = wordEl.value.trim().replace(/\s+/g,' ');
+    sheetTarget._fitKey = null;
+  }
+  sheetEl.classList.remove('on');
+  wordEl.blur();
+}
+/* putting a thought back down leaves nothing half-open behind it */
+function keepItForNow(){
+  if(!sheetEl.classList.contains('on')) return;
+  closeSheet(true);
+  closeTangle();
+  tangle = null;
+  setHint();
+}
+
+function openTangle(b){
+  active = b;
+  tangle = null;
+  fitTangle(b, false);
+  mode = 'tangle';
+  tuiWord.textContent = b.word || 'the one you didn’t name';
+  tuiHint.textContent = 'press the glowing dot, then follow the line to its end without lifting';
+  tuiHint.classList.remove('stray');
+  tuiEl.classList.add('on');
+  hintEl.classList.remove('on');
+  restartBtn.classList.remove('on');
+  markEl.style.opacity = '0';
+}
+function closeTangle(){
+  mode = 'scene';
+  tuiEl.classList.remove('on');
+  markEl.style.opacity = '';
+  restartBtn.classList.add('on');
+  setHint();
+  // the knot keeps drawing while it fades, and it draws in `active`'s colour —
+  // so the two have to be let go of together, not one before the other
+  setTimeout(()=>{ if(mode!=='tangle'){ tangle = null; active = null; } }, 600);
+}
+function updateTangleHint(){
+  if(!tangle || tangle.done) return;
+  const p = tangle.idx/(tangle.pts.length-1);
+  if(tangle.off){
+    tuiHint.textContent = 'come back to the line';
+    tuiHint.classList.add('stray');
+  } else {
+    tuiHint.classList.remove('stray');
+    tuiHint.textContent = p < 0.02 ? 'press the glowing dot, then follow the line to its end without lifting'
+      : p < 0.55 ? 'keep going — slowly is fine'
+      : p < 0.9  ? 'almost through the knot'
+      : 'the end of the line';
+  }
+}
+
+/* pointer */
+let down = false;
+cv.addEventListener('pointerdown', e=>{
+  const x = e.clientX, y = e.clientY;
+  if(mode === 'scene'){
+    const b = hitBalloon(x,y);
+    if(b){
+      blip(520, .09, 'sine', .03);
+      if(b.word) openTangle(b); else openSheet(b);
+    }
+    return;
+  }
+  if(mode === 'tangle' && tangle && !tangle.done){
+    down = true;
+    cv.setPointerCapture(e.pointerId);
+    const c = tangle.pts[tangle.idx];
+    if(Math.hypot(x-c[0], y-c[1]) <= tangleTolerance()*1.35){
+      tangle.tracing = true;
+      traceAt(x,y);
+    } else {
+      tangle.off = true;
+      tuiHint.textContent = tangle.idx===0 ? 'start at the glowing dot' : 'pick up where you left off';
+      tuiHint.classList.add('stray');
+    }
+  }
+}, {passive:true});
+
+cv.addEventListener('pointermove', e=>{
+  if(mode!=='tangle' || !down || !tangle || !tangle.tracing) return;
+  const co = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
+  if(co && co.length){
+    for(const ce of co) traceAt(ce.clientX, ce.clientY);
+  } else {
+    traceAt(e.clientX, e.clientY);
+  }
+}, {passive:true});
+
+function endTrace(){
+  down = false;
+  if(tangle && !tangle.done){
+    tangle.tracing = false;
+    tangle.off = false;
+    updateTangleHint();
+  }
+}
+cv.addEventListener('pointerup', endTrace, {passive:true});
+cv.addEventListener('pointercancel', endTrace, {passive:true});
+
+/* buttons */
+document.getElementById('begin').addEventListener('click', ()=>{
+  introEl.classList.remove('on');
+  if(balloons.length !== idealCount()) makeBalloons();
+  mode = 'scene';
+  restartBtn.classList.add('on');
+  setTimeout(setHint, 700);
+});
+
+function resetSession(){
+  released.length = 0; unnamedGone = 0;
+  particles = [];
+  tangle = null; active = null; finale = null;
+  endingEl.classList.remove('on');
+  tuiEl.classList.remove('on');
+  sheetEl.classList.remove('on');
+  markEl.style.opacity = '';
+  makeBalloons();
+}
+
+document.getElementById('again').addEventListener('click', ()=>{
+  resetSession();
+  mode = 'scene';
+  restartBtn.classList.add('on');
+  setTimeout(setHint, 700);
+});
+
+/* picked eight when you wanted three — go back and choose again */
+restartBtn.addEventListener('click', ()=>{
+  resetSession();
+  mode = 'intro';
+  introEl.classList.add('on');
+  restartBtn.classList.remove('on');
+  hintEl.classList.remove('on');
+});
+
+document.getElementById('untangleBtn').addEventListener('click', ()=>{
+  if(!sheetEl.classList.contains('on')) return;
+  const b = sheetTarget;
+  closeSheet(true);
+  setTimeout(()=>{ if(b) openTangle(b); }, 320);
+});
+document.getElementById('keepBtn').addEventListener('click', keepItForNow);
+sheetEl.addEventListener('pointerdown', e=>{ if(e.target === sheetEl) keepItForNow(); });
+wordEl.addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('untangleBtn').click(); }
+  if(e.key === 'Escape'){ keepItForNow(); }
+});
+document.getElementById('notYet').addEventListener('click', closeTangle);
+tuiWord.addEventListener('click', ()=>{
+  if(!active || (tangle && tangle.done)) return;
+  const b = active;
+  closeTangle();
+  setTimeout(()=>openSheet(b), 300);
+});
+
+sndBtn.addEventListener('click', ()=>{
+  S.on = !S.on;
+  sndBtn.textContent = 'sound · ' + (S.on ? 'on' : 'off');
+  sndBtn.setAttribute('aria-pressed', String(S.on));
+  if(S.on){ audioInit(); windLevel(0.035); } else { windLevel(0); }
+});
+
+/* both selectors drive the same choice and stay in sync with each other */
+const optGroups = [...document.querySelectorAll('[data-opts]')];
+function syncOpts(){
+  for(const g of optGroups)
+    for(const o of g.children)
+      o.setAttribute('aria-pressed', String(+o.dataset.n === chosenCount));
+}
+for(const g of optGroups){
+  g.addEventListener('click', e=>{
+    const o = e.target.closest('.opt');
+    if(!o) return;
+    chosenCount = +o.dataset.n;
+    syncOpts();
+    if(mode === 'intro') makeBalloons();   // let the choice show behind the veil
+
+  });
+}
+
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', ()=>setTimeout(resize, 120));
+
+/* boot */
+resize();
+makeBalloons();
+requestAnimationFrame(frame);
+})();
+</script>
