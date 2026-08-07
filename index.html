@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Experience Portal — AI Goddesses</title>
+<meta name="description" content="Every little interactive experience I build, gathered in one place for the AI Goddesses community. Open a door and play — most take two minutes.">
+<link rel="icon" href="assets/logo-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Fragment+Mono:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --berry:#ab125e; --pink:#ffbad3; --soft-rose:#fde6ee; --gold:#eab308; --cream:#f6f5f2;
+    --berry-900:#6e0e3d; --berry-800:#8d0f4e; --berry-600:#c4216f; --berry-500:#e0318c;
+    --pink-200:#fdcedf; --rose-50:#fff2f7;
+    --white:#ffffff; --ink-900:#212121; --ink-700:#333333; --ink-500:#777777; --ink-400:#999999; --ink-200:#e4e1da; --ink-100:#efece6;
+    --font-display:'Libre Baskerville', Georgia, 'Times New Roman', serif;
+    --font-sans:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono:'Fragment Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+    --dur-fast:150ms; --dur-base:240ms;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:var(--cream);
+    color:var(--ink-700);
+    font-family:var(--font-sans);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  a{color:var(--berry); text-decoration:none;}
+  button{font:inherit; border:none; background:none;}
+
+  .noscrollbar::-webkit-scrollbar{display:none;}
+  .noscrollbar{scrollbar-width:none; -ms-overflow-style:none;}
+
+  /* ------------------------------------------------------------ keyframes */
+  @keyframes rise{0%{transform:translateY(0) scale(.86); opacity:0;}12%{opacity:1;}78%{opacity:1;}100%{transform:translateY(-260px) scale(1.12); opacity:0;}}
+  @keyframes waveX{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  @keyframes ripple{0%{transform:scale(.32); opacity:.95;}100%{transform:scale(3.8); opacity:0;}}
+  @keyframes swell{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+  @keyframes crack{0%{stroke-dashoffset:260; opacity:1;}40%{stroke-dashoffset:0; opacity:1;}82%{stroke-dashoffset:0; opacity:1;}100%{stroke-dashoffset:0; opacity:0;}}
+  @keyframes shard{0%,100%{transform:translate(0,0) rotate(0deg);}50%{transform:translate(3px,-4px) rotate(-6deg);}}
+  @keyframes flap{0%,20%{transform:rotateX(0deg);}45%,75%{transform:rotateX(-155deg);}100%{transform:rotateX(0deg);}}
+  @keyframes fall{0%{transform:translateY(-14px) rotate(0deg); opacity:0;}15%{opacity:1;}100%{transform:translateY(190px) rotate(280deg); opacity:0;}}
+  @keyframes twinkle{0%,100%{opacity:.35; transform:scale(.82) rotate(0deg);}50%{opacity:1; transform:scale(1.12) rotate(45deg);}}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  @keyframes sheen{0%{transform:translateX(-120%) skewX(-18deg);}100%{transform:translateX(320%) skewX(-18deg);}}
+
+  .desktop-only{display:none !important;}
+
+  /* ================================================================ HEADER
+     Mobile spec: 76px tall, align-items:flex-end, padding 0 24px 12px,
+     rgba(255,242,247,.88) + blur. Logo 24px, title 15px. Right: "AI with Fey"
+     mono 10px berry @ .6 opacity. foundLabel lives in the hero, not here. */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:flex-end; justify-content:space-between;
+    height:76px; padding:0 24px 12px;
+    background:rgba(255,242,247,.88);
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  }
+  .brand{display:flex; align-items:center; gap:9px;}
+  .brand img{width:24px; height:24px; object-fit:contain;}
+  .brand span{font-family:var(--font-display); font-size:15px; font-weight:700; letter-spacing:-.025em; color:var(--berry);}
+  .topbar-meta{display:flex; align-items:center; gap:14px;}
+  .topbar-meta .fey{
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--berry); opacity:.6;
+  }
+
+  /* ================================================================== HERO
+     Mobile spec: rose-50 band, gap 13px, h1 38px/1.04/-.03em,
+     p 14.5px/1.6 ink-700, then the foundLabel · rule · "More arriving" row. */
+  .hero{
+    background:var(--rose-50);
+    padding:16px 24px 34px;
+    display:flex; flex-direction:column; gap:13px;
+  }
+  .hero-copy{display:flex; flex-direction:column; gap:13px;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px; width:fit-content;
+    font-family:var(--font-mono); font-size:.875rem; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--berry);
+  }
+  .eyebrow svg{flex:none;}
+  .hero h1{
+    font-family:var(--font-display); font-weight:700;
+    font-size:38px; line-height:1.04; letter-spacing:-.03em;
+    color:var(--ink-900); margin:0;
+  }
+  .hero h1 em{font-style:italic; color:var(--berry);}
+  .hero p{font-size:14.5px; line-height:1.6; color:var(--ink-700); margin:0; text-wrap:pretty;}
+
+  .hero-progress{display:flex; align-items:center; gap:8px; padding-top:2px;}
+  .hero-progress .found{
+    font-family:var(--font-mono); font-size:9.5px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--berry);
+  }
+  .hero-progress .rule{flex:1; height:1px; background:var(--pink-200);}
+  .hero-progress .more{
+    font-family:var(--font-mono); font-size:9.5px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--ink-400);
+  }
+
+  /* -------------------------------------------------------- scroll arrows */
+  .hero-scroll{display:flex; align-items:center; gap:10px; padding-bottom:6px;}
+  .scroll-label{
+    font-family:var(--font-mono); font-size:9.5px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--ink-400); margin-right:4px;
+  }
+  .scroll-btn{
+    width:40px; height:40px; border-radius:50%;
+    border:1.5px solid var(--pink-200);
+    display:inline-flex; align-items:center; justify-content:center;
+    color:var(--ink-400); cursor:pointer;
+    transition:background var(--dur-fast) var(--ease-soft), color var(--dur-fast) var(--ease-soft);
+  }
+  .scroll-btn.prev:hover{background:var(--rose-50); color:var(--berry);}
+  .scroll-btn.next{background:var(--soft-rose); color:var(--berry);}
+  .scroll-btn.next:hover{background:var(--pink);}
+
+  /* ================================================================= DOORS */
+  .doors{display:flex; flex-direction:column;}
+
+  .door{
+    position:relative; display:flex; overflow:hidden;
+    flex-direction:column; justify-content:flex-end;
+    height:238px; padding:0 24px 24px;
+    cursor:pointer; text-decoration:none;
+  }
+  .door-art{position:absolute; inset:0; overflow:hidden; pointer-events:none;}
+  /* Oval outline inside each door — desktop only, per the mockup. */
+  .door-frame{display:none;}
+  .door-body{
+    position:relative; display:flex; flex-direction:column; gap:5px;
+    margin:0 -24px -24px; padding:36px 24px 24px;
+  }
+  .door-tag-row{display:flex; align-items:center; gap:8px;}
+  .door-tag{font-family:var(--font-mono); font-size:9px; letter-spacing:.16em; text-transform:uppercase;}
+  .door-badge{
+    display:none; align-items:center;
+    font-family:var(--font-mono); font-size:8.5px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--berry-800); background:rgba(255,255,255,.75);
+    padding:3px 8px; border-radius:999px;
+  }
+  .door.is-seen .door-badge{display:inline-flex;}
+  .door-title{font-family:var(--font-display); font-size:27px; line-height:1.1; letter-spacing:-.025em;}
+  .door-desc{font-size:13px; line-height:1.5;}
+
+  /* per-door palettes */
+  .door-balloons{background:linear-gradient(180deg,#fff2f7 0%,#fde6ee 100%);}
+  .door-balloons .door-body{background:linear-gradient(180deg, rgba(253,230,238,0) 0%, #fde6ee 52%);}
+  .door-balloons .door-tag{color:var(--berry);}
+  .door-balloons .door-title{color:var(--ink-900);}
+  .door-balloons .door-desc{color:var(--ink-700);}
+
+  .door-water{background:linear-gradient(180deg,#6e0e3d 0%,#ab125e 100%);}
+  .door-water .door-body{background:linear-gradient(180deg, rgba(171,18,94,0) 0%, #ab125e 52%);}
+  .door-water .door-tag{color:var(--pink);}
+  .door-water .door-title{color:var(--white);}
+  .door-water .door-desc{color:rgba(255,255,255,.78);}
+  .door-water .door-badge{background:rgba(255,255,255,.85);}
+
+  .door-glass{background:linear-gradient(150deg,#ffffff 0%,#efece6 100%);}
+  .door-glass .door-body{background:linear-gradient(180deg, rgba(239,236,230,0) 0%, #efece6 52%);}
+  .door-glass .door-tag{color:var(--berry);}
+  .door-glass .door-title{color:var(--ink-900);}
+  .door-glass .door-desc{color:var(--ink-700);}
+
+  .door-card{background:linear-gradient(160deg,#ffbad3 0%,#fff2f7 100%); perspective:520px;}
+  .door-card .door-body{background:linear-gradient(180deg, rgba(255,242,247,0) 0%, #fff2f7 52%);}
+  .door-card .door-tag{color:var(--berry);}
+  .door-card .door-title{color:var(--ink-900);}
+  .door-card .door-desc{color:var(--berry-800);}
+  .door-card .door-badge{background:rgba(255,255,255,.8);}
+
+  .door-ripple{background:linear-gradient(160deg,#ab125e 0%,#6e0e3d 100%);}
+  .door-ripple .door-body{background:linear-gradient(180deg, rgba(110,14,61,0) 0%, #6e0e3d 52%);}
+  .door-ripple .door-tag{color:var(--gold);}
+  .door-ripple .door-title{color:var(--white);}
+  .door-ripple .door-desc{color:rgba(255,255,255,.78);}
+  .door-ripple .door-badge{background:rgba(255,255,255,.85);}
+
+  /* ------------------------------------------------------ "a new door soon" */
+  .door-soon{
+    position:relative; height:210px; background:var(--rose-50);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:9px; text-align:center; padding:0 34px; cursor:default;
+  }
+  .door-soon .soon-oval{
+    position:absolute; top:16px; left:24px; right:24px; bottom:16px;
+    border:1px dashed var(--pink-200); border-radius:999px 999px 4px 4px; pointer-events:none;
+  }
+  .soon-badge{
+    width:44px; height:44px; border-radius:50%; background:var(--white);
+    display:inline-flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 18px -12px rgba(110,14,61,.6); animation:bob 4s ease-in-out infinite;
+  }
+  .soon-badge svg{width:18px; height:18px;}
+  .soon-title{font-family:var(--font-display); font-size:19px; letter-spacing:-.02em; color:var(--berry-800);}
+  .soon-desc{font-size:13px; line-height:1.5; color:var(--ink-500);}
+  .twinkle-a{position:absolute; top:38px; left:64px; animation:twinkle 3.4s ease-in-out infinite;}
+  .twinkle-a svg{width:12px; height:12px;}
+  .twinkle-b{position:absolute; bottom:44px; right:60px; animation:twinkle 2.6s ease-in-out .9s infinite;}
+  .twinkle-b svg{width:16px; height:16px;}
+
+  .door-peek{display:none;}
+
+  /* ------------------------------------------------------------ door art */
+  .balloon{position:absolute; display:flex; flex-direction:column; align-items:center; animation:rise 8s linear infinite;}
+  .balloon .bulb{
+    border-radius:50% 50% 48% 48%; background:rgba(255,255,255,.92);
+    border:1.5px solid var(--pink-200); display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-style:italic; color:var(--berry);
+  }
+  .balloon svg{margin-top:-1px;}
+  .b1{left:11%; bottom:-70px; animation-duration:7.5s;}
+  .b1 .bulb{width:44px; height:50px;}
+  .b2{left:44%; bottom:-80px; animation-duration:9.5s; animation-delay:.9s;}
+  .b2 .bulb{width:70px; height:78px; border-radius:50% 50% 46% 46%; background:rgba(255,255,255,.96); font-size:13px;}
+  .b3{left:76%; bottom:-64px; animation-duration:6.4s; animation-delay:2.4s;}
+  .b3 .bulb{width:30px; height:35px; background:rgba(255,255,255,.88);}
+  .b4{left:26%; bottom:-58px; animation-duration:11s; animation-delay:4.8s;}
+  .b4 .bulb{width:20px; height:24px; background:var(--pink); border:none;}
+
+  .wave{position:absolute; left:0; width:200%; fill:none; stroke-width:2;}
+  .wave-1{bottom:66px; height:78px; stroke:rgba(255,186,211,.32); animation:waveX 11s linear infinite;}
+  .wave-2{bottom:50px; height:88px; stroke:rgba(255,186,211,.55); stroke-width:2.4; animation:waveX 7.5s linear infinite;}
+  .wave-3{bottom:36px; height:96px; fill:rgba(255,186,211,.14); stroke:rgba(255,186,211,.7); animation:waveX 5.2s linear infinite;}
+  .moon{
+    position:absolute; top:44px; left:50%; margin-left:-13px; width:26px; height:26px;
+    border-radius:50%; background:rgba(255,242,247,.85);
+    box-shadow:0 0 26px 6px rgba(255,186,211,.35); animation:swell 6s ease-in-out infinite;
+  }
+
+  .sheen{position:absolute; top:0; bottom:0; width:90px; background:linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent); animation:sheen 6s linear infinite;}
+  .crack-svg{position:absolute; top:-16px; left:50%; margin-left:-115px; width:230px; height:184px; opacity:.85;}
+  .shard{
+    position:absolute; top:44px; right:44px; width:0; height:0;
+    border-left:10px solid transparent; border-right:7px solid transparent;
+    border-bottom:17px solid var(--pink-200); animation:shard 4s ease-in-out infinite;
+  }
+
+  .confetti{position:absolute; top:0; border-radius:2px; animation:fall 4s linear infinite;}
+  .c1{left:14%; width:9px; height:9px; background:var(--berry); animation-duration:3.6s;}
+  .c2{left:36%; width:7px; height:11px; background:var(--gold); animation-duration:4.4s; animation-delay:.8s;}
+  .c3{left:66%; width:10px; height:7px; background:var(--white); animation-duration:3.2s; animation-delay:1.6s;}
+  .c4{left:86%; width:8px; height:8px; border-radius:50%; background:var(--berry-500); animation-duration:4.8s; animation-delay:2.4s;}
+  .envelope{
+    position:absolute; top:44px; left:50%; margin-left:-58px; width:116px; height:80px;
+    border-radius:6px; background:var(--white); box-shadow:0 12px 26px -14px rgba(110,14,61,.5);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-style:italic; font-size:14px; color:var(--berry);
+  }
+  .envelope .flap{
+    position:absolute; left:0; right:0; top:0; height:40px; background:var(--soft-rose);
+    border-radius:6px 6px 0 0; transform-origin:top center; transform-style:preserve-3d;
+    animation:flap 6s var(--ease-soft) infinite; border-bottom:1px solid var(--pink-200);
+  }
+
+  .ring{position:absolute; top:88px; left:50%; width:48px; height:48px; margin:-24px 0 0 -24px; border-radius:50%; animation:ripple 5.4s var(--ease-soft) infinite;}
+  .r1{border:1.5px solid rgba(234,179,8,.75);}
+  .r2{border:1.5px solid rgba(255,186,211,.6); animation-delay:1.8s;}
+  .r3{border:1.5px solid rgba(255,255,255,.35); animation-delay:3.6s;}
+  .star{position:absolute; top:88px; left:50%; margin:-17px 0 0 -17px; width:34px; height:34px; animation:twinkle 4s ease-in-out infinite;}
+
+  /* ------------------------------------------------------------ start over */
+  .startover-wrap{display:flex; justify-content:center; padding:22px 24px 34px; background:var(--cream);}
+  .startover{
+    font-family:var(--font-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-400); cursor:pointer; padding:8px;
+  }
+  .startover:hover{color:var(--berry);}
+
+  /* =============================================================== DESKTOP
+     Mockup: 1280 frame. Header 22px/40px + hairline. Hero 46px 40px 34px with
+     the scroll arrows pinned bottom-right. Strip: gap 18px, padding 0 40px 46px,
+     300px doors at ~446px tall, 160px peek panel closing the row. */
+  @media (min-width:800px){
+    .desktop-only{display:flex !important;}
+    .mobile-only{display:none !important;}
+
+    .topbar{
+      height:auto; align-items:center; padding:22px 40px;
+      background:rgba(246,245,242,.88);
+      border-bottom:1px solid var(--ink-200);
+    }
+    .brand img{width:26px; height:26px;}
+    .brand span{font-size:17px;}
+    .topbar-meta .found{
+      font-family:var(--font-mono); font-size:10px; letter-spacing:.16em;
+      text-transform:uppercase; color:var(--berry);
+    }
+    .topbar-meta .fey{font-size:10px; letter-spacing:.16em; color:var(--ink-400); opacity:1;}
+
+    .hero{
+      background:transparent;
+      max-width:1280px; margin:0 auto;
+      padding:46px 40px 34px;
+      flex-direction:row; align-items:flex-end; justify-content:space-between; gap:60px;
+    }
+    .hero-copy{gap:14px; max-width:640px;}
+    .hero h1{font-size:56px; line-height:1.02;}
+    .hero h1 br{display:none;}
+    .hero p{font-size:16.5px; max-width:52ch;}
+
+    .strip-wrap{max-width:1280px; margin:0 auto; padding:0 40px 46px;}
+    .doors{flex-direction:row; gap:18px; overflow-x:auto; scroll-snap-type:x proximity;}
+
+    .door{
+      flex:none; width:300px; height:446px;
+      border-radius:150px 150px 24px 24px;
+      padding:26px 24px; scroll-snap-align:start;
+      transition:transform 340ms var(--ease-soft), box-shadow 340ms var(--ease-soft);
+    }
+    .door:hover{transform:translateY(5px);}
+    .door-balloons:hover,
+    .door-glass:hover,
+    .door-card:hover{box-shadow:inset 0 0 0 2px rgba(171,18,94,.4), inset 0 34px 44px -30px rgba(110,14,61,.45);}
+    .door-water:hover,
+    .door-ripple:hover{box-shadow:inset 0 0 0 2px rgba(255,186,211,.6), inset 0 46px 52px -26px rgba(35,3,18,.9);}
+
+    .door-frame{
+      display:block; position:absolute; top:18px; left:18px; right:18px; bottom:96px;
+      border:1px solid rgba(171,18,94,.14); border-radius:999px 999px 4px 4px; pointer-events:none;
+    }
+    .door-water .door-frame,
+    .door-ripple .door-frame{border-color:rgba(255,186,211,.22);}
+    .door-card .door-frame{border-color:rgba(171,18,94,.16);}
+
+    .door-body{margin:0 -24px -26px; padding:44px 24px 26px; gap:6px;}
+    .door-title{font-size:26px;}
+    .door-desc{font-size:13.5px; text-wrap:pretty;}
+
+    /* desktop art offsets from the mockup */
+    .b1{bottom:-80px;} .b1 .bulb{width:50px; height:56px;}
+    .b2{bottom:-92px;} .b2 .bulb{width:80px; height:90px; font-size:15px;}
+    .b3{display:none;}
+    .b4{left:24%; bottom:-64px; animation-delay:4.4s;} .b4 .bulb{width:22px; height:26px;}
+    .wave-1{bottom:120px; height:110px;}
+    .wave-2{bottom:98px; height:120px;}
+    .wave-3{bottom:76px; height:130px;}
+    .moon{top:74px; margin-left:-16px; width:32px; height:32px; box-shadow:0 0 30px 8px rgba(255,186,211,.35);}
+    .sheen{width:96px;}
+    .crack-svg{top:52px; margin-left:-126px; width:252px; height:202px;}
+    .shard{top:96px; right:52px; border-left-width:11px; border-right-width:8px; border-bottom-width:18px;}
+    .c1{left:16%;} .c2{left:42%;} .c3{left:72%; animation-delay:1.7s;} .c4{left:58%; animation-delay:2.6s;}
+    .envelope{top:132px; margin-left:-64px; width:128px; height:88px; font-size:15px;}
+    .envelope .flap{height:44px;}
+    .ring{top:150px; width:56px; height:56px; margin:-28px 0 0 -28px;}
+    .star{top:150px; margin:-20px 0 0 -20px; width:40px; height:40px;}
+
+    .door-soon{
+      flex:none; width:300px; height:446px;
+      border-radius:150px 150px 24px 24px;
+      border:1.5px dashed var(--pink-200);
+      gap:11px; padding:26px 34px;
+    }
+    .door-soon .soon-oval{display:none;}
+    .soon-badge{width:48px; height:48px;}
+    .soon-badge svg{width:20px; height:20px;}
+    .soon-title{font-size:21px;}
+    .soon-desc{font-size:13.5px; line-height:1.55; text-wrap:pretty;}
+    .twinkle-a{top:74px; left:56px;}
+    .twinkle-a svg{width:13px; height:13px;}
+    .twinkle-b{bottom:96px; right:52px;}
+    .twinkle-b svg{width:18px; height:18px;}
+
+    .door-peek{
+      display:block; flex:none; width:160px; height:446px;
+      border-radius:80px 80px 24px 24px;
+      background:linear-gradient(180deg, rgba(253,230,238,.7) 0%, rgba(253,230,238,.25) 100%);
+      border:1px solid var(--ink-200);
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="#top">
+    <img src="assets/logo-mark.png" alt="">
+    <span>Experience Portal</span>
+  </a>
+  <div class="topbar-meta">
+    <span class="found js-found desktop-only">0 of 5 opened</span>
+    <span class="fey">AI with Fey</span>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="hero-copy">
+      <span class="eyebrow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c.6 5.7 3.9 9 9.6 9.6C15.9 10.2 12.6 13.5 12 19.2 11.4 13.5 8.1 10.2 2.4 9.6 8.1 9 11.4 5.7 12 0Z"/></svg>
+        A Place I Made for You
+      </span>
+      <h1>Experience<br> <em>Portal</em></h1>
+      <p>Every little interactive experience I build, gathered in one place for the AI Goddesses community. Open a door and play — most take two minutes.</p>
+      <div class="hero-progress mobile-only">
+        <span class="found js-found">0 of 5 opened</span>
+        <span class="rule"></span>
+        <span class="more">More arriving</span>
+      </div>
+    </div>
+
+    <div class="hero-scroll desktop-only">
+      <span class="scroll-label">Scroll</span>
+      <button class="scroll-btn prev" id="scrollPrev" aria-label="Scroll to previous door">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <button class="scroll-btn next" id="scrollNext" aria-label="Scroll to next door">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <div class="strip-wrap">
+    <div class="doors noscrollbar" id="doors">
+
+      <a class="door door-balloons" data-key="balloons" href="https://claude.ai/code/artifact/68eeebc3-58a7-4139-8668-017bd6172521?org=41dcb2c6-2b56-412a-922b-e49010ac6d16&open_in_browser=1" target="_blank" rel="noopener noreferrer">
+        <span class="door-frame"></span>
+        <div class="door-art">
+          <span class="balloon b1"><span class="bulb"></span>
+            <svg width="12" height="32" viewBox="0 0 12 32" fill="none" stroke="var(--berry)" stroke-width="1.7" opacity=".45"><path d="M6 0C2 8 10 16 6 24 4 28 6 30 6 32"/></svg>
+          </span>
+          <span class="balloon b2"><span class="bulb">enough</span>
+            <svg width="14" height="38" viewBox="0 0 14 38" fill="none" stroke="var(--berry)" stroke-width="1.7" opacity=".45"><path d="M7 0C2 9 12 18 7 27 5 32 7 35 7 38"/></svg>
+          </span>
+          <span class="balloon b3"><span class="bulb"></span>
+            <svg width="10" height="26" viewBox="0 0 10 26" fill="none" stroke="var(--berry)" stroke-width="1.7" opacity=".45"><path d="M5 0C2 7 8 13 5 19 4 22 5 24 5 26"/></svg>
+          </span>
+          <span class="balloon b4"><span class="bulb"></span>
+            <svg width="8" height="22" viewBox="0 0 8 22" fill="none" stroke="var(--berry)" stroke-width="1.7" opacity=".5"><path d="M4 0C2 6 6 11 4 16 3 19 4 20 4 22"/></svg>
+          </span>
+        </div>
+        <div class="door-body">
+          <div class="door-tag-row">
+            <span class="door-tag">Let it go · 2 min</span>
+            <span class="door-badge">Opened</span>
+          </div>
+          <span class="door-title">Thought Balloons</span>
+          <span class="door-desc">Name what's circling. Watch it float off.</span>
+        </div>
+      </a>
+
+      <a class="door door-water" data-key="water" href="https://claude.ai/code/artifact/c7a2bb98-63d4-4563-8c33-9f9bc5e91aad?org=41dcb2c6-2b56-412a-922b-e49010ac6d16&open_in_browser=1" target="_blank" rel="noopener noreferrer">
+        <span class="door-frame"></span>
+        <div class="door-art">
+          <svg class="wave wave-1" viewBox="0 0 800 120" preserveAspectRatio="none"><path d="M0 60 Q50 26 100 60 T200 60 T300 60 T400 60 T500 60 T600 60 T700 60 T800 60"/></svg>
+          <svg class="wave wave-2" viewBox="0 0 800 120" preserveAspectRatio="none"><path d="M0 60 Q50 22 100 60 T200 60 T300 60 T400 60 T500 60 T600 60 T700 60 T800 60"/></svg>
+          <svg class="wave wave-3" viewBox="0 0 800 120" preserveAspectRatio="none"><path d="M0 60 Q50 30 100 60 T200 60 T300 60 T400 60 T500 60 T600 60 T700 60 T800 60 L800 120 L0 120 Z"/></svg>
+          <span class="moon"></span>
+        </div>
+        <div class="door-body">
+          <div class="door-tag-row">
+            <span class="door-tag">Settle · 3 min</span>
+            <span class="door-badge">Opened</span>
+          </div>
+          <span class="door-title">Still Water</span>
+          <span class="door-desc">When everything is whirling, watch it go quiet.</span>
+        </div>
+      </a>
+
+      <a class="door door-glass" data-key="glass" href="https://claude.ai/public/artifacts/c16bce94-1ad3-4bf1-aa5e-b131daa438a8" target="_blank" rel="noopener noreferrer">
+        <span class="door-frame"></span>
+        <div class="door-art">
+          <span class="sheen"></span>
+          <svg class="crack-svg" viewBox="0 0 150 120" fill="none" stroke="var(--berry)" stroke-width="1.4" stroke-linecap="round">
+            <path d="M75 60 L38 18 M75 60 L128 30 M75 60 L112 108 M75 60 L28 96 M75 60 L8 62 M75 60 L86 6" stroke-dasharray="260" style="animation:crack 5.5s var(--ease-soft) infinite;"/>
+            <path d="M75 60 L52 34 L64 14 M75 60 L104 44 L124 52 M75 60 L60 92 L36 88" stroke-dasharray="260" opacity=".5" style="animation:crack 5.5s var(--ease-soft) .5s infinite;"/>
+          </svg>
+          <span class="shard"></span>
+        </div>
+        <div class="door-body">
+          <div class="door-tag-row">
+            <span class="door-tag">Break it · 1 min</span>
+            <span class="door-badge">Opened</span>
+          </div>
+          <span class="door-title">Break the Glass</span>
+          <span class="door-desc">"What's wrong with you?" — shatter it, literally.</span>
+        </div>
+      </a>
+
+      <a class="door door-card" data-key="card" href="https://claude.ai/public/artifacts/5749a56e-e54d-4cad-8421-84b9668288f6" target="_blank" rel="noopener noreferrer">
+        <span class="door-frame"></span>
+        <div class="door-art">
+          <span class="confetti c1"></span>
+          <span class="confetti c2"></span>
+          <span class="confetti c3"></span>
+          <span class="confetti c4"></span>
+          <span class="envelope">for you<span class="flap"></span></span>
+        </div>
+        <div class="door-body">
+          <div class="door-tag-row">
+            <span class="door-tag">Make &amp; send · 5 min</span>
+            <span class="door-badge">Opened</span>
+          </div>
+          <span class="door-title">Birthday Card</span>
+          <span class="door-desc">Build a little experience for someone, then send it.</span>
+        </div>
+      </a>
+
+      <a class="door door-ripple" data-key="ripple" href="https://claude.ai/public/artifacts/49d50cb3-3da4-4405-834e-6a94e35542aa" target="_blank" rel="noopener noreferrer">
+        <span class="door-frame"></span>
+        <div class="door-art">
+          <span class="ring r1"></span>
+          <span class="ring r2"></span>
+          <span class="ring r3"></span>
+          <svg class="star" viewBox="0 0 24 24" fill="var(--gold)"><path d="M12 0c.6 5.7 3.9 9 9.6 9.6C15.9 10.2 12.6 13.5 12 19.2 11.4 13.5 8.1 10.2 2.4 9.6 8.1 9 11.4 5.7 12 0Z"/></svg>
+        </div>
+        <div class="door-body">
+          <div class="door-tag-row">
+            <span class="door-tag">Read · 4 min</span>
+            <span class="door-badge">Opened</span>
+          </div>
+          <span class="door-title">The Ripple</span>
+          <span class="door-desc">What AI Goddesses believes, as something you move through.</span>
+        </div>
+      </a>
+
+      <div class="door-soon">
+        <span class="soon-oval"></span>
+        <span class="twinkle-a"><svg viewBox="0 0 24 24" fill="var(--pink)"><path d="M12 0c.6 5.7 3.9 9 9.6 9.6C15.9 10.2 12.6 13.5 12 19.2 11.4 13.5 8.1 10.2 2.4 9.6 8.1 9 11.4 5.7 12 0Z"/></svg></span>
+        <span class="twinkle-b"><svg viewBox="0 0 24 24" fill="var(--gold)"><path d="M12 0c.6 5.7 3.9 9 9.6 9.6C15.9 10.2 12.6 13.5 12 19.2 11.4 13.5 8.1 10.2 2.4 9.6 8.1 9 11.4 5.7 12 0Z"/></svg></span>
+        <span class="soon-badge">
+          <svg viewBox="0 0 24 24" fill="var(--berry)"><path d="M12 0c.6 5.7 3.9 9 9.6 9.6C15.9 10.2 12.6 13.5 12 19.2 11.4 13.5 8.1 10.2 2.4 9.6 8.1 9 11.4 5.7 12 0Z"/></svg>
+        </span>
+        <span class="soon-title">A new door soon</span>
+        <span class="soon-desc">I'm always building. Come back and this wall will be longer.</span>
+      </div>
+
+      <div class="door-peek" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div class="startover-wrap">
+    <button class="startover" id="startOver">Start over</button>
+  </div>
+</main>
+
+<script>
+(function () {
+  var STORAGE_KEY = 'aig-portal-seen';
+  var KEYS = ['balloons', 'water', 'glass', 'card', 'ripple'];
+  var doorsEl = document.getElementById('doors');
+  var foundEls = document.querySelectorAll('.js-found');
+
+  function getSeen() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+
+  function render() {
+    var seen = getSeen();
+    var opened = 0;
+    KEYS.forEach(function (key) {
+      var door = doorsEl.querySelector('.door[data-key="' + key + '"]');
+      var isSeen = !!seen[key];
+      if (isSeen) opened++;
+      if (door) door.classList.toggle('is-seen', isSeen);
+    });
+    var label = opened + ' of ' + KEYS.length + ' opened';
+    for (var i = 0; i < foundEls.length; i++) foundEls[i].textContent = label;
+  }
+
+  doorsEl.addEventListener('click', function (e) {
+    var door = e.target.closest('.door[data-key]');
+    if (!door) return;
+    var seen = getSeen();
+    seen[door.getAttribute('data-key')] = true;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(seen)); } catch (err) {}
+    render();
+  });
+
+  document.getElementById('startOver').addEventListener('click', function () {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    render();
+  });
+
+  function scrollByCard(dir) {
+    var card = doorsEl.querySelector('.door');
+    var amount = card ? card.getBoundingClientRect().width + 18 : 300;
+    doorsEl.scrollBy({ left: dir * amount, behavior: 'smooth' });
+  }
+  document.getElementById('scrollPrev').addEventListener('click', function () { scrollByCard(-1); });
+  document.getElementById('scrollNext').addEventListener('click', function () { scrollByCard(1); });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
