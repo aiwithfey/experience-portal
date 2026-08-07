@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home — a feeling</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/cormorant-garamond@5.0.14/index.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/cormorant-garamond@5.0.14/500.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/cormorant-garamond@5.0.14/300.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/cormorant-garamond@5.0.14/600-italic.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/caveat@5.0.18/index.min.css" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  html, body {
+    background: #1a1410;
+    color: #e8dcc4;
+    font-family: 'Cormorant Garamond', serif;
+    overflow-x: hidden;
+    cursor: default;
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    line-height: 1.6;
+  }
+  
+  #bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  .grain {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.08;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  
+  .vignette {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 3;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(10,6,4,0.6) 100%);
+  }
+  
+  .scroll-container {
+    position: relative;
+    z-index: 4;
+  }
+  
+  section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8vh 6vw;
+    position: relative;
+  }
+  
+  .scene-inner {
+    max-width: 900px;
+    width: 100%;
+    position: relative;
+  }
+  
+  /* Scene 1: Opening */
+  .scene-opening {
+    min-height: 110vh;
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .scene-opening .scene-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+  }
+  
+  .whisper {
+    font-family: 'Caveat', cursive;
+    font-size: clamp(1rem, 1.6vw, 1.3rem);
+    color: #b89a72;
+    opacity: 0;
+    letter-spacing: 0.1em;
+    margin-bottom: 3rem;
+    animation: fadeInSlow 3s ease-out 0.5s forwards;
+  }
+  
+  .thesis {
+    font-size: clamp(2.2rem, 5.5vw, 4.8rem);
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: #f0e4cc;
+    opacity: 0;
+    animation: fadeInSlow 3s ease-out 1.2s forwards;
+  }
+  
+  .thesis .word {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: wordRise 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    margin: 0 0.12em;
+  }
+  
+  .thesis .word.emphasis {
+    font-style: italic;
+    color: #e8b878;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.6s ease;
+    position: relative;
+  }
+  
+  .thesis .word.emphasis:hover {
+    color: #f5d59a;
+    text-shadow: 0 0 30px rgba(232, 184, 120, 0.6);
+  }
+  
+  .scroll-hint {
+    position: absolute;
+    bottom: 4vh;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Caveat', cursive;
+    font-size: 1rem;
+    color: #8a7558;
+    opacity: 0;
+    animation: fadeInSlow 2s ease-out 4s forwards, float 3s ease-in-out 4s infinite;
+    letter-spacing: 0.2em;
+    z-index: 5;
+  }
+  
+  .scroll-hint::after {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 30px;
+    background: linear-gradient(to bottom, #8a7558, transparent);
+    margin: 10px auto 0;
+  }
+  
+  /* Scene 2: No home */
+  .scene-no-home .scene-inner {
+    text-align: left;
+  }
+  
+  .fragment {
+    font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+    font-weight: 300;
+    line-height: 1.5;
+    color: #c9b896;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 1.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    margin-bottom: 1.5rem;
+  }
+  
+  .fragment.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .fragment .drift {
+    display: inline-block;
+    transition: transform 2s ease;
+  }
+  
+  .fragment.unmoored .drift {
+    animation: drift 8s ease-in-out infinite;
+  }
+  
+  .fragment.unmoored .drift:nth-child(2) { animation-delay: -2s; }
+  .fragment.unmoored .drift:nth-child(3) { animation-delay: -4s; }
+  .fragment.unmoored .drift:nth-child(4) { animation-delay: -6s; }
+  
+  .scene-no-home .marker {
+    font-family: 'Caveat', cursive;
+    font-size: 1.1rem;
+    color: #8a7558;
+    margin-bottom: 2rem;
+    letter-spacing: 0.15em;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+  }
+  
+  .scene-no-home .marker.visible { opacity: 1; }
+  
+  /* Scene 3: Paradox */
+  .scene-paradox {
+    text-align: center;
+  }
+  
+  .paradox-line {
+    font-size: clamp(1.8rem, 4vw, 3.4rem);
+    font-weight: 300;
+    line-height: 1.4;
+    color: #e8dcc4;
+    opacity: 0;
+    transition: all 1.6s ease;
+  }
+  
+  .paradox-line.visible { opacity: 1; }
+  
+  .paradox-line .core {
+    display: inline-block;
+    font-style: italic;
+    color: #f0c888;
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.8s ease;
+  }
+  
+  .paradox-line .core::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: #f0c888;
+    transition: width 1.2s ease;
+  }
+  
+  .paradox-line.visible .core::after {
+    width: 100%;
+    transition-delay: 1s;
+  }
+  
+  .paradox-line .core:hover {
+    text-shadow: 0 0 40px rgba(240, 200, 136, 0.8);
+  }
+  
+  /* Scene 4: Nomadic */
+  .scene-nomadic .scene-inner {
+    position: relative;
+  }
+  
+  .nomadic-text {
+    font-size: clamp(1.5rem, 2.8vw, 2.2rem);
+    font-weight: 300;
+    line-height: 1.8;
+    color: #b8a585;
+    max-width: 640px;
+  }
+  
+  .nomadic-text .line {
+    display: block;
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    margin-bottom: 0.6rem;
+  }
+  
+  .nomadic-text .line.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  
+  .nomadic-text .line:nth-child(2) { transition-delay: 0.3s; }
+  .nomadic-text .line:nth-child(3) { transition-delay: 0.6s; }
+  
+  .nomadic-text .moving {
+    font-style: italic;
+    color: #e8b878;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .nomadic-text .moving::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    width: 12px;
+    height: 1px;
+    background: #e8b878;
+    opacity: 0.6;
+  }
+  
+  /* Scene 5: Hotel room */
+  .scene-hotel {
+    text-align: center;
+  }
+  
+  .hotel-frame {
+    position: relative;
+    padding: 4rem 3rem;
+    border: 1px solid rgba(232, 184, 120, 0.2);
+    border-radius: 2px;
+    max-width: 600px;
+    margin: 0 auto;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 1.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  
+  .hotel-frame.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  .hotel-frame::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border: 1px solid rgba(232, 184, 120, 0.1);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  
+  .hotel-text {
+    font-size: clamp(1.4rem, 2.6vw, 2rem);
+    font-weight: 300;
+    line-height: 1.7;
+    color: #d4c4a0;
+    font-style: italic;
+  }
+  
+  .hotel-text .room {
+    color: #f0c888;
+    font-weight: 500;
+    font-style: normal;
+    cursor: pointer;
+    transition: all 0.6s ease;
+  }
+  
+  .hotel-text .room:hover {
+    text-shadow: 0 0 30px rgba(240, 200, 136, 0.7);
+  }
+  
+  .hotel-note {
+    font-family: 'Caveat', cursive;
+    font-size: 1.1rem;
+    color: #8a7558;
+    margin-top: 2rem;
+    letter-spacing: 0.1em;
+    opacity: 0;
+    transition: opacity 2s ease 1.5s;
+  }
+  
+  .hotel-frame.visible .hotel-note { opacity: 1; }
+  
+  /* Scene 6: With myself */
+  .scene-self {
+    text-align: center;
+  }
+  
+  .self-reveal {
+    font-size: clamp(2rem, 4.5vw, 3.8rem);
+    font-weight: 300;
+    line-height: 1.3;
+    color: #f0e4cc;
+    opacity: 0;
+    transition: all 2s ease;
+  }
+  
+  .self-reveal.visible { opacity: 1; }
+  
+  .self-reveal .myself {
+    display: inline-block;
+    font-style: italic;
+    color: #f5d59a;
+    font-weight: 500;
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .self-reveal .myself::before {
+    content: '';
+    position: absolute;
+    inset: -20px -30px;
+    background: radial-gradient(ellipse, rgba(245, 213, 154, 0.15), transparent 70%);
+    border-radius: 50%;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+  
+  .self-reveal .myself:hover::before {
+    opacity: 1;
+  }
+  
+  /* Scene 7: Closing */
+  .scene-closing {
+    text-align: center;
+    min-height: 100vh;
+  }
+  
+  .closing-inner {
+    max-width: 700px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 2s ease;
+  }
+  
+  .closing-inner.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .closing-question {
+    font-size: clamp(1.8rem, 3.8vw, 3rem);
+    font-weight: 300;
+    line-height: 1.4;
+    color: #e8dcc4;
+    margin-bottom: 3rem;
+    font-style: italic;
+  }
+  
+  .closing-question .you {
+    color: #f0c888;
+    font-weight: 500;
+    font-style: normal;
+  }
+  
+  .closing-echo {
+    font-family: 'Caveat', cursive;
+    font-size: 1.3rem;
+    color: #b89a72;
+    letter-spacing: 0.1em;
+    margin-top: 2rem;
+    opacity: 0;
+    transition: opacity 2s ease 1.5s;
+  }
+  
+  .closing-inner.visible .closing-echo { opacity: 1; }
+  
+  .closing-mark {
+    display: inline-block;
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #b89a72, transparent);
+    margin: 2rem auto;
+    opacity: 0;
+    transition: opacity 2s ease 2s;
+  }
+  
+  .closing-inner.visible .closing-mark { opacity: 1; }
+  
+  /* Ripple effect */
+  .ripple {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 5;
+    border: 1px solid rgba(240, 200, 136, 0.4);
+    animation: rippleExpand 1.4s ease-out forwards;
+  }
+  
+  @keyframes rippleExpand {
+    0% {
+      width: 0; height: 0;
+      opacity: 0.6;
+    }
+    100% {
+      width: 300px; height: 300px;
+      opacity: 0;
+    }
+  }
+  
+  @keyframes fadeInSlow {
+    to { opacity: 1; }
+  }
+  
+  @keyframes wordRise {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translate(-50%, 0); }
+    50% { transform: translate(-50%, -8px); }
+  }
+  
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(4px, -3px); }
+    50% { transform: translate(-3px, 2px); }
+    75% { transform: translate(2px, 4px); }
+  }
+  
+  /* Progress indicator */
+  .progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 1px;
+    background: linear-gradient(to right, #8a7558, #e8b878);
+    z-index: 10;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+  
+  /* Mobile adjustments */
+  @media (max-width: 768px) {
+    section { padding: 10vh 7vw; }
+    .hotel-frame { padding: 2.5rem 1.5rem; }
+  }
+  
+  ::selection {
+    background: rgba(232, 184, 120, 0.3);
+    color: #f5d59a;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="grain"></div>
+<div class="vignette"></div>
+<div class="progress" id="progress"></div>
+
+<div class="scroll-container">
+  
+  <!-- Scene 1: Opening -->
+  <section class="scene-opening" data-scene="opening" data-mood="0">
+    <div class="scene-inner">
+      <div class="whisper">a quiet noticing</div>
+      <h1 class="thesis" id="thesis"></h1>
+    </div>
+    <div class="scroll-hint">wander</div>
+  </section>
+  
+  <!-- Scene 2: No home -->
+  <section class="scene-no-home" data-scene="no-home" data-mood="1">
+    <div class="scene-inner">
+      <div class="marker">— and then, the losing —</div>
+      <div class="fragment unmoored">
+        <span class="drift">When</span> <span class="drift">I</span> <span class="drift">had</span> <span class="drift">no</span> <span class="drift">home</span>
+      </div>
+      <div class="fragment">
+        the walls I'd known grew quiet,<br>
+        the keys I'd carried grew light.
+      </div>
+    </div>
+  </section>
+  
+  <!-- Scene 3: Paradox -->
+  <section class="scene-paradox" data-scene="paradox" data-mood="2">
+    <div class="scene-inner">
+      <div class="paradox-line">
+        I noticed, strangely,<br>
+        that I was <span class="core" data-deep="true">most at home</span>.
+      </div>
+    </div>
+  </section>
+  
+  <!-- Scene 4: Nomadic -->
+  <section class="scene-nomadic" data-scene="nomadic" data-mood="3">
+    <div class="scene-inner">
+      <div class="nomadic-text">
+        <span class="line">A few months into the</span>
+        <span class="line"><span class="moving" data-deep="true">nomadic life</span> —</span>
+        <span class="line">cities blurring, borders thinning,</span>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Scene 5: Hotel room -->
+  <section class="scene-hotel" data-scene="hotel" data-mood="4">
+    <div class="scene-inner">
+      <div class="hotel-frame">
+        <div class="hotel-text">
+          in a <span class="room" data-deep="true">hotel room</span><br>
+          I did not own,<br>
+          on a street I could not name —
+        </div>
+        <div class="hotel-note">somewhere between here and there</div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Scene 6: With myself -->
+  <section class="scene-self" data-scene="self" data-mood="5">
+    <div class="scene-inner">
+      <div class="self-reveal">
+        I was, at last,<br>
+        <span class="myself" data-deep="true">at home with myself.</span>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Scene 7: Closing -->
+  <section class="scene-closing" data-scene="closing" data-mood="6">
+    <div class="scene-inner">
+      <div class="closing-inner">
+        <div class="closing-question">
+          And <span class="you">you</span> —<br>
+          where does home<br>
+          live inside <span class="you">you</span>?
+        </div>
+        <div class="closing-mark"></div>
+        <div class="closing-echo">perhaps it was never a place at all.</div>
+      </div>
+    </div>
+  </section>
+  
+</div>
+
+<script>
+// ============ THESIS WORD ANIMATION ============
+const thesisText = "Home can be a feeling, not necessarily a place.";
+const emphasisWords = ["feeling", "place"];
+const thesisEl = document.getElementById('thesis');
+thesisText.split(' ').forEach((word, i) => {
+  const span = document.createElement('span');
+  span.className = 'word' + (emphasisWords.includes(word.replace(/[.,]/g,'')) ? ' emphasis' : '');
+  span.textContent = word;
+  span.style.animationDelay = (1.5 + i * 0.15) + 's';
+  thesisEl.appendChild(span);
+  if (i < thesisText.split(' ').length - 1) {
+    thesisEl.appendChild(document.createTextNode(' '));
+  }
+});
+
+// ============ BACKGROUND CANVAS ============
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+let mouseX = -1000, mouseY = -1000;
+let currentMood = 0;
+let targetMood = 0;
+let moodBlend = 0;
+let ripples = [];
+let deepPulse = 0;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Mood configurations
+const moods = [
+  { // 0: opening - slow, warm, centered
+    orbCount: 14,
+    speed: 0.15,
+    colors: ['#e8b878', '#d4a56a', '#c9945a', '#b8805a', '#a87050'],
+    orbSize: [80, 220],
+    opacity: 0.18,
+    connectionDist: 200,
+    drift: 'circular',
+    warmth: 0.5
+  },
+  { // 1: no home - scattered, drifting apart
+    orbCount: 18,
+    speed: 0.25,
+    colors: ['#8a7558', '#6b5a42', '#5a4a38', '#4a3d2e', '#7a6548'],
+    orbSize: [60, 160],
+    opacity: 0.12,
+    connectionDist: 140,
+    drift: 'scattered',
+    warmth: 0.2
+  },
+  { // 2: paradox - gathering warmth
+    orbCount: 12,
+    speed: 0.18,
+    colors: ['#f0c888', '#e8b878', '#d4a56a', '#c9945a', '#e0b070'],
+    orbSize: [100, 260],
+    opacity: 0.22,
+    connectionDist: 240,
+    drift: 'gathering',
+    warmth: 0.7
+  },
+  { // 3: nomadic - horizontal flow
+    orbCount: 16,
+    speed: 0.4,
+    colors: ['#d4a56a', '#c9945a', '#b8805a', '#a87050', '#e8b878'],
+    orbSize: [70, 180],
+    opacity: 0.16,
+    connectionDist: 180,
+    drift: 'flow',
+    warmth: 0.5
+  },
+  { // 4: hotel room - intimate, contained, single warm light
+    orbCount: 8,
+    speed: 0.08,
+    colors: ['#f5d59a', '#f0c888', '#e8b878', '#d4a56a'],
+    orbSize: [120, 300],
+    opacity: 0.25,
+    connectionDist: 280,
+    drift: 'contained',
+    warmth: 0.9
+  },
+  { // 5: with myself - centered, breathing, warm
+    orbCount: 10,
+    speed: 0.12,
+    colors: ['#f5d59a', '#f0c888', '#e8c090', '#d4a878'],
+    orbSize: [140, 340],
+    opacity: 0.28,
+    connectionDist: 300,
+    drift: 'breathing',
+    warmth: 1.0
+  },
+  { // 6: closing - reflective, turning to visitor
+    orbCount: 12,
+    speed: 0.14,
+    colors: ['#e8dcc4', '#d4c4a0', '#c9b896', '#b8a585', '#f0c888'],
+    orbSize: [100, 240],
+    opacity: 0.2,
+    connectionDist: 220,
+    drift: 'circular',
+    warmth: 0.6
+  }
+];
+
+class Orb {
+  constructor(i, total) {
+    this.reset(i, total);
+    this.phase = Math.random() * Math.PI * 2;
+    this.phaseY = Math.random() * Math.PI * 2;
+  }
+  reset(i, total) {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.baseX = this.x;
+    this.baseY = this.y;
+    this.vx = (Math.random() - 0.5) * 0.3;
+    this.vy = (Math.random() - 0.5) * 0.3;
+    this.radius = 80 + Math.random() * 140;
+    this.colorIdx = Math.floor(Math.random() * 5);
+    this.pulse = Math.random() * Math.PI * 2;
+  }
+  update(mood, t) {
+    const m = mood;
+    const speed = m.speed;
+    
+    // Base movement
+    this.x += this.vx * speed * 2;
+    this.y += this.vy * speed * 2;
+    
+    // Mood-specific drift
+    if (m.drift === 'circular') {
+      this.x += Math.cos(t * 0.0003 + this.phase) * speed * 0.5;
+      this.y += Math.sin(t * 0.0004 + this.phaseY) * speed * 0.5;
+    } else if (m.drift === 'scattered') {
+      this.x += Math.cos(t * 0.0002 + this.phase) * speed * 0.8;
+      this.y += Math.sin(t * 0.0003 + this.phaseY) * speed * 0.8;
+      // drift away from center
+      const cx = W/2, cy = H/2;
+      const dx = this.x - cx, dy = this.y - cy;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < Math.min(W,H) * 0.3) {
+        this.x += (dx/dist) * 0.1;
+        this.y += (dy/dist) * 0.1;
+      }
+    } else if (m.drift === 'gathering') {
+      const cx = W/2, cy = H/2;
+      const dx = cx - this.x, dy = cy - this.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      this.x += (dx/dist) * 0.15 * speed;
+      this.y += (dy/dist) * 0.15 * speed;
+      this.x += Math.cos(t * 0.0005 + this.phase) * speed * 0.3;
+      this.y += Math.sin(t * 0.0005 + this.phaseY) * speed * 0.3;
+    } else if (m.drift === 'flow') {
+      this.x += speed * 1.2;
+      this.y += Math.sin(t * 0.0004 + this.phase) * speed * 0.6;
+      if (this.x > W + this.radius) this.x = -this.radius;
+    } else if (m.drift === 'contained') {
+      const cx = W/2, cy = H/2;
+      const dx = cx - this.x, dy = cy - this.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const maxDist = Math.min(W,H) * 0.35;
+      if (dist > maxDist) {
+        this.x += (dx/dist) * 0.3;
+        this.y += (dy/dist) * 0.3;
+      }
+      this.x += Math.cos(t * 0.0003 + this.phase) * speed * 0.3;
+      this.y += Math.sin(t * 0.0003 + this.phaseY) * speed * 0.3;
+    } else if (m.drift === 'breathing') {
+      const breath = Math.sin(t * 0.0008) * 0.5 + 0.5;
+      const cx = W/2, cy = H/2;
+      const dx = this.x - cx, dy = this.y - cy;
+      const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+      const targetDist = (Math.min(W,H) * 0.25) + breath * 80;
+      const angle = Math.atan2(dy, dx);
+      const targetX = cx + Math.cos(angle) * targetDist;
+      const targetY = cy + Math.sin(angle) * targetDist;
+      this.x += (targetX - this.x) * 0.02;
+      this.y += (targetY - this.y) * 0.02;
+    }
+    
+    // Wrap around
+    if (this.x < -this.radius) this.x = W + this.radius;
+    if (this.x > W + this.radius) this.x = -this.radius;
+    if (this.y < -this.radius) this.y = H + this.radius;
+    if (this.y > H + this.radius) this.y = -this.radius;
+    
+    // Mouse repulsion (gentle)
+    const mdx = this.x - mouseX;
+    const mdy = this.y - mouseY;
+    const mdist = Math.sqrt(mdx*mdx + mdy*mdy);
+    if (mdist < 200) {
+      const force = (200 - mdist) / 200 * 0.5;
+      this.x += (mdx/mdist) * force;
+      this.y += (mdy/mdist) * force;
+    }
+    
+    this.pulse += 0.01;
+  }
+  draw(mood) {
+    const m = mood;
+    const color = m.colors[this.colorIdx % m.colors.length];
+    const sizeRange = m.orbSize;
+    const r = sizeRange[0] + (this.radius / 220) * (sizeRange[1] - sizeRange[0]);
+    const pulseR = r * (1 + Math.sin(this.pulse) * 0.08 + deepPulse * 0.3);
+    
+    const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, pulseR);
+    const alpha = m.opacity * (0.8 + Math.sin(this.pulse * 0.5) * 0.2);
+    grad.addColorStop(0, color + hexAlpha(alpha));
+    grad.addColorStop(0.4, color + hexAlpha(alpha * 0.5));
+    grad.addColorStop(1, color + '00');
+    
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, pulseR, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function hexAlpha(a) {
+  const v = Math.max(0, Math.min(1, a));
+  const hex = Math.round(v * 255).toString(16).padStart(2, '0');
+  return hex;
+}
+
+let orbs = [];
+function initOrbs(count) {
+  orbs = [];
+  for (let i = 0; i < count; i++) {
+    orbs.push(new Orb(i, count));
+  }
+}
+initOrbs(moods[0].orbCount);
+
+function lerpMood(a, b, t) {
+  return {
+    orbCount: a.orbCount,
+    speed: a.speed + (b.speed - a.speed) * t,
+    colors: a.colors,
+    orbSize: [
+      a.orbSize[0] + (b.orbSize[0] - a.orbSize[0]) * t,
+      a.orbSize[1] + (b.orbSize[1] - a.orbSize[1]) * t
+    ],
+    opacity: a.opacity + (b.opacity - a.opacity) * t,
+    connectionDist: a.connectionDist + (b.connectionDist - a.connectionDist) * t,
+    drift: t < 0.5 ? a.drift : b.drift,
+    warmth: a.warmth + (b.warmth - a.warmth) * t
+  };
+}
+
+function drawConnections(mood) {
+  const dist = mood.connectionDist;
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i < orbs.length; i++) {
+    for (let j = i + 1; j < orbs.length; j++) {
+      const dx = orbs[i].x - orbs[j].x;
+      const dy = orbs[i].y - orbs[j].y;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d < dist) {
+        const alpha = (1 - d/dist) * 0.15 * mood.opacity * 3;
+        const warmth = mood.warmth;
+        const r = Math.round(200 + warmth * 40);
+        const g = Math.round(160 + warmth * 40);
+        const b = Math.round(100 + warmth * 30);
+        ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(orbs[i].x, orbs[i].y);
+        ctx.lineTo(orbs[j].x, orbs[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function drawRipples() {
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    const r = ripples[i];
+    r.radius += 2.5;
+    r.alpha *= 0.96;
+    if (r.alpha < 0.01) {
+      ripples.splice(i, 1);
+      continue;
+    }
+    const grad = ctx.createRadialGradient(r.x, r.y, r.radius * 0.8, r.x, r.y, r.radius);
+    grad.addColorStop(0, `rgba(240, 200, 136, 0)`);
+    grad.addColorStop(0.7, `rgba(240, 200, 136, ${r.alpha * 0.3})`);
+    grad.addColorStop(1, `rgba(240, 200, 136, 0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+let lastTime = 0;
+function animate(t) {
+  ctx.fillStyle = 'rgba(26, 20, 16, 0.35)';
+  ctx.fillRect(0, 0, W, H);
+  
+  // Blend mood
+  const fromMood = moods[currentMood];
+  const toMood = moods[targetMood];
+  const blended = lerpMood(fromMood, toMood, moodBlend);
+  
+  // Adjust orb count
+  if (orbs.length !== blended.orbCount) {
+    if (orbs.length < blended.orbCount) {
+      orbs.push(new Orb(orbs.length, blended.orbCount));
+    } else {
+      orbs.pop();
+    }
+  }
+  
+  // Update orbs
+  for (const orb of orbs) {
+    orb.update(blended, t);
+  }
+  
+  // Draw
+  ctx.globalCompositeOperation = 'lighter';
+  drawConnections(blended);
+  for (const orb of orbs) {
+    orb.draw(blended);
+  }
+  drawRipples();
+  ctx.globalCompositeOperation = 'source-over';
+  
+  // Decay deep pulse
+  deepPulse *= 0.95;
+  
+  // Blend mood transition
+  if (currentMood !== targetMood) {
+    moodBlend += 0.008;
+    if (moodBlend >= 1) {
+      currentMood = targetMood;
+      moodBlend = 0;
+    }
+  }
+  
+  requestAnimationFrame(animate);
+}
+animate(0);
+
+// ============ MOUSE TRACKING ============
+window.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+});
+window.addEventListener('mouseleave', () => {
+  mouseX = -1000;
+  mouseY = -1000;
+});
+
+// ============ CLICK RIPPLE ============
+function createRipple(x, y, deep = false) {
+  ripples.push({
+    x, y,
+    radius: deep ? 20 : 10,
+    alpha: deep ? 0.5 : 0.3
+  });
+  if (deep) {
+    deepPulse = 1;
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const isDeep = e.target.hasAttribute('data-deep') || 
+                 e.target.closest('[data-deep]');
+  createRipple(e.clientX, e.clientY, isDeep);
+});
+
+// ============ SCROLL OBSERVER ============
+const sections = document.querySelectorAll('section');
+const progress = document.getElementById('progress');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && entry.intersectionRatio > 0.4) {
+      const mood = parseInt(entry.target.dataset.mood);
+      if (mood !== targetMood) {
+        targetMood = mood;
+        moodBlend = 0;
+      }
+    }
+  });
+}, { threshold: [0.4, 0.6, 0.8] });
+
+sections.forEach(s => observer.observe(s));
+
+// Fragment reveal observer
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('.fragment, .marker, .paradox-line, .line, .hotel-frame, .self-reveal, .closing-inner').forEach(el => {
+  revealObserver.observe(el);
+});
+
+// ============ SCROLL PROGRESS ============
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY;
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = (scrolled / maxScroll) * 100;
+  progress.style.width = pct + '%';
+});
+
+// ============ DEEP INTERACTIONS ============
+document.querySelectorAll('[data-deep]').forEach(el => {
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    createRipple(cx, cy, true);
+    
+    // Visual feedback
+    el.style.transition = 'all 0.6s ease';
+    el.style.transform = 'scale(1.08)';
+    setTimeout(() => {
+      el.style.transform = 'scale(1)';
+    }, 600);
+  });
+});
+
+// Thesis emphasis words also trigger deep
+document.querySelectorAll('.thesis .word.emphasis').forEach(el => {
+  el.setAttribute('data-deep', 'true');
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const rect = el.getBoundingClientRect();
+    createRipple(rect.left + rect.width/2, rect.top + rect.height/2, true);
+  });
+});
+
+// ============ TOUCH SUPPORT ============
+document.addEventListener('touchstart', (e) => {
+  const touch = e.touches[0];
+  mouseX = touch.clientX;
+  mouseY = touch.clientY;
+});
+document.addEventListener('touchend', () => {
+  setTimeout(() => {
+    mouseX = -1000;
+    mouseY = -1000;
+  }, 100);
+});
+
+</script>
+</body>
+</html>
