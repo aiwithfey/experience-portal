@@ -1,15 +1,868 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Still Water — Experience Portal</title>
-</head>
-<body style="margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#ab125e; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#fff; text-align:center; padding:24px;">
-  <div>
-    <h1 style="font-family:Georgia,'Times New Roman',serif; margin-bottom:8px;">Still Water</h1>
-    <p style="color:rgba(255,255,255,.78);">This experience is on its way. Check back soon.</p>
-    <p><a href="../" style="color:#ffbad3;">&larr; Back to the Portal</a></p>
+<title>Still Water — an exploration of quiet</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<style>
+  :root{
+    --abyss:#050d14;
+    --water:#0b1c26;
+    --mist:#9fb6bd;
+    --foam:#dceef2;
+    --glow:#8fd8d2;
+    --dim:#5f7a83;
+  }
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--abyss);
+    color:var(--mist);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    overflow:hidden;
+    -webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:none;
+    overscroll-behavior:none;
+  }
+  #water{
+    position:fixed;inset:0;width:100%;height:100%;display:block;
+  }
+  .layer{
+    position:fixed;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    padding:8vh 7vw;
+    box-sizing:border-box;
+    transition:opacity 1.6s ease;
+    opacity:0;pointer-events:none;
+  }
+  .layer.on{opacity:1;pointer-events:auto;}
+  .eyebrow{
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-size:11px;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--dim);
+    margin-bottom:2.6em;
+  }
+  h1{
+    font-weight:300;font-style:italic;
+    font-size:clamp(34px,8vw,58px);
+    letter-spacing:.02em;
+    color:var(--foam);
+    margin:0 0 .5em;
+    text-wrap:balance;
+  }
+  .thesis{
+    font-size:clamp(16px,4.2vw,19px);
+    line-height:1.85;
+    max-width:30ch;
+    color:var(--mist);
+    font-style:italic;
+    margin:0 auto;
+  }
+  .thesis em{color:var(--foam);font-style:italic;}
+  button{
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-size:12px;letter-spacing:.3em;text-transform:uppercase;
+    color:var(--foam);
+    background:none;
+    border:1px solid rgba(143,216,210,.35);
+    border-radius:999px;
+    padding:1.1em 2.6em 1.05em;
+    margin-top:4.5em;
+    cursor:pointer;
+    transition:border-color .5s,background .5s,color .5s;
+  }
+  button:hover,button:focus-visible{
+    border-color:var(--glow);
+    background:rgba(143,216,210,.08);
+    outline:none;
+  }
+  button:focus-visible{box-shadow:0 0 0 3px rgba(143,216,210,.25);}
+  .quietbtn{
+    border:none;margin-top:1.4em;color:var(--dim);
+    letter-spacing:.26em;font-size:10.5px;
+  }
+  .quietbtn:hover,.quietbtn:focus-visible{color:var(--mist);background:none;}
+  /* choose screen */
+  .prompt{
+    font-style:italic;font-size:clamp(20px,5.4vw,28px);
+    color:var(--foam);font-weight:300;
+    margin:0 0 2.2em;text-wrap:balance;
+  }
+  .states{
+    display:flex;flex-direction:column;gap:14px;width:min(420px,100%);
+  }
+  .state{
+    margin:0;padding:1.35em 1.6em;text-transform:none;letter-spacing:0;
+    font-family:inherit;font-size:17px;font-style:italic;
+    border:1px solid rgba(159,182,189,.18);
+    border-radius:14px;
+    color:var(--foam);
+    text-align:left;
+    display:flex;align-items:baseline;justify-content:space-between;gap:1em;
+    background:rgba(11,28,38,.35);
+    backdrop-filter:blur(2px);
+  }
+  .state small{
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-style:normal;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--dim);white-space:nowrap;
+  }
+  .state:hover small,.state:focus-visible small{color:var(--glow);}
+  /* naming the loop */
+  #loopword{
+    font-family:inherit;font-style:italic;font-weight:300;
+    font-size:clamp(19px,5vw,26px);
+    color:var(--foam);
+    background:none;border:none;
+    border-bottom:1px solid rgba(159,182,189,.3);
+    outline:none;
+    text-align:center;
+    width:min(520px,88vw);
+    padding:.4em .2em .55em;
+    caret-color:var(--glow);
+  }
+  #loopword::placeholder{color:rgba(95,122,131,.65);font-style:italic;}
+  #loopword:focus{border-bottom-color:var(--glow);}
+  .privacy{
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--dim);margin-top:2.4em;
+  }
+  /* experience hints */
+  #hint{
+    position:fixed;left:0;right:0;bottom:9vh;
+    text-align:center;padding:0 8vw;
+    font-style:italic;font-size:clamp(15px,4vw,18px);
+    line-height:1.8;color:var(--mist);
+    text-shadow:0 1px 14px rgba(5,13,20,.9);
+    transition:opacity 2.2s ease;
+    pointer-events:none;
+  }
+  #hint .sub{
+    display:block;margin-top:.9em;
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-style:normal;font-size:10.5px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--dim);
+  }
+  /* still screen */
+  #still .thesis{max-width:27ch;}
+  #stillStone{
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-style:normal;font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--dim);margin-top:2.6em;
+  }
+  /* reflection UI */
+  #reflectUI{
+    position:fixed;left:0;right:0;bottom:7vh;
+    display:flex;flex-direction:column;align-items:center;gap:0;
+    text-align:center;padding:0 8vw;
+    opacity:0;pointer-events:none;transition:opacity 2s ease;
+  }
+  #reflectUI.on{opacity:1;pointer-events:auto;}
+  #reflectUI p{
+    font-style:italic;font-size:clamp(14px,3.8vw,17px);color:var(--mist);
+    text-shadow:0 1px 14px rgba(5,13,20,.9);margin:0;
+  }
+  #reflectUI button{margin-top:1.8em;}
+  /* shore */
+  #shoreline{
+    margin-top:4.2em;display:flex;flex-direction:column;align-items:center;gap:14px;
+  }
+  #shoreLabel{
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);
+  }
+  #stones{
+    display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;
+    gap:5px;max-width:min(340px,80vw);min-height:14px;
+  }
+  .stone{
+    display:inline-block;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #7c929b, #46595f 70%);
+    box-shadow:0 1px 3px rgba(0,0,0,.5);
+  }
+  .quietmark{
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    position:fixed;top:calc(env(safe-area-inset-top, 0px) + 18px);left:0;right:0;
+    text-align:center;font-size:10px;letter-spacing:.4em;text-transform:uppercase;
+    color:rgba(95,122,131,.75);pointer-events:none;
+    transition:opacity 2s;
+  }
+  #soundToggle{
+    position:fixed;top:calc(env(safe-area-inset-top, 0px) + 10px);
+    right:14px;margin:0;
+    border:none;padding:.8em 1em;
+    font-size:9.5px;letter-spacing:.28em;
+    color:var(--dim);
+    z-index:5;
+  }
+  #soundToggle:hover,#soundToggle:focus-visible{color:var(--foam);background:none;}
+  @media (max-width:600px){
+    #soundToggle{top:calc(env(safe-area-inset-top, 0px) + 42px);right:8px;}
+  }
+  video{display:none;}
+</style>
+
+<canvas id="water"></canvas>
+<video id="cam" playsinline muted></video>
+<div class="quietmark" id="mark">an exploration of quiet</div>
+<button id="soundToggle" aria-pressed="false">sound · off</button>
+
+<div class="layer on" id="intro">
+  <div class="eyebrow">still water</div>
+  <h1>the loop is stirred water</h1>
+  <p class="thesis">When a thought circles, the mind is water someone keeps stirring.
+  You cannot flatten water by pressing on it.<br>
+  <em>You can only stop stirring.</em></p>
+  <button id="begin">enter the water</button>
+  <div id="shoreline">
+    <div id="shoreLabel"></div>
+    <div id="stones"></div>
   </div>
-</body>
-</html>
+</div>
+
+<div class="layer" id="choose">
+  <p class="prompt">What does your water look like right now?</p>
+  <div class="states">
+    <button class="state" data-mode="vortex">a thought that circles <small>the vortex</small></button>
+    <button class="state" data-mode="waves">feeling, arriving in sets <small>the waves</small></button>
+    <button class="state" data-mode="rain">a thousand small noises <small>the rain</small></button>
+  </div>
+</div>
+
+<div class="layer" id="name">
+  <p class="prompt" id="namePrompt">If the loop has words,<br>give them to the water.</p>
+  <input id="loopword" type="text" maxlength="90" autocomplete="off"
+         placeholder="the thought that keeps circling…">
+  <div class="privacy">your words stay in the water · nothing is saved · nothing is sent</div>
+  <button id="letgo">let it sink</button>
+  <button id="wordless" class="quietbtn">enter without words</button>
+</div>
+
+<div id="hint" style="opacity:0"></div>
+
+<div class="layer" id="still">
+  <p class="thesis" id="stillText">The water is quiet.<br>
+  Look — the surface holds the moon.<br>
+  <em>The water remembers how to be still. So do you.</em></p>
+  <div id="stillStone">a stone has been added to your shore</div>
+  <button id="reflectBtn">the water is still enough to hold a reflection — look</button>
+  <button id="leave" class="quietbtn">return to shore</button>
+  <button id="stir" class="quietbtn">stir different water</button>
+</div>
+
+<div id="reflectUI">
+  <p id="reflectHint">Be still. The water is learning your face.</p>
+  <button id="release">let the reflection go</button>
+</div>
+
+<script>
+(() => {
+"use strict";
+const cv = document.getElementById('water');
+const ctx = cv.getContext('2d');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let W=0,H=0,DPR=1;
+function resize(){
+  DPR = Math.min(devicePixelRatio||1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = W*DPR; cv.height = H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener('resize', resize); resize();
+
+/* ---------- state ---------- */
+let mode = null;                 // 'vortex' | 'waves' | 'rain'
+let pendingMode = null;
+let phase = 'intro';             // intro | choose | name | active | still
+let T = 1;                       // turbulence 0..1
+let t = 0;                       // global time
+const CALM_TIME = reduced ? 30 : 42;
+const BREATH = 5.5;
+
+/* pointer */
+const ptr = {down:false, x:0, y:0, px:0, py:0, speed:0, stillFor:0};
+
+/* ---------- water elements ---------- */
+const P = [];
+const ripples = [];
+const NPART = reduced ? 160 : 340;
+const rand = (a,b)=>a+Math.random()*(b-a);
+
+function seedVortex(){
+  P.length = 0;
+  for(let i=0;i<NPART;i++){
+    P.push({a:rand(0,Math.PI*2), r:rand(0.03,0.52), s:rand(.6,1.4), z:rand(.3,1)});
+  }
+}
+function addRipple(x,y,soft){
+  ripples.push({x,y,r:2,v:soft? 26:60,a:soft? .35:.5,w:soft?1:1.4});
+  if(ripples.length>90) ripples.shift();
+}
+
+/* ---------- the shore (stones, stored on this device only) ---------- */
+function stonesGet(){ try{ return Math.max(0, parseInt(localStorage.getItem('stillwater.stones'))||0); }catch(e){ return 0; } }
+function stonesAdd(){ try{ localStorage.setItem('stillwater.stones', String(stonesGet()+1)); }catch(e){} }
+function renderShore(){
+  const n = stonesGet();
+  const label = document.getElementById('shoreLabel');
+  const box = document.getElementById('stones');
+  label.textContent = n===0 ? 'your shore is waiting for its first stone'
+    : n===1 ? 'your shore · one stone'
+    : 'your shore · '+n+' stones';
+  box.innerHTML='';
+  const shown = Math.min(n, 60);
+  for(let i=0;i<shown;i++){
+    const s = document.createElement('span');
+    s.className='stone';
+    const w = 8+((i*137)%9), h = w*(0.62+((i*61)%20)/100);
+    s.style.width=w+'px'; s.style.height=h+'px';
+    box.appendChild(s);
+  }
+}
+renderShore();
+
+/* ---------- sound (generated, nothing loaded) ---------- */
+const snd = {on:false, ac:null, nGain:null, filt:null, rGain:null, rOsc:null, pingAt:0, dropAt:0};
+function audioInit(){
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if(!AC) return false;
+  const ac = snd.ac = new AC();
+  /* water: looping noise through a low-pass */
+  const len = ac.sampleRate*2;
+  const buf = ac.createBuffer(1, len, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  let lp=0;
+  for(let i=0;i<len;i++){ lp = lp*0.96 + (Math.random()*2-1)*0.04; d[i]=lp*6; }
+  const src = ac.createBufferSource(); src.buffer=buf; src.loop=true;
+  snd.filt = ac.createBiquadFilter(); snd.filt.type='lowpass'; snd.filt.frequency.value=500;
+  snd.nGain = ac.createGain(); snd.nGain.gain.value=0;
+  src.connect(snd.filt).connect(snd.nGain).connect(ac.destination);
+  src.start();
+  /* the vortex's low rumble */
+  snd.rOsc = ac.createOscillator(); snd.rOsc.type='sine'; snd.rOsc.frequency.value=42;
+  snd.rGain = ac.createGain(); snd.rGain.gain.value=0;
+  snd.rOsc.connect(snd.rGain).connect(ac.destination);
+  snd.rOsc.start();
+  /* a pinch of white noise for raindrop impacts */
+  const cLen = Math.floor(ac.sampleRate*0.05);
+  const cBuf = ac.createBuffer(1, cLen, ac.sampleRate);
+  const cd = cBuf.getChannelData(0);
+  for(let i=0;i<cLen;i++) cd[i] = (Math.random()*2-1)*Math.pow(1-i/cLen,2);
+  snd.click = cBuf;
+  snd.pingAt = ac.currentTime + 6;
+  return true;
+}
+function ping(){
+  const ac = snd.ac;
+  const notes = [523.25, 587.33, 659.25, 783.99];
+  const o = ac.createOscillator(); o.type='sine';
+  o.frequency.value = notes[(Math.random()*notes.length)|0] * (Math.random()<.3? .5:1);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.045, ac.currentTime+0.9);
+  g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+3.6);
+  o.connect(g).connect(ac.destination);
+  o.start(); o.stop(ac.currentTime+3.8);
+}
+function drop(){
+  /* a real raindrop is two sounds: the impact tick, then the bubble's rising 'plink' */
+  const ac = snd.ac, now = ac.currentTime;
+  const dist = Math.random();                          // 0 near, 1 far away
+  let out = ac.destination;
+  if(ac.createStereoPanner){
+    const p = ac.createStereoPanner(); p.pan.value = rand(-0.85,0.85);
+    p.connect(ac.destination); out = p;
+  }
+  /* impact */
+  const n = ac.createBufferSource(); n.buffer = snd.click;
+  const bp = ac.createBiquadFilter(); bp.type='bandpass';
+  bp.frequency.value = 2500+rand(0,3500); bp.Q.value = 1.2;
+  const ng = ac.createGain();
+  ng.gain.setValueAtTime(0.014*(1-dist*0.8), now);
+  ng.gain.exponentialRampToValueAtTime(0.0001, now+0.03);
+  n.connect(bp).connect(ng).connect(out);
+  /* plink: pitch bends upward as the bubble forms under the surface */
+  const o = ac.createOscillator(); o.type='sine';
+  const f0 = rand(380,1100)*(1+dist*0.4);
+  o.frequency.setValueAtTime(f0, now+0.004);
+  o.frequency.exponentialRampToValueAtTime(f0*rand(1.35,2.1), now+rand(0.05,0.13));
+  const og = ac.createGain();
+  og.gain.setValueAtTime(0.0001, now);
+  og.gain.exponentialRampToValueAtTime(rand(0.010,0.034)*(1-dist*0.7), now+0.006);
+  og.gain.exponentialRampToValueAtTime(0.0001, now+rand(0.08,0.16));
+  o.connect(og).connect(out);
+  n.start(now); o.start(now); o.stop(now+0.25);
+}
+let previewMode = null;    // hovering a water on the choose screen lets you hear it
+function audioFrame(){
+  if(!snd.on || !snd.ac) return;
+  const ac = snd.ac, now = ac.currentTime;
+  const active = (phase==='active' || phase==='still');
+  const previewing = (phase==='choose' && previewMode);
+  const effMode = previewing? previewMode : mode;
+  const amb = active? T : (previewing? 0.7 : 0.22);   // menus keep a faint hush
+  /* each water has its own voice */
+  let f = 220 + 950*amb*amb;
+  let ng = 0.005 + 0.13*Math.pow(amb,1.3);
+  if(effMode==='rain'){ f = 900 + 2800*amb*amb; ng *= 0.85; }               // bright hiss, not deep water
+  if(effMode==='waves'){ ng *= 0.7 + 0.4*((Math.sin(t*0.85)+1)/2); }        // slow swell, arriving in sets
+  snd.nGain.gain.setTargetAtTime(ng, now, .35);
+  snd.filt.frequency.setTargetAtTime(f, now, .35);
+  const rum = (effMode==='vortex'? .055 : .025) * amb*amb * ((active||previewing)?1:0);
+  snd.rGain.gain.setTargetAtTime(rum, now, .6);
+  /* in stillness: a drop, far away, now and then */
+  if(active && T<0.18 && now>snd.pingAt){ ping(); snd.pingAt = now + rand(6,15); }
+  /* the rain itself: dense while stirred, sparse as it finishes */
+  if(((phase==='active' && mode==='rain') || previewing && previewMode==='rain') && now>snd.dropAt){
+    drop();
+    const lull = 0.07 + (1-amb)*(1-amb)*2.2;
+    snd.dropAt = now + rand(lull*0.5, lull*1.6);
+  }
+}
+const sBtn = document.getElementById('soundToggle');
+sBtn.onclick = ()=>{
+  if(!snd.ac && !audioInit()){ sBtn.textContent='sound · unavailable'; return; }
+  if(snd.ac.state==='suspended') snd.ac.resume();
+  snd.on = !snd.on;
+  if(!snd.on){ snd.nGain.gain.setTargetAtTime(0, snd.ac.currentTime, .3); snd.rGain.gain.setTargetAtTime(0, snd.ac.currentTime, .3); }
+  sBtn.textContent = snd.on? 'sound · on' : 'sound · off';
+  sBtn.setAttribute('aria-pressed', String(snd.on));
+};
+
+/* ---------- words given to the water ---------- */
+const letters = [];
+function dissolvePhrase(phrase){
+  letters.length=0;
+  const fs = Math.max(15, Math.min(30, (W*0.8)/(phrase.length*0.58)));
+  ctx.font = `italic 300 ${fs}px "Iowan Old Style","Palatino Linotype",Georgia,serif`;
+  const total = ctx.measureText(phrase).width;
+  let x = W/2 - total/2;
+  const y = H*0.4;
+  for(const ch of phrase){
+    const w = ctx.measureText(ch).width;
+    if(ch!==' '){
+      letters.push({ch, fs, x:x+w/2, y, vx:rand(-6,6), vy:rand(-4,2), a:1.6, sp:rand(-.5,.5), rot:0});
+    }
+    x += w;
+  }
+}
+function drawLetters(dt){
+  if(!letters.length) return;
+  ctx.save();
+  for(let i=letters.length-1;i>=0;i--){
+    const L = letters[i];
+    L.a -= dt*0.28;
+    if(L.a<=0){ letters.splice(i,1); continue; }
+    /* letters sink, drift, and are taken by the current */
+    L.vy += dt*(mode==='rain'? 26 : 10);
+    if(mode==='vortex'){
+      const dx = W/2-L.x, dy = H*0.52-L.y;
+      L.vx += (dy*0.4 + dx*0.15)*dt*0.6;
+      L.vy += (-dx*0.4 + dy*0.15)*dt*0.6;
+    }
+    L.x += L.vx*dt*6; L.y += L.vy*dt*6;
+    L.rot += L.sp*dt;
+    ctx.save();
+    ctx.translate(L.x, L.y);
+    ctx.rotate(L.rot);
+    ctx.globalAlpha = Math.min(1, L.a);
+    ctx.fillStyle = 'rgba(220,238,242,.85)';
+    ctx.font = `italic 300 ${L.fs}px "Iowan Old Style","Palatino Linotype",Georgia,serif`;
+    ctx.textAlign='center';
+    ctx.fillText(L.ch, 0, 0);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+/* ---------- reflection (camera; asked only after stillness) ---------- */
+const cam = document.getElementById('cam');
+const refl = {on:false, ok:false, dark:false, darkClock:0, clock:0, blur:0, stream:null};
+const rcv = document.createElement('canvas');
+const rctx = rcv.getContext('2d');
+function darkMirror(){
+  /* when the camera is closed to us, the glass itself becomes the mirror:
+     the screen fades to near-black still water, and a glossy screen holds a real reflection */
+  refl.dark = true; refl.on = true; refl.darkClock = 0;
+  show(null);
+  document.getElementById('reflectHint').textContent =
+    'This window keeps its camera closed. So the water turns to dark glass — look at the screen itself. It holds you.';
+  document.getElementById('reflectUI').classList.add('on');
+}
+async function reflectStart(){
+  const btn = document.getElementById('reflectBtn');
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ darkMirror(); return; }
+  btn.textContent = 'the water is looking…';
+  try{
+    refl.stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}, audio:false});
+    cam.srcObject = refl.stream;
+    await cam.play();
+    refl.on = true; refl.ok = true; refl.dark = false; refl.clock = 0; refl.blur = 0;
+    show(null);
+    document.getElementById('reflectHint').textContent = 'Be still. The water is learning your face.';
+    document.getElementById('reflectUI').classList.add('on');
+    btn.textContent = 'look into the water again';
+  }catch(e){
+    btn.textContent = 'the water is still enough to hold a reflection — look';
+    darkMirror();
+  }
+}
+function reflectStop(){
+  refl.on = false; refl.dark = false;
+  if(refl.stream){ for(const tr of refl.stream.getTracks()) tr.stop(); refl.stream=null; }
+  cam.srcObject = null;
+  document.getElementById('reflectUI').classList.remove('on');
+  if(phase==='still') show('still');
+}
+function drawReflection(dt){
+  if(!refl.on) return;
+  if(refl.dark){
+    /* fade the world to dark glass; keep the faintest moon so it stays water, not a crash */
+    refl.darkClock += dt;
+    const deep = Math.min(1, refl.darkClock/6);
+    ctx.save();
+    ctx.fillStyle = `rgba(1,3,5,${0.9*deep})`;
+    ctx.fillRect(0,0,W,H);
+    ctx.globalAlpha = 0.1*deep;
+    const g = ctx.createRadialGradient(W/2, H*0.3, 0, W/2, H*0.3, 30);
+    g.addColorStop(0,'rgba(220,238,242,1)'); g.addColorStop(1,'rgba(220,238,242,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(W/2, H*0.3, 30, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+    return;
+  }
+  if(cam.readyState<2) return;
+  /* movement blurs you again; stillness earns your face back */
+  if(ptr.speed>0.1) refl.blur = Math.min(1, refl.blur + dt*1.5);
+  else refl.blur = Math.max(0, refl.blur - dt*0.25);
+  refl.clock += dt;
+  const sharp = Math.min(1, refl.clock/22) * (1-refl.blur*.85);
+  /* cover-fit mirror into an offscreen, then copy in rippling strips */
+  const vw = cam.videoWidth, vh = cam.videoHeight;
+  if(!vw||!vh) return;
+  if(rcv.width!==W||rcv.height!==H){ rcv.width=W; rcv.height=H; }
+  const sc = Math.max(W/vw, H/vh);
+  const dw = vw*sc, dh = vh*sc;
+  rctx.save();
+  rctx.clearRect(0,0,W,H);
+  rctx.translate(W,0); rctx.scale(-1,1);
+  rctx.drawImage(cam, (W-dw)/2, (H-dh)/2, dw, dh);
+  rctx.restore();
+  ctx.save();
+  ctx.globalAlpha = 0.10 + 0.42*sharp;
+  const wob = (reduced? .5:1) * (2 + 18*(1-sharp));
+  const strip = 6;
+  for(let y=0;y<H;y+=strip){
+    const off = Math.sin(y*0.045 + t*1.4)*wob + Math.sin(y*0.11 - t*2.2)*wob*0.4;
+    ctx.drawImage(rcv, 0, y, W, strip, off, y, W, strip);
+  }
+  /* the water's tint over your face */
+  ctx.globalAlpha = 1;
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'rgba(6,16,23,.62)');
+  g.addColorStop(.5,'rgba(8,22,31,.42)');
+  g.addColorStop(1,'rgba(6,16,23,.68)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.restore();
+  const hintEl = document.getElementById('reflectHint');
+  hintEl.textContent = refl.blur>0.5 ? 'You stirred — wait, and you will come back.'
+    : sharp>0.8 ? 'There you are.'
+    : 'Be still. The water is learning your face.';
+}
+
+/* ---------- interaction ---------- */
+function pdown(e){
+  const p = e.touches? e.touches[0] : e;
+  ptr.down = true; ptr.x = ptr.px = p.clientX; ptr.y = ptr.py = p.clientY;
+  ptr.stillFor = 0;
+  if(phase==='active') addRipple(ptr.x, ptr.y, true);
+}
+function pmove(e){
+  const p = e.touches? e.touches[0] : e;
+  ptr.x = p.clientX; ptr.y = p.clientY;
+}
+function pup(){ ptr.down = false; ptr.stillFor = 0; }
+addEventListener('pointerdown', pdown);
+addEventListener('pointermove', pmove);
+addEventListener('pointerup', pup);
+addEventListener('pointercancel', pup);
+addEventListener('keydown', e=>{
+  if(e.code==='Space' && phase==='active' && document.activeElement.tagName!=='INPUT'){
+    if(!ptr.down){ ptr.down=true; ptr.x=ptr.px=W/2; ptr.y=ptr.py=H*0.55; ptr.stillFor=0; }
+    e.preventDefault();
+  }
+});
+addEventListener('keyup', e=>{ if(e.code==='Space' && document.activeElement.tagName!=='INPUT') pup(); });
+
+/* ---------- screens ---------- */
+const $ = id=>document.getElementById(id);
+const hint = $('hint');
+function show(id){
+  for(const s of ['intro','choose','name','still']) $(s).classList.toggle('on', s===id);
+}
+$('begin').onclick = ()=>{ phase='choose'; show('choose'); };
+const NAME_COPY = {
+  vortex:{prompt:'If the loop has words,<br>give them to the water.', ph:'the thought that keeps circling…'},
+  waves:{prompt:'If this wave has a name,<br>give it to the water.', ph:'the feeling that keeps arriving…'},
+  rain:{prompt:'Give the water the first three drops —<br>the first three things on your mind.', ph:'one, another, a third…'}
+};
+for(const b of document.querySelectorAll('.state')){
+  const hear = ()=>{ previewMode = b.dataset.mode; };
+  const hush = ()=>{ if(previewMode===b.dataset.mode) previewMode = null; };
+  b.addEventListener('mouseenter', hear);
+  b.addEventListener('mouseleave', hush);
+  b.addEventListener('focus', hear);
+  b.addEventListener('blur', hush);
+  b.onclick = ()=>{
+    pendingMode = b.dataset.mode;
+    const c = NAME_COPY[pendingMode];
+    $('namePrompt').innerHTML = c.prompt;
+    $('loopword').placeholder = c.ph;
+    phase='name'; show('name');
+    setTimeout(()=>$('loopword').focus({preventScroll:true}), 400);
+  };
+}
+$('letgo').onclick = ()=> start(pendingMode, $('loopword').value.trim());
+$('wordless').onclick = ()=> start(pendingMode, '');
+$('loopword').addEventListener('keydown', e=>{ if(e.key==='Enter') start(pendingMode, $('loopword').value.trim()); });
+function backToShore(){
+  phase='intro'; T=1; mode=null; ripples.length=0; letters.length=0;
+  reflectStop(); renderShore(); show('intro'); hint.style.opacity=0;
+}
+$('leave').onclick = backToShore;
+$('stir').onclick = ()=>{
+  phase='choose'; T=1; mode=null; ripples.length=0; letters.length=0;
+  reflectStop(); show('choose'); hint.style.opacity=0;
+};
+$('reflectBtn').onclick = reflectStart;
+$('release').onclick = reflectStop;
+
+const HINTS = {
+  vortex:'Rest one finger on the water, and be still.<span class="sub">movement feeds the vortex · stillness slows it</span>',
+  waves:'Rest one finger on the water, and breathe with the ring.<span class="sub">in as it grows · out as it fades</span>',
+  rain:'Rest one finger on the water. Let the rain finish.<span class="sub">your stillness is shelter</span>'
+};
+let hintTimer = 0;
+function start(m, phrase){
+  mode = m; phase='active';
+  T = 1; ripples.length = 0;
+  if(m==='vortex') seedVortex();
+  $('loopword').value=''; $('loopword').blur();
+  if(phrase) dissolvePhrase(phrase);
+  show(null);
+  hint.innerHTML = HINTS[m];
+  hint.style.opacity = 1;
+  hintTimer = 12;
+  /* reset the reflect button for this pass */
+  const rb = $('reflectBtn');
+  rb.disabled=false;
+  rb.textContent = 'the water is still enough to hold a reflection — look';
+}
+
+/* ---------- physics of quiet ---------- */
+function updateT(dt){
+  const dx = ptr.x-ptr.px, dy = ptr.y-ptr.py;
+  const sp = Math.hypot(dx,dy)/Math.max(dt,0.001)/Math.max(W,H);
+  ptr.px = ptr.x; ptr.py = ptr.y;
+  ptr.speed = ptr.speed*0.85 + sp*0.15;
+  if(phase!=='active') return;
+
+  if(ptr.down){
+    if(ptr.speed < 0.06){
+      ptr.stillFor += dt;
+      const ease = Math.min(1, ptr.stillFor/4);
+      T -= dt/CALM_TIME * (0.35 + 0.65*ease) * 1.35;
+    }else{
+      T += ptr.speed*0.9*dt*8;
+      ptr.stillFor = 0;
+      if(ptr.speed>0.35 && Math.random()<0.3) addRipple(ptr.x,ptr.y,false);
+      if(hintTimer<=0){ hint.style.opacity=1; hintTimer=8; }
+    }
+  }else{
+    T += dt*0.006;
+  }
+  T = Math.max(0, Math.min(1, T));
+
+  if(hintTimer>0){ hintTimer-=dt; if(hintTimer<=0) hint.style.opacity=0; }
+
+  if(T<=0.055 && phase==='active'){
+    phase='still';
+    hint.style.opacity=0;
+    stonesAdd();
+    setTimeout(()=>{ if(phase==='still') show('still'); }, 1800);
+  }
+}
+
+/* ---------- rendering ---------- */
+function background(){
+  const calm = 1-T;
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0, `rgb(${5+calm*3},${13+calm*8},${20+calm*11})`);
+  g.addColorStop(1, `rgb(${8+calm*4},${22+calm*8},${30+calm*10})`);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+}
+
+function moonAndStars(){
+  const calm = Math.max(0, (0.5-T)/0.5);
+  if(calm<=0) return;
+  ctx.save();
+  ctx.globalAlpha = calm*calm;
+  for(let i=0;i<34;i++){
+    const sx = (Math.sin(i*127.1)*.5+.5)*W;
+    const sy = (Math.sin(i*311.7)*.5+.5)*H*0.45;
+    const tw = .4+.6*Math.abs(Math.sin(t*.4+i*2.3));
+    ctx.fillStyle = `rgba(220,238,242,${0.5*tw*calm})`;
+    ctx.fillRect(sx, sy, 1.3, 1.3);
+  }
+  const mx = W*0.5, top = H*0.30;
+  const grd = ctx.createRadialGradient(mx, top, 0, mx, top, 46);
+  grd.addColorStop(0, `rgba(220,238,242,${.85*calm})`);
+  grd.addColorStop(1, 'rgba(220,238,242,0)');
+  ctx.fillStyle = grd;
+  ctx.beginPath(); ctx.arc(mx, top, 46, 0, Math.PI*2); ctx.fill();
+  ctx.globalAlpha = calm*calm*.8;
+  for(let y=top+70; y<H; y+=7){
+    const p = (y-top)/(H-top);
+    const wob = Math.sin(y*.08+t*(1.5+T*6))*(2+18*T) * (reduced?.5:1);
+    const wdt = (10+p*30)*(1+T*2);
+    ctx.fillStyle = `rgba(215,236,240,${(0.16*(1-p*.65))*calm})`;
+    ctx.fillRect(mx+wob-wdt/2, y, wdt, 2.4);
+  }
+  ctx.restore();
+}
+
+function drawVortex(dt){
+  const m = Math.min(W,H);
+  const cx=W/2, cy=H*0.52;
+  ctx.save();
+  for(const p of P){
+    p.a += dt * p.s * (0.12 + T*T*2.6) / (0.15+p.r);
+    const wob = Math.sin(t*.7+p.a*3)*0.012*T;
+    const rr = (p.r + wob) * m * (0.5 + (1-T)*0.35);
+    const x = cx + Math.cos(p.a)*rr;
+    const y = cy + Math.sin(p.a)*rr*0.62;
+    const al = p.z*(0.10+0.5*T) + (1-T)*0.05;
+    ctx.fillStyle = `rgba(143,216,210,${al})`;
+    const s2 = 1+p.z*1.4;
+    ctx.fillRect(x,y,s2,s2);
+  }
+  if(T>0.05){
+    const g = ctx.createRadialGradient(cx,cy,0,cx,cy,m*0.16*T);
+    g.addColorStop(0,`rgba(3,8,12,${.75*T})`);
+    g.addColorStop(1,'rgba(3,8,12,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.ellipse(cx,cy,m*0.16*T,m*0.1*T,0,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawWaves(){
+  /* slow rolling swells: long wavelengths, one direction, speed settles with the water */
+  const layers = 5;
+  ctx.save();
+  for(let i=0;i<layers;i++){
+    const base = H*(0.30+0.14*i);
+    const amp  = (3 + 32*T*T) * (1+i*0.30) * (reduced?.6:1);
+    const spd  = (0.16+T*1.2)*(1+i*.18);
+    const al   = 0.05+0.10*(i/layers)+0.10*T;
+    /* the chop travels against the swell and dies away with the turbulence,
+       so the storm is chaotic but the calming stays a smooth slowdown */
+    const wy = x => base
+      + Math.sin(x*0.005 + t*spd + i*2.1)*amp
+      + Math.sin(x*0.011 + t*spd*0.6 + i*1.3)*amp*0.35
+      + Math.sin(x*0.017 - t*spd*2.1 + i*1.7)*amp*0.6*T;
+    ctx.beginPath();
+    ctx.moveTo(0,H);
+    for(let x=0;x<=W;x+=6) ctx.lineTo(x, wy(x));
+    ctx.lineTo(W,H); ctx.closePath();
+    ctx.fillStyle = `rgba(16,42,54,${al})`;
+    ctx.fill();
+    ctx.beginPath();
+    for(let x=0;x<=W;x+=6){ x===0? ctx.moveTo(x,wy(x)) : ctx.lineTo(x,wy(x)); }
+    ctx.strokeStyle = `rgba(143,216,210,${0.05+0.16*T*(i/layers)})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawRain(dt){
+  const rate = T*T*(reduced? 8:16);
+  if(Math.random() < rate*dt) addRipple(rand(0,W), rand(H*0.2,H), false);
+  ctx.save();
+  for(let i=ripples.length-1;i>=0;i--){
+    const r = ripples[i];
+    r.r += r.v*dt; r.a -= dt*0.35;
+    if(r.a<=0){ ripples.splice(i,1); continue; }
+    ctx.beginPath();
+    ctx.ellipse(r.x, r.y, r.r, r.r*0.42, 0, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(159,200,205,${r.a})`;
+    ctx.lineWidth = r.w;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function breathRing(){
+  if(phase!=='active' || !ptr.down) return;
+  const c = (Math.sin(t*Math.PI*2/BREATH - Math.PI/2)+1)/2;
+  const r = 26 + c*46;
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(ptr.x, ptr.y, r, r*0.6, 0, 0, Math.PI*2);
+  ctx.strokeStyle = `rgba(220,238,242,${0.14+0.3*c})`;
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  const settle = Math.min(1, ptr.stillFor/6);
+  if(settle>0){
+    ctx.beginPath();
+    ctx.ellipse(ptr.x, ptr.y, r+14, (r+14)*0.6, 0, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(143,216,210,${0.18*settle})`;
+    ctx.lineWidth = .8;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ---------- loop ---------- */
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.05, (now-last)/1000);
+  last = now;
+  t += dt * (reduced? .7:1);
+
+  updateT(dt);
+  audioFrame();
+  background();
+  moonAndStars();
+
+  if(mode==='vortex') drawVortex(dt);
+  else if(mode==='waves') drawWaves();
+  else if(mode==='rain') drawRain(dt);
+  else { const keepT = T; T = 0.25; drawWaves(); T = keepT; }
+
+  if(mode!=='rain'){
+    ctx.save();
+    for(let i=ripples.length-1;i>=0;i--){
+      const r = ripples[i];
+      r.r += r.v*dt; r.a -= dt*0.4;
+      if(r.a<=0){ ripples.splice(i,1); continue; }
+      ctx.beginPath();
+      ctx.ellipse(r.x, r.y, r.r, r.r*0.42, 0, 0, Math.PI*2);
+      ctx.strokeStyle = `rgba(159,200,205,${r.a})`;
+      ctx.lineWidth = r.w;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  drawLetters(dt);
+  drawReflection(dt);
+  breathRing();
+
+  document.getElementById('mark').style.opacity = (phase==='active'||refl.on)? 0 : 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
