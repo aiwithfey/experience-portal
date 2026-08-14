@@ -54,7 +54,6 @@
   @keyframes swayA{0%,100%{transform:rotate(-2.4deg)}28%{transform:rotate(.6deg)}50%{transform:rotate(2.4deg)}74%{transform:rotate(-.5deg)}}
   @keyframes swayB{0%,100%{transform:rotate(1.9deg)}32%{transform:rotate(-.4deg)}50%{transform:rotate(-1.9deg)}78%{transform:rotate(.5deg)}}
   @keyframes swayC{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
-  @keyframes flutter{0%,100%{transform:rotate(-1.05deg)}50%{transform:rotate(1.05deg)}}
   @keyframes drift{0%,100%{transform:translate(-4px,2px)}50%{transform:translate(4px,-2px)}}
   @keyframes burn{0%,100%{opacity:.5}50%{opacity:1}}
   @keyframes spark{0%,100%{opacity:0}30%{opacity:0}50%{opacity:1}70%{opacity:0}}
@@ -295,7 +294,6 @@
   #frondA{transform-origin:334px 474px; animation:swayA 8.5s ease-in-out infinite;}
   #frondB{transform-origin:334px 474px; animation:swayB 11s ease-in-out infinite;}
   #frondC{transform-origin:334px 474px; animation:swayC 14s ease-in-out infinite;}
-  .band{transform-box:view-box; animation:flutter 4.2s ease-in-out infinite;}
   .glow{animation:burn 11s ease-in-out infinite;}
   .spark{animation:spark 4s ease-in-out infinite;}
   .beam{animation:beam 7s ease-in-out infinite; transform-box:view-box; transform-origin:178px 142px;}
@@ -730,7 +728,7 @@
 
   function frond(o){
     const blur=o.blur?` filter="url(#soft)"`:'';
-    const R=mulberry32(o.seed), bands=Array.from({length:5},()=>[]);
+    const R=mulberry32(o.seed), paths=[];
     for(let side of [-1,1]){
       for(let i=0;i<o.count;i++){
         const s=i/(o.count-1);
@@ -750,39 +748,39 @@
         const sag=L*(.10+.10*s);
         const arc=side*(1.5+L*.045);
         const bend=[n[0]*arc, n[1]*arc+sag];
-        bands[i%5].push(leaflet(P,d,L,w,bend));
+        paths.push(leaflet(P,d,L,w,bend));
       }
     }
     const rachis=`M${o.r[0][0]} ${o.r[0][1]}C${o.r[1][0]} ${o.r[1][1]} ${o.r[2][0]} ${o.r[2][1]} ${o.r[3][0]} ${o.r[3][1]}`;
-    const g=bands.map((paths,i)=>
-      `<g class="band" style="transform-origin:${o.pivot[0]}px ${o.pivot[1]}px;animation-duration:${(3.4+i*.61).toFixed(2)}s;animation-delay:-${(i*.97).toFixed(2)}s">`
-      +`<path d="${paths.join('')}"/></g>`).join('');
     return `<g class="frond" id="${o.id}"${blur} fill="${o.fill}" stroke="${o.stroke}" stroke-width="${o.sw}" opacity="${o.op}">`
-         + g
+         + `<path d="${paths.join('')}"/>`
          + `<path d="${rachis}" fill="none" stroke="${o.ribColor}" stroke-width="${o.ribW}" stroke-linecap="round" opacity=".85"/>`
          + `</g>`;
   }
 
   const CROWN=[334,474];
+  const isMobile = window.matchMedia('(max-width:799px)').matches;
+  const density = isMobile ? 0.55 : 1;
+  const sparkCount = isMobile ? 34 : 70;
 
   const A={id:'frondA',seed:7,pivot:CROWN,
     r:[CROWN,[262,336],[206,216],[34,74]],
-    count:82,t0:.07,t1:1,angBase:80,angTip:30,lMin:18,lMax:124,missing:.05,
+    count:Math.round(82*density),t0:.07,t1:1,angBase:80,angTip:30,lMin:18,lMax:124,missing:.05,
     fill:'url(#leafNear)',stroke:'#ff9dc4',sw:.4,op:.97,ribColor:'#79104a',ribW:1.7};
 
   const B={id:'frondB',seed:23,pivot:CROWN,
     r:[CROWN,[248,420],[152,346],[-34,258]],
-    count:76,t0:.08,t1:1,angBase:78,angTip:28,lMin:16,lMax:106,missing:.06,
+    count:Math.round(76*density),t0:.08,t1:1,angBase:78,angTip:28,lMin:16,lMax:106,missing:.06,
     fill:'url(#leafNear)',stroke:'#ff9dc4',sw:.4,op:.94,ribColor:'#79104a',ribW:1.6};
 
   const C={id:'frondC',seed:41,pivot:CROWN,
     r:[CROWN,[356,306],[338,146],[236,-20]],
-    count:70,t0:.07,t1:1,angBase:76,angTip:30,lMin:16,lMax:100,missing:.07,
-    fill:'url(#leafFar)',stroke:'#ffc2da',sw:.3,op:.5,ribColor:'#d94c8c',ribW:1.2,blur:1};
+    count:Math.round(70*density),t0:.07,t1:1,angBase:76,angTip:30,lMin:16,lMax:100,missing:.07,
+    fill:'url(#leafFar)',stroke:'#ffc2da',sw:.3,op:.5,ribColor:'#d94c8c',ribW:1.2,blur:isMobile?0:1};
 
   function sparks(){
     const R=mulberry32(99); let out='';
-    for(let i=0;i<70;i++){
+    for(let i=0;i<sparkCount;i++){
       const t=.12+R()*.8, side=R()<.5?-1:1;
       const src=R()<.6?A:B, P=bez(src.r,t), T=tan(src.r,t), n=[-T[1]*side,T[0]*side];
       const off=18+R()*74;
