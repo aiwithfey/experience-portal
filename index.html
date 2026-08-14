@@ -51,6 +51,14 @@
   @keyframes sheen{0%{transform:translateX(-120%) skewX(-18deg);}100%{transform:translateX(320%) skewX(-18deg);}}
   @keyframes letterCycle{0%{opacity:0; transform:translateY(11px) scale(.92);}5%,17%{opacity:1; transform:translateY(0) scale(1);}27%{opacity:0; transform:translateY(-13px) scale(1.08);}100%{opacity:0; transform:translateY(-13px) scale(1.08);}}
   @keyframes softGlow{0%,100%{transform:translate(-12%,-6%) scale(1); opacity:.75;}50%{transform:translate(14%,8%) scale(1.2); opacity:1;}}
+  @keyframes swayA{0%,100%{transform:rotate(-2.4deg)}28%{transform:rotate(.6deg)}50%{transform:rotate(2.4deg)}74%{transform:rotate(-.5deg)}}
+  @keyframes swayB{0%,100%{transform:rotate(1.9deg)}32%{transform:rotate(-.4deg)}50%{transform:rotate(-1.9deg)}78%{transform:rotate(.5deg)}}
+  @keyframes swayC{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
+  @keyframes flutter{0%,100%{transform:rotate(-1.05deg)}50%{transform:rotate(1.05deg)}}
+  @keyframes drift{0%,100%{transform:translate(-4px,2px)}50%{transform:translate(4px,-2px)}}
+  @keyframes burn{0%,100%{opacity:.5}50%{opacity:1}}
+  @keyframes spark{0%,100%{opacity:0}30%{opacity:0}50%{opacity:1}70%{opacity:0}}
+  @keyframes beam{0%,100%{opacity:.12}50%{opacity:.5}}
 
   .desktop-only{display:none !important;}
 
@@ -193,6 +201,12 @@
   .door-home .door-title{color:var(--ink-900);}
   .door-home .door-desc{color:var(--ink-700);}
 
+  .door-palm{background:#ffe7f0;}
+  .door-palm .door-body{background:linear-gradient(rgba(110,14,61,0) 0%, rgba(110,14,61,.86) 46%, rgb(94,12,52) 100%);}
+  .door-palm .door-tag{color:var(--pink);}
+  .door-palm .door-title{color:var(--white);}
+  .door-palm .door-desc{color:rgba(255,255,255,.8);}
+
   /* ------------------------------------------------------ "a new door soon" */
   .door-soon{
     position:relative; height:210px; background:var(--rose-50);
@@ -276,6 +290,16 @@
   .r3{border:1.5px solid rgba(255,255,255,.35); animation-delay:3.6s;}
   .star{position:absolute; top:88px; left:50%; margin:-17px 0 0 -17px; width:34px; height:34px; animation:twinkle 4s ease-in-out infinite;}
 
+  .canopy{animation:drift 12s ease-in-out infinite;}
+  .frond{transform-box:view-box;}
+  #frondA{transform-origin:334px 474px; animation:swayA 8.5s ease-in-out infinite;}
+  #frondB{transform-origin:334px 474px; animation:swayB 11s ease-in-out infinite;}
+  #frondC{transform-origin:334px 474px; animation:swayC 14s ease-in-out infinite;}
+  .band{transform-box:view-box; animation:flutter 4.2s ease-in-out infinite;}
+  .glow{animation:burn 11s ease-in-out infinite;}
+  .spark{animation:spark 4s ease-in-out infinite;}
+  .beam{animation:beam 7s ease-in-out infinite; transform-box:view-box; transform-origin:178px 142px;}
+
   .home-glow{
     position:absolute; width:260px; height:260px; left:50%; top:-40px; margin-left:-130px;
     border-radius:50%; filter:blur(13px);
@@ -348,7 +372,8 @@
     .door-balloons:hover,
     .door-glass:hover,
     .door-card:hover,
-    .door-home:hover{box-shadow:inset 0 0 0 2px rgba(171,18,94,.4), inset 0 34px 44px -30px rgba(110,14,61,.45);}
+    .door-home:hover,
+    .door-palm:hover{box-shadow:inset 0 0 0 2px rgba(171,18,94,.4), inset 0 34px 44px -30px rgba(110,14,61,.45);}
     .door-water:hover,
     .door-ripple:hover{box-shadow:inset 0 0 0 2px rgba(255,186,211,.6), inset 0 46px 52px -26px rgba(35,3,18,.9);}
 
@@ -359,6 +384,7 @@
     .door-water .door-frame,
     .door-ripple .door-frame{border-color:rgba(255,186,211,.22);}
     .door-card .door-frame{border-color:rgba(171,18,94,.16);}
+    .door-palm .door-frame{border-color:rgba(255,255,255,.34);}
 
     .door-body{margin:0 -24px -26px; padding:44px 24px 26px; gap:6px;}
     .door-title{font-size:26px;}
@@ -420,7 +446,7 @@
     <span>Experience Portal</span>
   </a>
   <div class="topbar-meta">
-    <span class="found js-found desktop-only">0 of 6 opened</span>
+    <span class="found js-found desktop-only">0 of 7 opened</span>
     <a class="fey" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a>
   </div>
 </header>
@@ -435,7 +461,7 @@
       <h1>Experience<br> <em>Portal</em></h1>
       <p>Every little interactive experience I build, gathered in one place for the AI Goddesses community. Open a door and play — most take two minutes.</p>
       <div class="hero-progress mobile-only">
-        <span class="found js-found">0 of 6 opened</span>
+        <span class="found js-found">0 of 7 opened</span>
         <span class="rule"></span>
         <span class="more">More arriving</span>
       </div>
@@ -586,6 +612,21 @@
         </div>
       </a>
 
+      <a class="door door-palm" data-key="palm" href="under-the-palm/">
+        <span class="door-frame"></span>
+        <div class="door-art">
+          <svg id="art-palm" viewBox="0 0 300 446" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A backlit palm canopy in pink, moving in a light wind"></svg>
+        </div>
+        <div class="door-body">
+          <div class="door-tag-row">
+            <span class="door-tag">Do nothing · 1 min</span>
+            <span class="door-badge">Opened</span>
+          </div>
+          <span class="door-title">Under the Palm</span>
+          <span class="door-desc">A canopy, a little wind, and nothing asked of you.</span>
+        </div>
+      </a>
+
       <div class="door-soon">
         <span class="soon-oval"></span>
         <span class="twinkle-a"><svg viewBox="0 0 24 24" fill="var(--pink)"><path d="M12 0c.6 5.7 3.9 9 9.6 9.6C15.9 10.2 12.6 13.5 12 19.2 11.4 13.5 8.1 10.2 2.4 9.6 8.1 9 11.4 5.7 12 0Z"/></svg></span>
@@ -609,7 +650,7 @@
 <script>
 (function () {
   var STORAGE_KEY = 'aig-portal-seen';
-  var KEYS = ['balloons', 'water', 'glass', 'card', 'ripple', 'home'];
+  var KEYS = ['balloons', 'water', 'glass', 'card', 'ripple', 'home', 'palm'];
   var doorsEl = document.getElementById('doors');
   var foundEls = document.querySelectorAll('.js-found');
 
@@ -654,6 +695,208 @@
   document.getElementById('scrollNext').addEventListener('click', function () { scrollByCard(1); });
 
   render();
+})();
+</script>
+
+<script>
+(function () {
+  var art = document.getElementById('art-palm');
+  if (!art) return;
+
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+  const SUN={x:178,y:142};
+
+  function bez(p,t){const u=1-t;
+    return [u*u*u*p[0][0]+3*u*u*t*p[1][0]+3*u*t*t*p[2][0]+t*t*t*p[3][0],
+            u*u*u*p[0][1]+3*u*u*t*p[1][1]+3*u*t*t*p[2][1]+t*t*t*p[3][1]];}
+  function tan(p,t){const u=1-t;
+    let x=3*u*u*(p[1][0]-p[0][0])+6*u*t*(p[2][0]-p[1][0])+3*t*t*(p[3][0]-p[2][0]);
+    let y=3*u*u*(p[1][1]-p[0][1])+6*u*t*(p[2][1]-p[1][1])+3*t*t*(p[3][1]-p[2][1]);
+    const m=Math.hypot(x,y)||1; return [x/m,y/m];}
+  const rot=(v,a)=>[v[0]*Math.cos(a)-v[1]*Math.sin(a), v[0]*Math.sin(a)+v[1]*Math.cos(a)];
+  const f=n=>Math.round(n*10)/10;
+
+  function leaflet(P,d,L,w,bend){
+    const n=[-d[1],d[0]];
+    const tip=[P[0]+d[0]*L+bend[0], P[1]+d[1]*L+bend[1]];
+    const a=[P[0]+d[0]*L*.20+n[0]*w*.9, P[1]+d[1]*L*.20+n[1]*w*.9];
+    const b=[P[0]+d[0]*L*.66+n[0]*w*.62+bend[0]*.45, P[1]+d[1]*L*.66+n[1]*w*.62+bend[1]*.45];
+    const c=[P[0]+d[0]*L*.66-n[0]*w*.42+bend[0]*.45, P[1]+d[1]*L*.66-n[1]*w*.42+bend[1]*.45];
+    const e=[P[0]+d[0]*L*.18-n[0]*w*.65, P[1]+d[1]*L*.18-n[1]*w*.65];
+    return `M${f(P[0])} ${f(P[1])}C${f(a[0])} ${f(a[1])} ${f(b[0])} ${f(b[1])} ${f(tip[0])} ${f(tip[1])}`
+         + `C${f(c[0])} ${f(c[1])} ${f(e[0])} ${f(e[1])} ${f(P[0])} ${f(P[1])}Z`;
+  }
+
+  function frond(o){
+    const blur=o.blur?` filter="url(#soft)"`:'';
+    const R=mulberry32(o.seed), bands=Array.from({length:5},()=>[]);
+    for(let side of [-1,1]){
+      for(let i=0;i<o.count;i++){
+        const s=i/(o.count-1);
+        const t=o.t0+(o.t1-o.t0)*s + side*0.5/o.count*(o.t1-o.t0);
+        if(t>.995) continue;
+        if(R()<o.missing) continue;
+        const P=bez(o.r,t), T=tan(o.r,t);
+        let angDeg=o.angBase+(o.angTip-o.angBase)*Math.pow(s,.7);
+        if(R()<.05) angDeg+=(R()-.5)*26;
+        const d=rot(T,side*angDeg*Math.PI/180);
+        const shape=Math.sin(Math.pow(s,.82)*Math.PI);
+        let L=o.lMin+(o.lMax-o.lMin)*shape;
+        L*=.86+R()*.28;
+        if(R()<.05) L*=1.22;
+        const w=Math.max(.95,L*.026);
+        const n=[-d[1],d[0]];
+        const sag=L*(.10+.10*s);
+        const arc=side*(1.5+L*.045);
+        const bend=[n[0]*arc, n[1]*arc+sag];
+        bands[i%5].push(leaflet(P,d,L,w,bend));
+      }
+    }
+    const rachis=`M${o.r[0][0]} ${o.r[0][1]}C${o.r[1][0]} ${o.r[1][1]} ${o.r[2][0]} ${o.r[2][1]} ${o.r[3][0]} ${o.r[3][1]}`;
+    const g=bands.map((paths,i)=>
+      `<g class="band" style="transform-origin:${o.pivot[0]}px ${o.pivot[1]}px;animation-duration:${(3.4+i*.61).toFixed(2)}s;animation-delay:-${(i*.97).toFixed(2)}s">`
+      +`<path d="${paths.join('')}"/></g>`).join('');
+    return `<g class="frond" id="${o.id}"${blur} fill="${o.fill}" stroke="${o.stroke}" stroke-width="${o.sw}" opacity="${o.op}">`
+         + g
+         + `<path d="${rachis}" fill="none" stroke="${o.ribColor}" stroke-width="${o.ribW}" stroke-linecap="round" opacity=".85"/>`
+         + `</g>`;
+  }
+
+  const CROWN=[334,474];
+
+  const A={id:'frondA',seed:7,pivot:CROWN,
+    r:[CROWN,[262,336],[206,216],[34,74]],
+    count:82,t0:.07,t1:1,angBase:80,angTip:30,lMin:18,lMax:124,missing:.05,
+    fill:'url(#leafNear)',stroke:'#ff9dc4',sw:.4,op:.97,ribColor:'#79104a',ribW:1.7};
+
+  const B={id:'frondB',seed:23,pivot:CROWN,
+    r:[CROWN,[248,420],[152,346],[-34,258]],
+    count:76,t0:.08,t1:1,angBase:78,angTip:28,lMin:16,lMax:106,missing:.06,
+    fill:'url(#leafNear)',stroke:'#ff9dc4',sw:.4,op:.94,ribColor:'#79104a',ribW:1.6};
+
+  const C={id:'frondC',seed:41,pivot:CROWN,
+    r:[CROWN,[356,306],[338,146],[236,-20]],
+    count:70,t0:.07,t1:1,angBase:76,angTip:30,lMin:16,lMax:100,missing:.07,
+    fill:'url(#leafFar)',stroke:'#ffc2da',sw:.3,op:.5,ribColor:'#d94c8c',ribW:1.2,blur:1};
+
+  function sparks(){
+    const R=mulberry32(99); let out='';
+    for(let i=0;i<70;i++){
+      const t=.12+R()*.8, side=R()<.5?-1:1;
+      const src=R()<.6?A:B, P=bez(src.r,t), T=tan(src.r,t), n=[-T[1]*side,T[0]*side];
+      const off=18+R()*74;
+      const x=P[0]+n[0]*off, y=P[1]+n[1]*off;
+      if(Math.hypot(x-SUN.x,y-SUN.y)>158) continue;
+      const rr=(1.8+R()*4.2).toFixed(1);
+      out+=`<circle class="spark" cx="${f(x)}" cy="${f(y)}" r="${rr}" fill="url(#sparkG)" `
+         + `style="animation-duration:${(2.6+R()*2.8).toFixed(2)}s;animation-delay:-${(R()*6).toFixed(2)}s"/>`;
+    }
+    return out;
+  }
+
+  function beams(){
+    const R=mulberry32(5); let out='';
+    const angs=[-72,-38,-6,22,54,96,132];
+    for(let i=0;i<angs.length;i++){
+      const len=110+R()*95, w=9+R()*13;
+      out+=`<ellipse class="beam" cx="${SUN.x+len*0.42*Math.cos(angs[i]*Math.PI/180)}" `
+         + `cy="${SUN.y+len*0.42*Math.sin(angs[i]*Math.PI/180)}" rx="${f(len*0.6)}" ry="${f(w)}" `
+         + `fill="url(#beamG)" transform="rotate(${angs[i]} ${SUN.x+len*0.42*Math.cos(angs[i]*Math.PI/180)} ${SUN.y+len*0.42*Math.sin(angs[i]*Math.PI/180)})" `
+         + `style="animation-duration:${(5.5+R()*5).toFixed(2)}s;animation-delay:-${(R()*8).toFixed(2)}s"/>`;
+    }
+    return out;
+  }
+
+  function rays(){
+    const R=mulberry32(5); let out='';
+    for(let i=0;i<7;i++){
+      const a=(-118+i*23+R()*10)*Math.PI/180, len=120+R()*130, spread=(3.4+R()*5)*Math.PI/180;
+      const p1=[SUN.x+Math.cos(a-spread)*len, SUN.y+Math.sin(a-spread)*len];
+      const p2=[SUN.x+Math.cos(a+spread)*len, SUN.y+Math.sin(a+spread)*len];
+      out+=`<path class="ray" d="M${SUN.x} ${SUN.y}L${f(p1[0])} ${f(p1[1])}L${f(p2[0])} ${f(p2[1])}Z" fill="url(#rayG)" `
+         + `style="animation-duration:${(5+R()*5).toFixed(2)}s;animation-delay:-${(R()*8).toFixed(2)}s"/>`;
+    }
+    return out;
+  }
+
+  art.innerHTML = `
+<defs>
+  <filter id="soft" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur stdDeviation="1.1"/></filter>
+  <filter id="hazy" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5.5"/></filter>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffd2e3"/><stop offset=".45" stop-color="#ffc0d9"/><stop offset="1" stop-color="#ffa8c9"/>
+  </linearGradient>
+  <radialGradient id="sunGlow" cx="${SUN.x}" cy="${SUN.y}" r="132" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#ffffff"/>
+    <stop offset=".26" stop-color="#fff4f8" stop-opacity=".9"/>
+    <stop offset=".58" stop-color="#ffe2ee" stop-opacity=".5"/>
+    <stop offset="1" stop-color="#ffbdd5" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="sunCore" cx="${SUN.x}" cy="${SUN.y}" r="31" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#ffffff"/><stop offset=".58" stop-color="#ffffff"/>
+    <stop offset=".76" stop-color="#fff6fa" stop-opacity=".72"/>
+    <stop offset="1" stop-color="#ffe6f0" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="sunHot" cx="${SUN.x}" cy="${SUN.y}" r="19" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ffffff" stop-opacity=".2"/>
+  </radialGradient>
+  <radialGradient id="leafNear" cx="${SUN.x}" cy="${SUN.y}" r="196" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#f27bb0"/><stop offset=".3" stop-color="#cb2b7a"/>
+    <stop offset=".68" stop-color="#9c1257"/><stop offset="1" stop-color="#6e0e3d"/>
+  </radialGradient>
+  <radialGradient id="leafFar" cx="${SUN.x}" cy="${SUN.y}" r="210" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#ff9ec6"/><stop offset=".6" stop-color="#e56ba4"/>
+    <stop offset="1" stop-color="#c4216f"/>
+  </radialGradient>
+  <radialGradient id="beamG" cx=".5" cy=".5" r=".5">
+    <stop offset="0" stop-color="#ffffff" stop-opacity=".9"/>
+    <stop offset=".45" stop-color="#fff3f8" stop-opacity=".45"/>
+    <stop offset="1" stop-color="#ffd6e7" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="rayG" cx="${SUN.x}" cy="${SUN.y}" r="250" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#ffffff" stop-opacity=".7"/>
+    <stop offset=".35" stop-color="#ffeaf3" stop-opacity=".3"/>
+    <stop offset="1" stop-color="#ffd2e5" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="sparkG" cx=".5" cy=".5" r=".5">
+    <stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#fff0f6" stop-opacity=".7"/>
+    <stop offset="1" stop-color="#ffd0e2" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="bleed" cx="${SUN.x}" cy="${SUN.y}" r="86" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
+    <stop offset=".42" stop-color="#fff2f8" stop-opacity=".5"/>
+    <stop offset="1" stop-color="#ffcbe0" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="haze" cx="${SUN.x}" cy="${SUN.y}" r="230" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#fff8fb" stop-opacity=".8"/>
+    <stop offset=".45" stop-color="#ffdcec" stop-opacity=".34"/>
+    <stop offset="1" stop-color="#ffbad3" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="vig" cx=".38" cy=".33" r=".82">
+    <stop offset=".42" stop-color="#ab125e" stop-opacity="0"/>
+    <stop offset="1" stop-color="#7d0f46" stop-opacity=".42"/>
+  </radialGradient>
+</defs>
+
+<rect width="300" height="446" fill="url(#sky)"/>
+<rect width="300" height="446" fill="url(#sunGlow)" class="glow"/>
+<circle cx="${SUN.x}" cy="${SUN.y}" r="31" fill="url(#sunCore)"/>
+<circle cx="${SUN.x}" cy="${SUN.y}" r="19" fill="url(#sunHot)"/>
+
+<g class="canopy">
+  ${frond(C)}
+  ${frond(A)}
+  ${frond(B)}
+  <g style="mix-blend-mode:screen">${beams()}</g>
+</g>
+<g class="rays" filter="url(#hazy)">${rays()}</g>
+<g class="sparks">${sparks()}</g>
+
+<circle cx="${SUN.x}" cy="${SUN.y}" r="86" fill="url(#bleed)" class="glow" style="mix-blend-mode:screen"/>
+<rect width="300" height="446" fill="url(#haze)" style="mix-blend-mode:screen" class="glow"/>
+<rect width="300" height="446" fill="url(#vig)"/>
+`;
 })();
 </script>
 

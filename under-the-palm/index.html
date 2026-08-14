@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1f6f4a">
+<title>Under the Palm</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#2f7fae;}
+  body{-webkit-tap-highlight-color:transparent;}
+  canvas{display:block;width:100vw;height:100vh;touch-action:none;}
+  #snd{
+    position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));
+    width:40px;height:40px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(8,42,34,.30);border:1px solid rgba(255,255,255,.32);
+    backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
+    opacity:.62;transition:opacity .6s ease;cursor:pointer;user-select:none;
+  }
+  #snd:active{opacity:1;}
+  #snd svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:1.7;
+    stroke-linecap:round;stroke-linejoin:round;
+    filter:drop-shadow(0 1px 3px rgba(0,30,40,.6));}
+  #snd .off{display:none;}
+  #snd.muted .on{display:none;}
+  #snd.muted .off{display:block;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="snd" class="muted" aria-label="sound">
+  <svg viewBox="0 0 24 24" class="on"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 010 7"/><path d="M19 6a8.5 8.5 0 010 12"/></svg>
+  <svg viewBox="0 0 24 24" class="off"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9.5l4 5M21 9.5l-4 5"/></svg>
+</div>
+<script>
+(function(){
+  var cv=document.getElementById('c'), ctx=cv.getContext('2d');
+  var w=0,h=0,dpr=1,minD=0,maxDpr=2;
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var lowPower=(navigator.hardwareConcurrency||4)<=4;
+
+  var SKY_TOP=[38,108,172], SKY_MID=[112,182,218], SKY_LOW=[204,234,238];
+  var LEAF_DEEP=[8,38,30], LEAF_DARK=[16,62,44], LEAF_MID=[36,104,58],
+      LEAF_LIT=[168,208,78], LEAF_HOT=[252,246,190];
+  function mix(a,b,t){t=t<0?0:t>1?1:t;return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];}
+  function rgba(c,a){return 'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+a+')';}
+  function clamp(v,a,b){return v<a?a:v>b?b:v;}
+
+  var sunRel={x:.58,y:.30}, sun={x:0,y:0}, sunScr={x:0,y:0,s:1};
+
+  /* ---------- fronds ---------- */
+  var fronds=[], leafScale=1;
+  function buildFronds(){
+    fronds=[];
+    var crowns=[
+      {x:1.12,y:-0.02,angs:[2.18,2.62,3.02],depth:1.00,len:2.05,leaf:0.205,sway:0.15,nl:104},
+      {x:-0.14,y:1.08,angs:[-0.98,-0.52],depth:0.68,len:1.85,leaf:0.170,sway:0.20,nl:88},
+      {x:0.42,y:1.30,angs:[-1.52],depth:0.34,len:1.45,leaf:0.130,sway:0.24,nl:70}
+    ];
+    for(var c=0;c<crowns.length;c++){
+      var cr=crowns[c];
+      for(var i=0;i<cr.angs.length;i++){
+        var nl=Math.round(cr.nl*leafScale*(lowPower?0.72:1));
+        var f={x:cr.x,y:cr.y,
+          ang:cr.angs[i]+(Math.random()-0.5)*0.10,
+          bend:0.34+(Math.random()-0.5)*0.28,
+          len:cr.len*(0.90+Math.random()*0.22),
+          leafLen:cr.leaf*(0.92+Math.random()*0.18),
+          depth:cr.depth*(0.94+Math.random()*0.06),
+          seg:18,nl:nl,
+          sway:cr.sway*(0.85+Math.random()*0.4),
+          speed:0.26+Math.random()*0.20,
+          fspeed:1.0+Math.random()*0.9,
+          phase:Math.random()*Math.PI*2,
+          tint:(Math.random()-0.5)*0.14,jit:[]};
+        for(var k=0;k<nl;k++){
+          f.jit.push({len:0.80+Math.random()*0.36,ang:(Math.random()-0.5)*0.16,
+            tint:(Math.random()-0.5)*0.20,gap:Math.random()<0.045});
+        }
+        fronds.push(f);
+      }
+    }
+    fronds.sort(function(a,b){return a.depth-b.depth;});
+  }
+
+  /* ---------- cached sky + grain ---------- */
+  var skyCv=document.createElement('canvas'),skyCtx=skyCv.getContext('2d');
+  var grainCv=document.createElement('canvas'),grainCtx=grainCv.getContext('2d');
+  function buildSky(){
+    skyCv.width=w;skyCv.height=h;
+    var g=skyCtx.createLinearGradient(w*0.1,0,w*0.75,h);
+    g.addColorStop(0,rgba(SKY_TOP,1));g.addColorStop(0.55,rgba(SKY_MID,1));g.addColorStop(1,rgba(SKY_LOW,1));
+    skyCtx.fillStyle=g;skyCtx.fillRect(0,0,w,h);
+    var rg=skyCtx.createRadialGradient(sun.x,sun.y,0,sun.x,sun.y,minD*1.05);
+    rg.addColorStop(0,'rgba(255,244,206,0.66)');
+    rg.addColorStop(0.30,'rgba(238,248,242,0.28)');
+    rg.addColorStop(1,'rgba(255,255,255,0)');
+    skyCtx.fillStyle=rg;skyCtx.fillRect(0,0,w,h);
+  }
+  function buildGrain(){
+    grainCv.width=110;grainCv.height=110;
+    var id=grainCtx.createImageData(110,110),d=id.data;
+    for(var i=0;i<d.length;i+=4){var v=190+Math.random()*65;d[i]=d[i+1]=d[i+2]=v;d[i+3]=14;}
+    grainCtx.putImageData(id,0,0);
+  }
+  function resize(){
+    dpr=Math.min(maxDpr,window.devicePixelRatio||1);
+    w=window.innerWidth;h=window.innerHeight;minD=Math.min(w,h);
+    cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    sun.x=w*sunRel.x;sun.y=h*sunRel.y;buildSky();
+  }
+
+  /* ---------- wind curve, shared by picture and sound ---------- */
+  function wind(t,phase){
+    var g=0.52+0.26*Math.sin(t*0.15+phase*0.3)+0.18*Math.sin(t*0.37+1.7)+0.26*Math.sin(t*0.062+3.1);
+    var gust=Math.pow(Math.max(0,Math.sin(t*0.08+phase*0.15)),6)*0.5;
+    return clamp(g+gust,0.2,1.6);
+  }
+
+  /* ---------- sound: wind in the leaves, water further off ---------- */
+  var actx=null,master=null,muffle=null,gWind=null,gHiss=null,gWave=null,muted=false,sndTick=0;
+  var sndEl=document.getElementById('snd');
+  var quiet=null;
+  function unlockIOS(){
+    /* iPhones route web audio through the ringer switch unless a media element has played */
+    try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+    try{
+      if(!quiet){
+        quiet=new Audio('data:audio/wav;base64,UklGRmQfAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAfAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==');
+        quiet.loop=true; quiet.volume=0.01; quiet.setAttribute('playsinline','');
+      }
+      var pr=quiet.play(); if(pr&&pr.catch) pr.catch(function(){});
+    }catch(e){}
+    if(actx&&actx.state==='suspended') actx.resume();
+  }
+  function initAudio(){
+    if(actx){ unlockIOS(); return; }
+    unlockIOS();
+    var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    actx=new AC();
+    master=actx.createGain(); master.gain.value=0;
+    muffle=actx.createBiquadFilter(); muffle.type='lowpass'; muffle.frequency.value=18000;
+    master.connect(muffle); muffle.connect(actx.destination);
+    var len=Math.floor(actx.sampleRate*3);
+    var buf=actx.createBuffer(1,len,actx.sampleRate), d=buf.getChannelData(0);
+    var b0=0,b1=0,b2=0;
+    for(var i=0;i<len;i++){
+      var wn=Math.random()*2-1;
+      b0=0.99765*b0+wn*0.0990460; b1=0.96300*b1+wn*0.2965164; b2=0.57000*b2+wn*1.0526913;
+      d[i]=(b0+b1+b2+wn*0.1848)*0.16;
+    }
+    function src(){var s=actx.createBufferSource();s.buffer=buf;s.loop=true;return s;}
+    function chain(type,freq,q,g0){
+      var gn=actx.createGain(); gn.gain.value=g0;
+      var fl=actx.createBiquadFilter(); fl.type=type; fl.frequency.value=freq; fl.Q.value=q;
+      var s=src(); s.connect(fl); fl.connect(gn); gn.connect(master); s.start();
+      return gn;
+    }
+    gWind=chain('bandpass',360,0.45,0.10);   /* air moving, low and soft */
+    gHiss=chain('bandpass',1900,0.7,0.022);  /* dry leaves, barely there */
+    gWave=chain('lowpass',380,0.4,0.14);     /* water, some distance away */
+    if(actx.state==='suspended') actx.resume();
+    setMuted(false);
+  }
+  function setMuted(m){
+    muted=m;
+    sndEl.classList.toggle('muted',m);
+    if(master&&actx) master.gain.setTargetAtTime(m?0:1.0,actx.currentTime,m?0.5:1.6);
+    if(!m) unlockIOS();
+  }
+  sndEl.addEventListener('pointerdown',function(e){
+    e.stopPropagation(); e.preventDefault();
+    if(!actx){initAudio();} else {setMuted(!muted);}
+  });
+
+  /* ---------- looking around ---------- */
+  var px=0,py=0,tx=0,ty=0,gyroOn=false,baseB=null,baseG=null,lastGyro=0;
+  function onOrient(e){
+    if(e.beta==null&&e.gamma==null)return;
+    var b=e.beta||0,g=e.gamma||0;
+    if(baseB===null){baseB=b;baseG=g;}
+    baseB+=(b-baseB)*0.0012; baseG+=(g-baseG)*0.0012;
+    tx=clamp((g-baseG)/18,-1,1); ty=clamp((b-baseB)/18,-1,1);
+    gyroOn=true;lastGyro=performance.now();
+  }
+  function attachGyro(){
+    window.addEventListener('deviceorientation',onOrient,{passive:true});
+    window.addEventListener('deviceorientationabsolute',onOrient,{passive:true});
+  }
+  var motionAsked=false;
+  function requestMotion(){
+    if(motionAsked) return; motionAsked=true;
+    var D=window.DeviceOrientationEvent;
+    if(D&&typeof D.requestPermission==='function'){
+      D.requestPermission().then(function(r){if(r==='granted')attachGyro();}).catch(function(){});
+    } else attachGyro();
+  }
+  if(!(window.DeviceOrientationEvent&&typeof window.DeviceOrientationEvent.requestPermission==='function')) attachGyro();
+
+  function pointer(e){
+    if(gyroOn&&performance.now()-lastGyro<800)return;
+    var p=e.touches?e.touches[0]:e;
+    tx=(p.clientX/w-0.5)*2;ty=(p.clientY/h-0.5)*2;
+  }
+  window.addEventListener('mousemove',pointer,{passive:true});
+  window.addEventListener('touchmove',pointer,{passive:true});
+
+  /* ---------- eyes: the sun is the way in and out ---------- */
+  var eyeT=0, eyeTarget=0;
+  var downX=0,downY=0,downT=0;
+  cv.addEventListener('pointerdown',function(e){
+    downX=e.clientX;downY=e.clientY;downT=performance.now();
+    /* first touch anywhere unlocks motion and sound, no sign needed */
+    requestMotion(); initAudio();
+  });
+  cv.addEventListener('pointerup',function(e){
+    var dx=e.clientX-downX, dy=e.clientY-downY;
+    if(Math.sqrt(dx*dx+dy*dy)>16||performance.now()-downT>420) return;
+    if(eyeTarget>0.5){ eyeTarget=0; return; }
+    var sx=e.clientX-sunScr.x, sy=e.clientY-sunScr.y;
+    if(Math.sqrt(sx*sx+sy*sy)<minD*0.13) eyeTarget=1;
+  });
+
+  /* ---------- helpers ---------- */
+  function segDist(px_,py_,ax,ay,bx,by){
+    var vx=bx-ax,vy=by-ay,wx=px_-ax,wy=py_-ay,L=vx*vx+vy*vy;
+    var t=L>0?(wx*vx+wy*vy)/L:0;t=t<0?0:t>1?1:t;
+    var dx=px_-(ax+vx*t),dy=py_-(ay+vy*t);
+    return Math.sqrt(dx*dx+dy*dy);
+  }
+
+  /* ---------- leaflet ---------- */
+  var SAMP=4;
+  function blade(bx,by,ang,len,droop,halfW,fill){
+    var nx=-Math.sin(ang),ny=Math.cos(ang);
+    var ex=bx+Math.cos(ang)*len,ey=by+Math.sin(ang)*len;
+    var p1x=bx+Math.cos(ang)*len*0.5+nx*droop*len*0.5;
+    var p1y=by+Math.sin(ang)*len*0.5+ny*droop*len*0.5;
+    var p2x=ex+nx*droop*len,p2y=ey+ny*droop*len;
+    var i,s,it,mx,my,dx,dy,dl,ox,oy,ww,L=[],R=[];
+    for(i=0;i<=SAMP;i++){
+      s=i/SAMP;it=1-s;
+      mx=it*it*bx+2*it*s*p1x+s*s*p2x;
+      my=it*it*by+2*it*s*p1y+s*s*p2y;
+      dx=2*it*(p1x-bx)+2*s*(p2x-p1x);
+      dy=2*it*(p1y-by)+2*s*(p2y-p1y);
+      dl=Math.sqrt(dx*dx+dy*dy)||1;
+      ox=-dy/dl;oy=dx/dl;
+      ww=halfW*(0.34+0.66*Math.sin(Math.PI*Math.pow(s,0.62)))*Math.pow(1-s,0.38);
+      L.push(mx+ox*ww,my+oy*ww);R.push(mx-ox*ww,my-oy*ww);
+    }
+    ctx.beginPath();ctx.moveTo(L[0],L[1]);
+    for(i=1;i<=SAMP;i++)ctx.lineTo(L[i*2],L[i*2+1]);
+    for(i=SAMP;i>=0;i--)ctx.lineTo(R[i*2],R[i*2+1]);
+    ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+  }
+
+  /* ---------- frond ---------- */
+  var coverage=0;
+  function drawFrond(f,t,ox,oy){
+    var g=wind(t,f.phase);
+    var step=f.len*minD/f.seg;
+    var ppx=f.x*w+ox*f.depth, ppy=f.y*h+oy*f.depth;
+    var pts=[],i;
+    for(i=0;i<=f.seg;i++){
+      var u=i/f.seg;
+      var a=f.ang+f.bend*u*u*1.4+Math.sin(t*f.speed+f.phase+u*1.8)*f.sway*u*u*g;
+      pts.push(ppx,ppy,a);
+      ppx+=Math.cos(a)*step;ppy+=Math.sin(a)*step;
+    }
+    var haze=1-f.depth, alphaBase=0.70+0.30*f.depth;
+    var leafMax=f.leafLen*minD, NL=f.nl, S=f.seg;
+    var mgnX=w*0.35, mgnY=h*0.35;
+    for(var k=0;k<NL;k++){
+      var j=f.jit[k]; if(j.gap) continue;
+      var u2=0.05+0.93*(k/(NL-1));
+      var fpos=u2*S,i0=fpos|0; if(i0>S-1)i0=S-1;
+      var fr=fpos-i0,b0=i0*3,b1=b0+3;
+      var bx=pts[b0]+(pts[b1]-pts[b0])*fr;
+      var by=pts[b0+1]+(pts[b1+1]-pts[b0+1])*fr;
+      var ra=pts[b0+2]+(pts[b1+2]-pts[b0+2])*fr;
+      if(bx<-mgnX||bx>w+mgnX||by<-mgnY||by>h+mgnY) continue;
+      var env=Math.pow(Math.sin(Math.PI*Math.pow(u2,0.88)),0.55);
+      var ll=leafMax*env*j.len; if(ll<3) continue;
+      for(var s2=-1;s2<=1;s2+=2){
+        var fl=Math.sin(t*f.fspeed+u2*11+f.phase+s2*0.5)*0.20*g;
+        var spread=0.88-0.46*u2+j.ang+fl*0.5;
+        var la=ra+s2*spread;
+        var droop=s2*(0.24+0.16*u2)+fl*0.14;
+        var tw=Math.sin(t*f.fspeed*1.27+u2*17+f.phase*1.6+s2*0.7);
+        var edge=Math.abs(Math.sin(tw*1.1));
+        var halfW=Math.max(0.45,ll*0.046*(0.24+0.76*Math.abs(Math.cos(tw))));
+        var mx=bx+Math.cos(la)*ll*0.5,my=by+Math.sin(la)*ll*0.5;
+        var dx=mx-sun.x,dy=my-sun.y;
+        var dsun=Math.sqrt(dx*dx+dy*dy);
+        var trans=Math.exp(-dsun/(minD*0.40));
+        var shade=0.20+0.80*Math.pow(u2,0.35);
+        var col=mix(LEAF_DEEP,LEAF_DARK,shade);
+        col=mix(col,LEAF_MID,0.30+0.55*f.depth+f.tint+j.tint);
+        col=mix(col,LEAF_LIT,Math.min(1,trans*1.35*(0.55+0.45*edge)));
+        col=mix(col,LEAF_HOT,Math.min(1,Math.pow(trans,2.3)*(0.35+edge*0.95)));
+        col=mix(col,SKY_MID,haze*0.55);
+        if(dsun<minD*0.26){
+          var tipx=bx+Math.cos(la)*ll,tipy=by+Math.sin(la)*ll;
+          var d=segDist(sun.x,sun.y,bx,by,tipx,tipy);
+          var r=halfW*2.0+minD*0.004;
+          if(d<r) coverage+=(1-d/r)*(0.4+0.6*f.depth);
+        }
+        blade(bx,by,la,ll,droop,halfW,rgba(col,alphaBase*(0.90+0.10*trans)));
+      }
+    }
+    ctx.beginPath();ctx.moveTo(pts[0],pts[1]);
+    for(i=1;i<=S;i++)ctx.lineTo(pts[i*3],pts[i*3+1]);
+    var rc=mix(mix(LEAF_DEEP,LEAF_MID,0.5*f.depth),SKY_MID,haze*0.5);
+    ctx.strokeStyle=rgba(rc,alphaBase*0.9);
+    ctx.lineWidth=Math.max(1.2,minD*0.005*f.depth);
+    ctx.lineCap='round';ctx.stroke();
+  }
+
+  /* ---------- light ---------- */
+  function drawSunCore(leak){
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    var r=minD*0.075;
+    var g1=ctx.createRadialGradient(sun.x,sun.y,0,sun.x,sun.y,r);
+    g1.addColorStop(0,'rgba(255,255,250,'+(0.92*leak)+')');
+    g1.addColorStop(1,'rgba(255,238,180,0)');
+    ctx.fillStyle=g1;ctx.beginPath();ctx.arc(sun.x,sun.y,r,0,6.2832);ctx.fill();
+    ctx.restore();
+  }
+  function drawLeak(t,leak){
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    var R=minD*(0.16+0.30*leak);
+    var g=ctx.createRadialGradient(sun.x,sun.y,0,sun.x,sun.y,R);
+    g.addColorStop(0,'rgba(255,252,234,'+(0.90*leak)+')');
+    g.addColorStop(0.18,'rgba(255,228,162,'+(0.42*leak)+')');
+    g.addColorStop(0.55,'rgba(216,238,190,'+(0.13*leak)+')');
+    g.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(sun.x,sun.y,R,0,6.2832);ctx.fill();
+    var rot=t*0.05,arms=6,len=minD*(0.10+0.50*leak);
+    for(var i=0;i<arms;i++){
+      var a=rot+i*Math.PI*2/arms+Math.sin(t*0.8+i)*0.03;
+      var wd=minD*0.0065*(0.5+leak);
+      var ex=sun.x+Math.cos(a)*len,ey=sun.y+Math.sin(a)*len;
+      var lg=ctx.createLinearGradient(sun.x,sun.y,ex,ey);
+      lg.addColorStop(0,'rgba(255,246,214,'+(0.45*leak)+')');
+      lg.addColorStop(1,'rgba(255,236,190,0)');
+      ctx.fillStyle=lg;ctx.beginPath();
+      ctx.moveTo(sun.x-Math.sin(a)*wd,sun.y+Math.cos(a)*wd);
+      ctx.lineTo(ex,ey);ctx.lineTo(sun.x+Math.sin(a)*wd,sun.y-Math.cos(a)*wd);
+      ctx.closePath();ctx.fill();
+    }
+    for(var j=0;j<4;j++){
+      var an=rot*0.6+j*1.571+Math.sin(t*0.10+j*2.1)*0.10;
+      var L=minD*1.5,sp=0.05+0.02*Math.sin(t*0.21+j);
+      var x1=sun.x+Math.cos(an-sp)*L,y1=sun.y+Math.sin(an-sp)*L;
+      var x2=sun.x+Math.cos(an+sp)*L,y2=sun.y+Math.sin(an+sp)*L;
+      var rg=ctx.createLinearGradient(sun.x,sun.y,(x1+x2)/2,(y1+y2)/2);
+      rg.addColorStop(0,'rgba(255,244,206,'+(0.13*leak)+')');
+      rg.addColorStop(1,'rgba(255,244,206,0)');
+      ctx.fillStyle=rg;ctx.beginPath();ctx.moveTo(sun.x,sun.y);
+      ctx.lineTo(x1,y1);ctx.lineTo(x2,y2);ctx.closePath();ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /* ---------- behind closed eyelids ---------- */
+  var blurCv=document.createElement('canvas'),blurCtx=blurCv.getContext('2d');
+  var canFilter=(function(){
+    var t=document.createElement('canvas').getContext('2d');
+    try{t.filter='blur(2px)';return t.filter==='blur(2px)';}catch(e){return false;}
+  })();
+  function drawEyelidView(t,k){
+    /* the real canopy, seen the way it looks through a closed lid:
+       soft dark shapes drifting inside orange light */
+    var d=1+16*k;
+    var bw=Math.max(6,Math.round(w/d)), bh=Math.max(6,Math.round(h/d));
+    if(blurCv.width!==bw||blurCv.height!==bh){blurCv.width=bw;blurCv.height=bh;}
+    blurCtx.imageSmoothingEnabled=true;
+    blurCtx.clearRect(0,0,bw,bh);
+    blurCtx.drawImage(cv,0,0,bw,bh);
+    ctx.save();
+    ctx.imageSmoothingEnabled=true;
+    if(canFilter&&k>0.1) ctx.filter='blur('+(minD*0.012*k)+'px)';
+    ctx.globalAlpha=Math.min(1,k*1.8);
+    ctx.drawImage(blurCv,0,0,w,h);
+    ctx.filter='none';ctx.globalAlpha=1;
+    /* greens fall away to dark red, the sky burns through orange */
+    ctx.globalCompositeOperation='multiply';
+    ctx.fillStyle='rgba(255,72,18,'+(0.92*Math.pow(k,0.62))+')';ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation='screen';
+    ctx.fillStyle='rgba(206,58,10,'+(0.40*Math.pow(k,0.62))+')';ctx.fillRect(0,0,w,h);
+    /* the sun still pressing through the lid, pulsing with the wind */
+    var cx=sunScr.x,cy=sunScr.y;
+    var g=wind(t,0.7);
+    var fk=clamp(0.45+0.55*(0.5+0.30*Math.sin(t*1.5)+0.20*Math.sin(t*0.62+1.3))*g,0.3,1.2);
+    ctx.globalCompositeOperation='lighter';
+    var hot=ctx.createRadialGradient(cx,cy,0,cx,cy,minD*(0.30+0.14*fk));
+    hot.addColorStop(0,'rgba(255,198,116,'+(0.46*Math.pow(k,0.55)*fk)+')');
+    hot.addColorStop(0.42,'rgba(255,118,38,'+(0.20*Math.pow(k,0.55)*fk)+')');
+    hot.addColorStop(1,'rgba(255,90,30,0)');
+    ctx.fillStyle=hot;ctx.fillRect(0,0,w,h);
+    /* the lid is thick and dark toward its edges */
+    ctx.globalCompositeOperation='multiply';
+    var vg=ctx.createRadialGradient(cx,cy,minD*0.08,w*0.5,h*0.5,minD*0.92);
+    vg.addColorStop(0,'rgba(255,255,255,1)');
+    vg.addColorStop(0.50,'rgba(198,82,54,1)');
+    vg.addColorStop(1,'rgba(62,12,10,1)');
+    ctx.globalAlpha=Math.pow(k,0.7);ctx.fillStyle=vg;ctx.fillRect(0,0,w,h);
+    ctx.restore();
+  }
+  function drawLids(k){
+    /* the lids sweep most of the way, then hand over to the orange field.
+       they never meet in full black. */
+    var travel=Math.min(1,k/0.72);
+    var fade=1-clamp((k-0.34)/0.46,0,1);
+    var a=0.62*fade;
+    if(a<=0.004) return;
+    var d=h*0.50*travel;
+    ctx.fillStyle='rgba(74,20,10,'+a+')';
+    ctx.beginPath();ctx.moveTo(0,-2);ctx.lineTo(w,-2);ctx.lineTo(w,d);
+    ctx.quadraticCurveTo(w*0.5,d+h*0.07*travel,0,d);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,h+2);ctx.lineTo(w,h+2);ctx.lineTo(w,h-d);
+    ctx.quadraticCurveTo(w*0.5,h-d-h*0.05*travel,0,h-d);ctx.closePath();ctx.fill();
+  }
+
+  function drawFinish(){
+    var vg=ctx.createRadialGradient(w*0.5,h*0.5,minD*0.32,w*0.5,h*0.5,minD*0.98);
+    vg.addColorStop(0,'rgba(0,20,40,0)');
+    vg.addColorStop(1,'rgba(4,30,44,0.34)');
+    ctx.fillStyle=vg;ctx.fillRect(0,0,w,h);
+    ctx.globalAlpha=0.5;ctx.fillStyle=ctx.createPattern(grainCv,'repeat');
+    ctx.fillRect(0,0,w,h);ctx.globalAlpha=1;
+  }
+
+  /* ---------- loop ---------- */
+  var t0=performance.now(),last=t0,smoothLeak=0.4,ema=16,stage=0;
+  function frame(now){
+    var dt=now-last;last=now;
+    var t=(now-t0)/1000; if(reduce)t*=0.35;
+    ema+=(dt-ema)*0.04;
+    if(t>3&&ema>32&&eyeT<0.5){
+      if(stage===0){stage=1;maxDpr=1.25;resize();ema=16;}
+      else if(stage===1&&t>7){stage=2;leafScale=0.68;buildFronds();ema=16;}
+    }
+    eyeT+=(eyeTarget-eyeT)*0.042;
+    px+=(tx-px)*0.055;py+=(ty-py)*0.055;
+
+    var br=1+0.012*Math.sin(t*0.52);
+    var tl=1+0.020*Math.min(1,Math.abs(px)+Math.abs(py));
+    var S=br*tl, rot=px*0.020;
+    var ddx=sun.x-w*0.5, ddy=sun.y-h*0.5, cs=Math.cos(rot), sn=Math.sin(rot);
+    var ox0=-px*minD*0.085, oy0=-py*minD*0.070;
+    sunScr.x=w*0.5+(ddx*cs-ddy*sn)*S; sunScr.y=h*0.5+(ddx*sn+ddy*cs)*S;
+
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+
+    ctx.drawImage(skyCv,-px*minD*0.012,-py*minD*0.010,w,h);
+    ctx.save();
+    ctx.translate(w*0.5,h*0.5);ctx.rotate(rot);ctx.scale(S,S);ctx.translate(-w*0.5,-h*0.5);
+    drawSunCore(smoothLeak*0.6+0.4);
+    coverage=0;
+    for(var i=0;i<fronds.length;i++)drawFrond(fronds[i],t,ox0,oy0);
+    var leak=0.10+0.90*Math.exp(-coverage*0.55);
+    smoothLeak+=(leak-smoothLeak)*0.16;
+    drawLeak(t,smoothLeak);
+    ctx.restore();
+    drawFinish();
+
+    if(eyeT>0.01){
+      drawEyelidView(t,eyeT);
+      drawLids(eyeT);
+      ctx.globalAlpha=0.4;ctx.fillStyle=ctx.createPattern(grainCv,'repeat');
+      ctx.fillRect(0,0,w,h);ctx.globalAlpha=1;
+    }
+
+    /* sound follows the same wind, and muffles when the eyes close */
+    if(actx&&!muted&&++sndTick%6===0){
+      var g=wind(t,0.7), now2=actx.currentTime;
+      gWind.gain.setTargetAtTime(0.105*(0.62+0.38*g),now2,0.60);
+      gHiss.gain.setTargetAtTime(0.026*Math.pow(g,1.4),now2,0.55);
+      var swell=Math.pow(Math.max(0,Math.sin(t*0.105)),3)*0.9
+               +Math.pow(Math.max(0,Math.sin(t*0.071+2.1)),4)*0.7;
+      gWave.gain.setTargetAtTime(0.12+0.16*swell,now2,1.0);
+      muffle.frequency.setTargetAtTime(5200-4100*eyeT,now2,0.5);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden&&actx&&actx.state==='suspended') actx.resume();
+  });
+  window.addEventListener('resize',function(){resize();},{passive:true});
+  window.addEventListener('orientationchange',function(){setTimeout(resize,220);},{passive:true});
+  resize();buildGrain();buildFronds();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
