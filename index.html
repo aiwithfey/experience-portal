@@ -58,6 +58,20 @@
   @keyframes burn{0%,100%{opacity:.5}50%{opacity:1}}
   @keyframes spark{0%,100%{opacity:0}30%{opacity:0}50%{opacity:1}70%{opacity:0}}
   @keyframes beam{0%,100%{opacity:.12}50%{opacity:.5}}
+  /* Written in Sand: the water runs up the beach, takes the word, goes back. */
+  @keyframes washSheet{0%{transform:scaleY(.04);}34%{transform:scaleY(1);}46%{transform:scaleY(1);}84%{transform:scaleY(.04);}100%{transform:scaleY(.04);}}
+  @keyframes washFoam{
+    0%{transform:translateY(calc(var(--travel) * .04)); opacity:.55;}
+    10%{opacity:1;}
+    34%{transform:translateY(var(--travel)); opacity:1;}
+    46%{transform:translateY(var(--travel)); opacity:1;}
+    84%{transform:translateY(calc(var(--travel) * .04)); opacity:.5;}
+    92%{opacity:.3;}
+    100%{transform:translateY(calc(var(--travel) * .04)); opacity:.55;}
+  }
+  @keyframes sandWord{0%,30%{opacity:1;}38%{opacity:.4;}44%{opacity:0;}90%{opacity:0;}100%{opacity:1;}}
+  @keyframes shellUp{0%,54%{opacity:0; transform:translateY(4px) scale(.84);}66%{opacity:1; transform:translateY(0) scale(1);}88%{opacity:1;}100%{opacity:0;}}
+  @keyframes seaDrift{from{transform:translateX(0);}to{transform:translateX(-50%);}}
 
   .desktop-only{display:none !important;}
 
@@ -206,6 +220,12 @@
   .door-palm .door-title{color:var(--white);}
   .door-palm .door-desc{color:rgba(255,255,255,.8);}
 
+  .door-sand{background:linear-gradient(180deg,#5e0f34 0%,#a83a63 15%,#f0c1a4 24%,#e6b8a6 32%,#f0d2bf 58%,#f7e3d3 100%);}
+  .door-sand .door-body{background:linear-gradient(180deg, rgba(247,227,211,0) 0%, #f7e3d3 52%);}
+  .door-sand .door-tag{color:var(--berry);}
+  .door-sand .door-title{color:var(--ink-900);}
+  .door-sand .door-desc{color:var(--ink-700);}
+
   /* ------------------------------------------------------ "a new door soon" */
   .door-soon{
     position:relative; height:210px; background:var(--rose-50);
@@ -298,6 +318,48 @@
   .spark{animation:spark 4s ease-in-out infinite;}
   .beam{animation:beam 7s ease-in-out infinite; transform-box:view-box; transform-origin:178px 142px;}
 
+  /* ---- Written in Sand ---- */
+  .door-sand .door-art{--travel:64px;}
+  .sand-sun{
+    position:absolute; left:64%; top:12px; width:28px; height:28px; margin-left:-14px;
+    border-radius:50%;
+    background:radial-gradient(circle, #fff8ea 0%, rgba(255,240,214,.92) 42%, rgba(255,214,190,0) 72%);
+  }
+  .sand-sea{
+    position:absolute; left:0; right:0; top:40px; height:28px; overflow:hidden;
+    background:linear-gradient(180deg,#c2707f 0%,#96305c 18%,#5c1236 60%,#8a2b52 100%);
+  }
+  .sand-sea svg{
+    position:absolute; left:0; bottom:1px; width:200%; height:15px;
+    fill:none; stroke:rgba(255,242,247,.45); stroke-width:2;
+    animation:seaDrift 9s linear infinite;
+  }
+  .sand-word{
+    position:absolute; left:0; right:0; top:80px; text-align:center;
+    font-family:var(--font-display); font-style:italic; font-size:22px; letter-spacing:-.01em;
+    color:rgba(150,92,88,.62);
+    text-shadow:1.5px 1.5px 0 rgba(255,245,234,.9), -1.5px -1.5px 0 rgba(118,50,62,.3);
+    animation:sandWord 9s var(--ease-soft) infinite;
+  }
+  .sand-shell{
+    position:absolute; left:50%; top:76px; margin-left:-14px; width:28px; height:26px;
+    animation:shellUp 9s var(--ease-soft) infinite;
+  }
+  .sand-wash{
+    position:absolute; left:-6%; right:-6%; top:66px; height:var(--travel);
+    transform-origin:top center;
+    background:linear-gradient(180deg, rgba(108,22,66,.40) 0%, rgba(176,76,112,.24) 58%, rgba(255,236,236,.30) 100%);
+    border-radius:0 0 50% 50% / 0 0 22px 22px;
+    animation:washSheet 9s var(--ease-soft) infinite;
+  }
+  .sand-foam{
+    position:absolute; left:-6%; right:-6%; top:62px; height:14px;
+    border-top:2.5px solid rgba(255,248,250,.95);
+    border-radius:50% 50% 0 0 / 12px 12px 0 0;
+    box-shadow:0 -5px 12px -2px rgba(255,246,248,.55);
+    animation:washFoam 9s var(--ease-soft) infinite;
+  }
+
   .home-glow{
     position:absolute; width:260px; height:260px; left:50%; top:-40px; margin-left:-130px;
     border-radius:50%; filter:blur(13px);
@@ -371,6 +433,7 @@
     .door-glass:hover,
     .door-card:hover,
     .door-home:hover,
+    .door-sand:hover,
     .door-palm:hover{box-shadow:inset 0 0 0 2px rgba(171,18,94,.4), inset 0 34px 44px -30px rgba(110,14,61,.45);}
     .door-water:hover,
     .door-ripple:hover{box-shadow:inset 0 0 0 2px rgba(255,186,211,.6), inset 0 46px 52px -26px rgba(35,3,18,.9);}
@@ -405,6 +468,16 @@
     .envelope .flap{height:44px;}
     .ring{top:150px; width:56px; height:56px; margin:-28px 0 0 -28px;}
     .star{top:150px; margin:-20px 0 0 -20px; width:40px; height:40px;}
+
+      /* ---- Written in Sand ---- */
+    .door-sand .door-art{--travel:132px;}
+    .sand-sun{top:80px; width:40px; height:40px; margin-left:-20px;}
+    .sand-sea{top:130px; height:46px;}
+    .sand-sea svg{height:20px;}
+    .sand-word{top:206px; font-size:30px;}
+    .sand-shell{top:200px; margin-left:-19px; width:38px; height:34px;}
+    .sand-wash{top:176px;}
+    .sand-foam{top:172px;}
 
     .home-glow{width:320px; height:320px; top:-30px; margin-left:-160px;}
     .home-stage{top:64px; height:90px;}
@@ -444,7 +517,7 @@
     <span>Experience Portal</span>
   </a>
   <div class="topbar-meta">
-    <span class="found js-found desktop-only">0 of 7 opened</span>
+    <span class="found js-found desktop-only">0 of 8 opened</span>
     <a class="fey" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a>
   </div>
 </header>
@@ -459,7 +532,7 @@
       <h1>Experience<br> <em>Portal</em></h1>
       <p>Every little interactive experience I build, gathered in one place for the AI Goddesses community. Open a door and play — most take two minutes.</p>
       <div class="hero-progress mobile-only">
-        <span class="found js-found">0 of 7 opened</span>
+        <span class="found js-found">0 of 8 opened</span>
         <span class="rule"></span>
         <span class="more">More arriving</span>
       </div>
@@ -625,6 +698,33 @@
         </div>
       </a>
 
+      <a class="door door-sand" data-key="sand" href="written-in-sand/">
+        <span class="door-frame"></span>
+        <div class="door-art">
+          <span class="sand-sun"></span>
+          <span class="sand-sea">
+            <svg viewBox="0 0 800 40" preserveAspectRatio="none"><path d="M0 26 Q50 12 100 26 T200 26 T300 26 T400 26 T500 26 T600 26 T700 26 T800 26"/></svg>
+          </span>
+          <span class="sand-word">I'm sorry for&hellip;</span>
+          <span class="sand-shell">
+            <svg viewBox="0 0 24 22" aria-hidden="true">
+              <path d="M2.2 5.2 Q4 1.6 6.2 4.6 Q8.2 1.2 10 3.8 Q12 .6 14 3.8 Q15.8 1.2 17.8 4.6 Q20 1.6 21.8 5.2 C21 13 17.4 18.4 12 21.2 C6.6 18.4 3 13 2.2 5.2 Z" fill="#ffd9e6" stroke="rgba(255,255,255,.85)" stroke-width=".9"/>
+              <path d="M12 21 L12 3 M12 21 L6.6 5 M12 21 L17.4 5 M12 21 L3.4 7.4 M12 21 L20.6 7.4" stroke="rgba(171,18,94,.32)" stroke-width=".8" fill="none"/>
+            </svg>
+          </span>
+          <span class="sand-wash"></span>
+          <span class="sand-foam"></span>
+        </div>
+        <div class="door-body">
+          <div class="door-tag-row">
+            <span class="door-tag">Forgive yourself &middot; 3 min</span>
+            <span class="door-badge">Opened</span>
+          </div>
+          <span class="door-title">Written in Sand</span>
+          <span class="door-desc">Write what you can't forgive yourself for. Let the tide take it.</span>
+        </div>
+      </a>
+
       <div class="door-soon">
         <span class="soon-oval"></span>
         <span class="twinkle-a"><svg viewBox="0 0 24 24" fill="var(--pink)"><path d="M12 0c.6 5.7 3.9 9 9.6 9.6C15.9 10.2 12.6 13.5 12 19.2 11.4 13.5 8.1 10.2 2.4 9.6 8.1 9 11.4 5.7 12 0Z"/></svg></span>
@@ -648,7 +748,7 @@
 <script>
 (function () {
   var STORAGE_KEY = 'aig-portal-seen';
-  var KEYS = ['balloons', 'water', 'glass', 'card', 'ripple', 'home', 'palm'];
+  var KEYS = ['balloons', 'water', 'glass', 'card', 'ripple', 'home', 'palm', 'sand'];
   var doorsEl = document.getElementById('doors');
   var foundEls = document.querySelectorAll('.js-found');
 

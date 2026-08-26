@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#2b0b20">
+<title>Written in Sand — asking your own forgiveness</title>
+<meta name="description" content="Write what you want to be forgiven for. The sea comes up, takes the words, and leaves the beach clean.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#2b0b20;
+    --deep:#6e0e3d;
+    --tide:#a33a68;
+    --sand:#f2dbc9;
+    --foam:#fff2f7;
+    --pink:#ffbad3;
+    --dim:#c1919f;
+    --gold:#f4d29a;
+  }
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--night);
+    color:var(--dim);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    overflow:hidden;
+    -webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:none;
+    overscroll-behavior:none;
+  }
+  #beach{position:fixed;inset:0;width:100%;height:100%;display:block;}
+  /* the beach dims a little whenever there are words to read over it */
+  #scrim{
+    position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(120% 78% at 50% 46%, rgba(38,9,28,.52) 0%, rgba(38,9,28,.42) 54%, rgba(26,5,19,.28) 100%);
+    opacity:0;transition:opacity 1.5s ease;
+  }
+  #scrim.on{opacity:1;}
+
+  .layer{
+    position:fixed;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    padding:9vh 7vw;
+    box-sizing:border-box;
+    transition:opacity 1.5s ease;
+    opacity:0;pointer-events:none;
+  }
+  .layer.on{opacity:1;pointer-events:auto;}
+  .eyebrow{
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-size:11px;letter-spacing:.34em;text-transform:uppercase;
+    text-shadow:0 1px 16px rgba(30,6,22,.9);
+    color:var(--dim);
+    margin-bottom:2.4em;
+  }
+  h1{
+    font-weight:300;font-style:italic;
+    text-shadow:0 2px 22px rgba(30,6,22,.9), 0 0 60px rgba(30,6,22,.7);
+    font-size:clamp(30px,7.4vw,52px);
+    line-height:1.16;
+    letter-spacing:.02em;
+    color:var(--foam);
+    margin:0 0 .6em;
+    text-wrap:balance;
+  }
+  .thesis{
+    font-size:clamp(16px,4.2vw,19px);
+    line-height:1.85;
+    max-width:31ch;
+    text-shadow:0 1px 18px rgba(30,6,22,.95), 0 0 44px rgba(30,6,22,.75);
+    color:#e3bfc9;
+    font-style:italic;
+    margin:0 auto;
+  }
+  .thesis em{color:var(--foam);font-style:italic;}
+  button{
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-size:12px;letter-spacing:.3em;text-transform:uppercase;
+    text-shadow:0 1px 14px rgba(30,6,22,.85);
+    color:var(--foam);
+    background:none;
+    border:1px solid rgba(255,186,211,.35);
+    border-radius:999px;
+    padding:1.1em 2.4em 1.05em;
+    margin-top:3.6em;
+    cursor:pointer;
+    transition:border-color .5s,background .5s,color .5s;
+  }
+  button:hover,button:focus-visible{
+    border-color:var(--pink);
+    background:rgba(255,186,211,.09);
+    outline:none;
+  }
+  button:focus-visible{box-shadow:0 0 0 3px rgba(255,186,211,.25);}
+  .quietbtn{
+    border:none;margin-top:1.3em;color:var(--dim);
+    letter-spacing:.26em;font-size:10.5px;padding:.9em 1.4em;
+  }
+  .quietbtn:hover,.quietbtn:focus-visible{color:var(--foam);background:none;}
+
+  /* ---------- the asking screen ---------- */
+  .prompt{
+    font-style:italic;font-size:clamp(20px,5.4vw,28px);
+    color:var(--foam);font-weight:300;
+    text-shadow:0 2px 20px rgba(30,6,22,.9);
+    margin:0 0 .6em;text-wrap:balance;
+  }
+  .undertext{
+    font-style:italic;font-size:clamp(14px,3.6vw,16px);
+    text-shadow:0 1px 16px rgba(30,6,22,.9);
+    color:#dcb3bf;margin:0 0 2.1em;max-width:30ch;line-height:1.7;
+  }
+  .writeline{
+    display:flex;align-items:baseline;justify-content:center;gap:.35em;
+    width:min(560px,88vw);
+    border-bottom:1px solid rgba(255,186,211,.3);
+    padding-bottom:.45em;
+    transition:border-color .5s;
+  }
+  .writeline:focus-within{border-bottom-color:var(--pink);}
+  .lead{
+    font-family:'Caveat',"Iowan Old Style",Georgia,cursive;
+    font-size:clamp(24px,6.2vw,32px);
+    color:var(--pink);white-space:nowrap;opacity:.9;
+  }
+  #words{
+    font-family:'Caveat',"Iowan Old Style",Georgia,cursive;
+    font-size:clamp(24px,6.2vw,32px);
+    color:var(--foam);
+    background:none;border:none;outline:none;
+    flex:1;min-width:0;
+    padding:0;
+    caret-color:var(--pink);
+  }
+  #words::placeholder{color:rgba(193,145,159,.6);}
+  .privacy{
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+    text-shadow:0 1px 14px rgba(30,6,22,.95);
+    color:var(--dim);opacity:.85;margin-top:2.2em;
+  }
+
+  /* ---------- hints over the beach ---------- */
+  #hint{
+    position:fixed;left:0;right:0;top:11vh;
+    text-align:center;padding:0 9vw;
+    font-style:italic;font-size:clamp(16px,4.2vw,19px);
+    line-height:1.8;color:var(--foam);
+    text-shadow:0 1px 18px rgba(43,11,32,.95);
+    transition:opacity 2.2s ease;
+    opacity:0;pointer-events:none;
+  }
+  #hint .sub{
+    display:block;margin-top:.8em;
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-style:normal;font-size:10.5px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--pink);opacity:.85;
+  }
+
+  /* ---------- shelf of shells ---------- */
+  #shelf{
+    margin-top:3.4em;display:flex;flex-direction:column;align-items:center;gap:12px;
+  }
+  #shelfLabel{
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);opacity:.8;
+  }
+  #shells{
+    display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;
+    gap:7px;max-width:min(340px,80vw);min-height:16px;
+  }
+  #shells svg{width:19px;height:17px;opacity:.9;}
+
+  #restLayer{justify-content:flex-end;padding-bottom:12vh;}
+  #restLayer .thesis{max-width:26ch;color:#fff2f7;text-shadow:0 2px 22px rgba(50,12,34,.95),0 0 46px rgba(50,12,34,.8);}
+  #restLayer .quietbtn{color:rgba(255,242,247,.92);text-shadow:0 1px 16px rgba(50,12,34,.95);}
+  .mark{
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    position:fixed;top:calc(env(safe-area-inset-top, 0px) + 18px);left:0;right:0;
+    text-align:center;font-size:10px;letter-spacing:.4em;text-transform:uppercase;
+    color:rgba(193,145,159,.7);pointer-events:none;
+    transition:opacity 1.6s;z-index:2;
+  }
+  #soundToggle{
+    position:fixed;top:calc(env(safe-area-inset-top, 0px) + 10px);
+    right:14px;margin:0;border:none;padding:.8em 1em;
+    font-size:9.5px;letter-spacing:.28em;color:var(--dim);z-index:5;
+  }
+  #soundToggle:hover,#soundToggle:focus-visible{color:var(--foam);background:none;}
+  @media (max-width:600px){
+    #soundToggle{top:calc(env(safe-area-inset-top, 0px) + 40px);right:6px;}
+    .layer{padding:8vh 6vw;}
+  }
+  @media (max-height:620px){
+    #hint{top:8vh;}
+    button{margin-top:2.4em;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="beach"></canvas>
+<div id="scrim" class="on"></div>
+<div class="mark" id="mark">asking your own forgiveness</div>
+<button id="soundToggle" aria-pressed="false">sound · off</button>
+
+<div class="layer on" id="intro">
+  <div class="eyebrow">written in sand</div>
+  <h1>the sea has been doing this<br>for a very long time</h1>
+  <p class="thesis">Some of what you carry, no one else can absolve.
+  You wrote it, and you are the one still reading it back.<br>
+  <em>Put it somewhere the water can reach.</em></p>
+  <button id="begin">walk down to the water</button>
+  <div id="shelf">
+    <div id="shelfLabel"></div>
+    <div id="shells"></div>
+  </div>
+</div>
+
+<div class="layer" id="ask">
+  <p class="prompt">What do you need to forgive yourself for?</p>
+  <p class="undertext">Say it plainly, the way you'd say it to someone who already knew.</p>
+  <div class="writeline">
+    <span class="lead">I'm sorry for</span>
+    <input id="words" type="text" maxlength="80" autocomplete="off" autocapitalize="none"
+           spellcheck="false" placeholder="…">
+  </div>
+  <div class="privacy">nothing saved · nothing sent</div>
+  <button id="write">write it in the sand</button>
+  <button id="silent" class="quietbtn">no words today</button>
+</div>
+
+<div id="hint"></div>
+
+<div class="layer" id="close">
+  <div class="eyebrow" id="closeEyebrow">taken</div>
+  <h1 id="closeTitle">the water didn't flinch</h1>
+  <p class="thesis" id="closeText">You said it to something far older than you,
+  and it took the words the way it takes everything — without argument, without a record.<br>
+  <em>You can set it down now. It's the sea's.</em></p>
+  <div id="shellNote"></div>
+  <button id="again">there's something else</button>
+  <button id="stay" class="quietbtn">stay on the beach a while</button>
+</div>
+
+<div class="layer" id="restLayer">
+  <p class="thesis">Nothing is being asked of you here.<br>
+  <em>The tide will keep going with or without your attention.</em></p>
+  <button id="backHome" class="quietbtn">back to the top of the beach</button>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ==========================================================================
+   Written in Sand
+   A beach at dusk. You write what you want forgiveness for, the tide comes
+   up, takes it, and leaves the sand clean — and one shell behind.
+   Everything here is drawn and generated: no images, no audio files.
+   ========================================================================== */
+
+const cv  = document.getElementById('beach');
+const ctx = cv.getContext('2d');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = id => document.getElementById(id);
+
+let W = 0, H = 0, DPR = 1;
+let phase = 'intro';           // intro | ask | writing | waiting | washing | shell | close | rest
+let t = 0;                     // seconds since load
+const rand = (a,b) => a + Math.random()*(b-a);
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const easeOut  = p => 1 - Math.pow(1-p, 2.6);
+const easeInOut = p => p < .5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2;
+/* deterministic little hash, so the sand and the handwriting don't crawl */
+function hash(n){ let x = Math.sin(n*127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+
+/* ---------- the shape of the beach ---------- */
+const S = {};
+function layout(){
+  S.horizon = H * 0.30;                 // where sky meets sea
+  S.shore   = H * (H < 560 ? 0.50 : 0.47);  // the waterline at rest
+  S.textY   = S.shore + (H - S.shore) * 0.42;
+  S.maxReach = H * 0.90;
+  S.sunX = W * 0.68;
+  S.sunY = S.horizon - H * 0.018;
+}
+
+/* ---------- offscreen surfaces ---------- */
+const sandCv  = document.createElement('canvas');   // sand texture, redrawn on resize
+const sandCtx = sandCv.getContext('2d');
+const textCv  = document.createElement('canvas');   // the words, carved; the sea erases these pixels
+const tctx    = textCv.getContext('2d');
+let grainPattern = null;
+
+function makeGrain(){
+  const n = 128;
+  const g = document.createElement('canvas');
+  g.width = g.height = n;
+  const gc = g.getContext('2d');
+  const img = gc.createImageData(n,n);
+  for(let i=0;i<n*n;i++){
+    const v = Math.random();
+    const k = i*4;
+    img.data[k]   = 255;
+    img.data[k+1] = 232 + v*23;
+    img.data[k+2] = 214 + v*30;
+    img.data[k+3] = v < .5 ? 0 : (v-.5)*150;   // sparse bright grains
+  }
+  gc.putImageData(img,0,0);
+  /* a few darker specks — shell dust, wet grit */
+  gc.globalAlpha = .5;
+  for(let i=0;i<90;i++){
+    gc.fillStyle = 'rgba(102,54,58,'+ (0.15+Math.random()*0.4) +')';
+    gc.fillRect(Math.random()*n, Math.random()*n, 1, 1);
+  }
+  return g;
+}
+
+function buildSand(){
+  sandCv.width  = Math.max(1, Math.round(W*DPR));
+  sandCv.height = Math.max(1, Math.round(H*DPR));
+  sandCtx.setTransform(DPR,0,0,DPR,0,0);
+  const top = S.shore - 10;
+  const g = sandCtx.createLinearGradient(0, top, 0, H);
+  g.addColorStop(0,    '#b8767c');     // wet, just left by the water
+  g.addColorStop(0.16, '#cf9a92');
+  g.addColorStop(0.48, '#e2b8a6');
+  g.addColorStop(1,    '#f4dcc8');     // dry sand, warm, up by your feet
+  sandCtx.fillStyle = g;
+  sandCtx.fillRect(0, top, W, H-top);
+
+  /* grain */
+  if(grainPattern){
+    sandCtx.globalAlpha = .55;
+    sandCtx.fillStyle = grainPattern;
+    sandCtx.fillRect(0, top, W, H-top);
+    sandCtx.globalAlpha = 1;
+  }
+  /* old tide lines: every wave that came before yours left one */
+  for(let i=0;i<7;i++){
+    const y = top + (H-top) * (0.10 + i*0.115) + hash(i*3.3)*12;
+    sandCtx.beginPath();
+    for(let x=-20;x<=W+20;x+=14){
+      const yy = y + Math.sin(x*0.013 + i*2.1)*4 + Math.sin(x*0.041 + i)*1.8;
+      x === -20 ? sandCtx.moveTo(x,yy) : sandCtx.lineTo(x,yy);
+    }
+    sandCtx.strokeStyle = 'rgba(255,238,224,'+ (0.10 + 0.05*hash(i)) +')';
+    sandCtx.lineWidth = 1 + hash(i*7)*1.2;
+    sandCtx.stroke();
+    sandCtx.strokeStyle = 'rgba(110,52,60,0.07)';
+    sandCtx.lineWidth = 2.4;
+    sandCtx.stroke();
+  }
+  /* a scatter of small stones and broken shell */
+  for(let i=0;i<26;i++){
+    const x = hash(i*11.7)*W;
+    const y = top + 24 + hash(i*5.9)*(H-top-30);
+    const r = .8 + hash(i*2.3)*1.9;
+    sandCtx.beginPath();
+    sandCtx.ellipse(x, y, r, r*.72, hash(i)*3, 0, 6.283);
+    sandCtx.fillStyle = 'rgba(255,244,236,'+ (0.2+hash(i*13)*0.35) +')';
+    sandCtx.fill();
+    sandCtx.beginPath();
+    sandCtx.ellipse(x+r*.5, y+r*.5, r, r*.5, hash(i)*3, 0, 6.283);
+    sandCtx.fillStyle = 'rgba(96,44,52,0.13)';
+    sandCtx.fill();
+  }
+}
+
+function resize(){
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width  = Math.round(W*DPR);
+  cv.height = Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  layout();
+  buildSand();
+  textCv.width  = cv.width;
+  textCv.height = cv.height;
+  tctx.setTransform(DPR,0,0,DPR,0,0);
+  wetInit();
+  if(sentence && !erased){ layoutSentence(); renderSentence(written); }
+}
+
+/* ---------- how wet the sand is, column by column ---------- */
+const COLS = 72;
+let wetLevel = new Float32Array(COLS);
+let wetY     = new Float32Array(COLS);
+function wetInit(){
+  for(let i=0;i<COLS;i++){ wetLevel[i] = 0; wetY[i] = S.shore; }
+}
+
+/* ==========================================================================
+   The words, carved into the sand
+   ========================================================================== */
+let sentence = '';        // what gets written on the beach
+let glyphs   = [];        // laid out, with a little handwritten wobble
+let written  = 0;         // how many glyphs have been traced so far
+let erased   = false;     // once the sea has had it, never redraw
+const HAND = "'Caveat','Iowan Old Style',Georgia,cursive";
+
+function fontStr(size){ return '400 ' + size + 'px ' + HAND; }
+
+function layoutSentence(){
+  glyphs = [];
+  if(!sentence) return;
+  const maxW = W * 0.80;
+  let size = clamp(W * 0.088, 26, 62);
+  let lines = [];
+  for(let attempt=0; attempt<7; attempt++){
+    ctx.font = fontStr(size);
+    lines = wrap(sentence, maxW);
+    if(lines.length <= 3) break;
+    size *= 0.86;
+  }
+  ctx.font = fontStr(size);
+  const lh = size * 1.18;
+  const top = S.textY - (lines.length-1)*lh/2;
+  let n = 0;
+  lines.forEach((line, li) => {
+    const lw = ctx.measureText(line).width;
+    let x = (W - lw)/2;
+    for(const ch of line){
+      const w = ctx.measureText(ch).width;
+      glyphs.push({
+        ch, x: x + w/2, y: top + li*lh,
+        rot: (hash(n*4.1)-0.5) * 0.075,
+        dy:  (hash(n*8.3)-0.5) * size*0.055,
+        size
+      });
+      x += w; n++;
+    }
+  });
+}
+
+function wrap(str, maxW){
+  const words = str.split(' ');
+  const lines = [];
+  let cur = '';
+  for(const w of words){
+    const test = cur ? cur + ' ' + w : w;
+    if(ctx.measureText(test).width > maxW && cur){ lines.push(cur); cur = w; }
+    else cur = test;
+  }
+  if(cur) lines.push(cur);
+  return lines;
+}
+
+/* Carved, not printed: a dark side where the sand is pushed up, a lit side
+   where the low sun catches the ridge, and a dim floor in the groove. */
+function carveGlyph(i){
+  const g = glyphs[i];
+  if(!g) return;
+  const off = Math.max(1.2, g.size*0.032);        // the groove scales with the hand
+  tctx.save();
+  tctx.translate(g.x, g.y + g.dy);
+  tctx.rotate(g.rot);
+  tctx.font = fontStr(g.size);
+  tctx.textAlign = 'center';
+  tctx.textBaseline = 'alphabetic';
+  tctx.fillStyle = 'rgba(255,241,226,0.62)';      // sun on the far ridge
+  tctx.fillText(g.ch, off, off*1.18);
+  tctx.fillStyle = 'rgba(92,34,50,0.50)';         // shadow in the near wall
+  tctx.fillText(g.ch, -off*0.95, -off*0.88);
+  tctx.fillStyle = 'rgba(150,90,86,0.44)';        // the floor of the groove
+  tctx.fillText(g.ch, 0, 0);
+  tctx.restore();
+  /* let the grain eat this letter's edges, so it reads as sand, not ink */
+  if(grainPattern){
+    const w = g.size*1.4, h = g.size*1.9;
+    tctx.globalCompositeOperation = 'destination-out';
+    tctx.globalAlpha = .30;
+    tctx.fillStyle = grainPattern;
+    tctx.fillRect(g.x - w/2, g.y + g.dy - h*0.72, w, h);
+    tctx.globalAlpha = 1;
+    tctx.globalCompositeOperation = 'source-over';
+  }
+}
+function renderSentence(count){
+  tctx.setTransform(DPR,0,0,DPR,0,0);
+  tctx.clearRect(0,0,W,H);
+  const n = Math.min(count, glyphs.length);
+  for(let i=0;i<n;i++) carveGlyph(i);
+}
+
+/* The sea taking the pixels: a soft-edged wipe of everything the water
+   has been over, applied as it draws back down the beach. */
+function eraseTo(edgeAt, bottom){
+  tctx.setTransform(DPR,0,0,DPR,0,0);
+  tctx.globalCompositeOperation = 'destination-out';
+  const strips = 40, sw = W/strips;
+  for(let i=0;i<strips;i++){
+    const x = i*sw;
+    const y = edgeAt(x + sw/2);
+    if(bottom <= y) continue;
+    const feather = 16;
+    const g = tctx.createLinearGradient(0, y - feather, 0, y + feather*0.6);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(0,0,0,0.85)');
+    tctx.fillStyle = g;
+    tctx.fillRect(x - 0.5, y - feather, sw + 1, feather*1.6);
+    tctx.fillStyle = 'rgba(0,0,0,0.85)';
+    tctx.fillRect(x - 0.5, y + feather*0.6, sw + 1, bottom - y);
+  }
+  tctx.globalCompositeOperation = 'source-over';
+  erased = true;
+}
+
+/* ==========================================================================
+   Washes — one run of water up the beach and back
+   ========================================================================== */
+const washes = [];
+const residue = [];      // foam left sitting on the sand, fading
+let ambientOn = true;
+let nextAmbient = 3;
+
+function spawnWash(frac, opts){
+  opts = opts || {};
+  const span = S.maxReach - S.shore;
+  const w = {
+    t0: t,
+    reach: S.shore + span*frac,
+    adv: opts.adv || (1.4 + frac*1.6),
+    hold: opts.hold != null ? opts.hold : 0.35 + frac*0.9,
+    ret: opts.ret || (2.2 + frac*2.4),
+    seed: rand(0,100),
+    big: !!opts.big,
+    maxSeen: S.shore,
+    peak: 0
+  };
+  washes.push(w);
+  washSound(w);
+  return w;
+}
+
+function washEdge(w, x, now){
+  const u = now - w.t0;
+  let base;
+  if(u < w.adv)                    base = easeOut(clamp(u/w.adv,0,1));
+  else if(u < w.adv + w.hold)      base = 1;
+  else                             base = 1 - easeInOut(clamp((u - w.adv - w.hold)/w.ret, 0, 1));
+  w.peak = base;
+  const span = w.reach - S.shore;
+  const wob = Math.sin(x*0.0105 + w.seed) * 1 + Math.sin(x*0.0271 + w.seed*3.1) * 0.45;
+  return S.shore + span*base + wob * (5 + span*0.035) * base;
+}
+function washDone(w){ return t - w.t0 > w.adv + w.hold + w.ret + 0.2; }
+
+function drawWash(w, now){
+  const u = now - w.t0;
+  const retreating = u > w.adv + w.hold;
+  const edge = x => washEdge(w, x, now);
+  const STEP = 14;
+  const pts = [];
+  for(let x=-STEP; x<=W+STEP; x+=STEP) pts.push([x, edge(x)]);
+
+  /* the sheet of water lying on the sand */
+  ctx.beginPath();
+  ctx.moveTo(-STEP, S.shore - H*0.03);
+  for(const p of pts) ctx.lineTo(p[0], p[1]);
+  ctx.lineTo(W+STEP, S.shore - H*0.03);
+  ctx.closePath();
+  const deepest = Math.max(...pts.map(p=>p[1]));
+  const g = ctx.createLinearGradient(0, S.shore - H*0.03, 0, deepest);
+  g.addColorStop(0,   'rgba(108,22,66,0.40)');
+  g.addColorStop(0.55,'rgba(168,64,104,0.24)');
+  g.addColorStop(0.88,'rgba(255,214,208,0.20)');   // the thin edge picks up the sky
+  g.addColorStop(1,   'rgba(255,242,247,0.38)');
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  /* foam line along the leading edge */
+  const strength = retreating ? 0.55 : 1;
+  ctx.beginPath();
+  pts.forEach((p,i) => i ? ctx.lineTo(p[0],p[1]) : ctx.moveTo(p[0],p[1]));
+  ctx.strokeStyle = 'rgba(255,246,248,'+ (0.30 + 0.55*w.peak*strength) +')';
+  ctx.lineWidth = 2 + 2.6*w.peak;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,246,248,'+ (0.10 + 0.16*w.peak*strength) +')';
+  ctx.lineWidth = 9 + 8*w.peak;
+  ctx.stroke();
+
+  /* streaks of older foam sliding around inside the sheet */
+  for(let k=0;k<3;k++){
+    ctx.beginPath();
+    for(let x=-12; x<=W+12; x+=16){
+      const e = edge(x);
+      const yy = S.shore + (e - S.shore)*(0.34 + k*0.2) + Math.sin(x*0.02 + t*1.2 + k*2)*4;
+      x === -12 ? ctx.moveTo(x,yy) : ctx.lineTo(x,yy);
+    }
+    ctx.strokeStyle = 'rgba(255,246,248,' + (0.05 + 0.07*w.peak) + ')';
+    ctx.lineWidth = 1.2 + k*0.9;
+    ctx.stroke();
+  }
+
+  /* bubbles in the foam */
+  const n = reduced ? 26 : 60;
+  ctx.fillStyle = 'rgba(255,248,250,'+ (0.30 + 0.45*w.peak) +')';
+  for(let i=0;i<n;i++){
+    const hx = hash(i*3.7 + w.seed);
+    const x = hx*W;
+    const y = edge(x) - hash(i*9.1 + w.seed)*10 + 2;
+    const r = (0.5 + hash(i*5.3 + w.seed)*1.9) * (0.45 + 0.55*w.peak);
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, 6.283);
+    ctx.fill();
+  }
+
+  /* remember how wet it left the sand, and take the words with it */
+  const colW = W/COLS;
+  for(let i=0;i<COLS;i++){
+    const y = edge((i+0.5)*colW);
+    if(y > wetY[i]) wetY[i] = y;
+    if(y > S.shore) wetLevel[i] = 1;
+  }
+  if(w.peak > 0) w.maxSeen = Math.max(w.maxSeen, deepest);
+  if(retreating) eraseTo(edge, w.maxSeen);
+
+  /* foam that stays behind after the water has gone back down */
+  if(retreating && residue.length < 130 && Math.random() < 0.32){
+    for(let k=0;k<2;k++){
+      const x = Math.random()*W;
+      residue.push({x, y: edge(x) + rand(-2,3), r: rand(0.6,1.9), a: rand(.25,.6)});
+    }
+  }
+}
+
+/* ==========================================================================
+   Sky, sea, sand
+   ========================================================================== */
+function drawSky(){
+  const g = ctx.createLinearGradient(0,0,0,S.horizon);
+  g.addColorStop(0,    '#2b0b20');
+  g.addColorStop(0.34, '#5c0f38');
+  g.addColorStop(0.62, '#a3245f');
+  g.addColorStop(0.84, '#e97f9c');
+  g.addColorStop(1,    '#ffd9bd');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,S.horizon+1);
+
+  /* the sun, nearly down, its edge already going soft in the haze */
+  const r = Math.max(11, H*0.022);
+  const glow = ctx.createRadialGradient(S.sunX, S.sunY, r*0.3, S.sunX, S.sunY, r*11);
+  glow.addColorStop(0,   'rgba(255,231,190,0.50)');
+  glow.addColorStop(0.28,'rgba(255,186,168,0.18)');
+  glow.addColorStop(1,   'rgba(255,178,168,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0,0,W,S.horizon+2);
+  const disc = ctx.createRadialGradient(S.sunX, S.sunY, 0, S.sunX, S.sunY, r*1.5);
+  disc.addColorStop(0,   'rgba(255,247,230,0.95)');
+  disc.addColorStop(0.62,'rgba(255,236,208,0.75)');
+  disc.addColorStop(1,   'rgba(255,220,192,0)');
+  ctx.beginPath();
+  ctx.ellipse(S.sunX, S.sunY, r*1.5, r*1.28, 0, 0, 6.283);
+  ctx.fillStyle = disc;
+  ctx.fill();
+
+  /* three long clouds, moving about as fast as clouds move */
+  for(let i=0;i<3;i++){
+    const y = S.horizon * (0.30 + i*0.19);
+    const x = ((t*(2.2+i*0.9) + hash(i)*W*2) % (W*1.7)) - W*0.35;
+    const w = W*(0.30 + hash(i*3)*0.28), h = Math.max(3, H*0.006*(1+i*0.25));
+    for(let k=0;k<3;k++){        // stacked and faint, so the edges stay vague
+      ctx.beginPath();
+      ctx.ellipse(x + (k-1)*w*0.22, y + (k-1)*h*0.5, w*(1 - k*0.18), h*(1 + k*0.5), 0, 0, 6.283);
+      ctx.fillStyle = 'rgba(255,216,208,'+ (0.035 + 0.022*i) +')';
+      ctx.fill();
+    }
+  }
+}
+
+function drawSea(){
+  const g = ctx.createLinearGradient(0, S.horizon, 0, S.shore+2);
+  g.addColorStop(0,    '#e2a2a8');     // the horizon is mostly borrowed sky
+  g.addColorStop(0.07, '#a24a6d');
+  g.addColorStop(0.30, '#4e0f31');
+  g.addColorStop(0.70, '#3d0a28');     // the deep part, where you can't see the bottom
+  g.addColorStop(1,    '#6b1a42');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, S.horizon, W, S.shore - S.horizon + 3);
+
+  /* the sun's road: light spilled on the water, broken up by the swell */
+  const seaH = S.shore - S.horizon;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, S.horizon, W, seaH + 3);
+  ctx.clip();
+  ctx.save();
+  ctx.translate(S.sunX, S.horizon + seaH*0.28);
+  ctx.scale(W*0.19, seaH*0.95);
+  const road = ctx.createRadialGradient(0,0,0, 0,0,1);
+  road.addColorStop(0,    'rgba(255,232,200,0.26)');
+  road.addColorStop(0.55, 'rgba(255,210,190,0.09)');
+  road.addColorStop(1,    'rgba(255,201,186,0)');
+  ctx.beginPath();
+  ctx.arc(0, 0, 1, 0, 6.283);
+  ctx.fillStyle = road;
+  ctx.fill();
+  ctx.restore();
+  const glints = reduced ? 14 : 30;
+  for(let i=0;i<glints;i++){
+    const p = Math.pow(hash(i*1.7), 0.8);
+    const y = S.horizon + seaH*Math.pow(p, 1.25) + 2;
+    const flick = 0.35 + 0.65*Math.abs(Math.sin(t*(0.6 + p*1.3) + i*2.3));
+    const spread = W*(0.02 + p*0.16);
+    const cx = S.sunX + (hash(i*5.3)-0.5)*spread*2.1 + Math.sin(t*0.7 + i*1.9)*W*0.02*p;
+    const len = spread * (0.30 + hash(i*2.7)*0.7) * flick;
+    const fade = 1 - Math.min(1, Math.abs(cx - S.sunX)/(spread*1.9 + 1));
+    ctx.beginPath();
+    ctx.ellipse(cx, y, Math.max(1, len), Math.max(0.6, 0.7 + p*1.8), 0, 0, 6.283);
+    ctx.fillStyle = 'rgba(255,235,210,' + (0.34*(1-p*0.5)*flick*fade).toFixed(3) + ')';
+    ctx.fill();
+  }
+  ctx.restore();
+
+  /* swell lines — closer together far out, and never louder than the horizon */
+  const rows = reduced ? 12 : 22;
+  for(let i=0;i<rows;i++){
+    const p = (i+1)/rows;
+    const y = S.horizon + (S.shore - S.horizon)*Math.pow(p, 1.75);
+    const amp = 0.5 + p*4.5;
+    const spd = 0.30 + p*0.9;
+    ctx.beginPath();
+    for(let x=-16; x<=W+16; x+=12){
+      const yy = y + Math.sin(x*(0.008 + p*0.004) + t*spd + i*1.3)*amp
+                   + Math.sin(x*0.029 - t*spd*0.6 + i)*amp*0.3;
+      x === -16 ? ctx.moveTo(x,yy) : ctx.lineTo(x,yy);
+    }
+    ctx.strokeStyle = 'rgba(255,224,220,' + (0.025 + 0.13*p*p).toFixed(3) + ')';
+    ctx.lineWidth = 0.6 + p*1.1;
+    ctx.stroke();
+  }
+
+  /* the break: where the water is always turning over, just off the sand */
+  const breakY = S.shore - Math.max(5, H*0.014);
+  const pulse = 0.55 + 0.45*Math.sin(t*0.9);
+  ctx.beginPath();
+  for(let x=-16; x<=W+16; x+=10){
+    const yy = breakY + Math.sin(x*0.018 + t*1.5)*3 + Math.sin(x*0.05 - t)*1.6;
+    x === -16 ? ctx.moveTo(x,yy) : ctx.lineTo(x,yy);
+  }
+  ctx.strokeStyle = 'rgba(255,246,248,' + (0.30 + 0.24*pulse).toFixed(3) + ')';
+  ctx.lineWidth = 3.2;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,246,248,0.11)';
+  ctx.lineWidth = 13;
+  ctx.stroke();
+}
+
+/* The dark stain the water leaves behind, drawn as one smooth shape so the
+   beach never looks like it was painted in columns. As it dries, the line
+   walks back down toward the sea. */
+const wetSmooth = new Float32Array(COLS);
+function drawWet(){
+  let maxA = 0, deepest = S.shore;
+  for(let i=0;i<COLS;i++){
+    const y = S.shore + (wetY[i] - S.shore) * wetLevel[i];
+    if(wetLevel[i] > maxA) maxA = wetLevel[i];
+    if(y > deepest) deepest = y;
+    wetSmooth[i] = y;
+  }
+  if(maxA <= 0.02) return;
+  const colW = W/COLS;
+  ctx.beginPath();
+  ctx.moveTo(-colW, S.shore - 12);
+  ctx.lineTo(-colW, wetSmooth[0]);
+  for(let i=0;i<COLS;i++){
+    const a = (wetSmooth[Math.max(0,i-1)] + wetSmooth[i]*2 + wetSmooth[Math.min(COLS-1,i+1)]) / 4;
+    const b = (wetSmooth[i] + wetSmooth[Math.min(COLS-1,i+1)]) / 2;
+    ctx.quadraticCurveTo((i+0.5)*colW, a, (i+1)*colW, b);
+  }
+  ctx.lineTo(W+colW, S.shore - 12);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, S.shore-12, 0, deepest);
+  g.addColorStop(0,   'rgba(84,16,48,' + (0.44*maxA).toFixed(3) + ')');
+  g.addColorStop(0.7, 'rgba(84,16,48,' + (0.26*maxA).toFixed(3) + ')');
+  g.addColorStop(1,   'rgba(84,16,48,' + (0.08*maxA).toFixed(3) + ')');
+  ctx.fillStyle = g;
+  ctx.fill();
+  /* the damp line itself catches a little light */
+  ctx.strokeStyle = 'rgba(255,228,216,' + (0.16*maxA).toFixed(3) + ')';
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+}
+
+function drawSand(){
+  ctx.drawImage(sandCv, 0, 0, sandCv.width, sandCv.height, 0, 0, W, H);
+  drawWet();
+  /* foam left sitting on the beach */
+  for(const f of residue){
+    ctx.beginPath();
+    ctx.arc(f.x, f.y, f.r, 0, 6.283);
+    ctx.fillStyle = 'rgba(255,248,250,'+ f.a +')';
+    ctx.fill();
+  }
+}
+
+/* the words, seen through moving water when the wash is over them */
+function drawWords(submerged){
+  if(!textCv.width) return;
+  if(!submerged){
+    ctx.drawImage(textCv, 0, 0, textCv.width, textCv.height, 0, 0, W, H);
+    return;
+  }
+  const slices = 14;
+  const sh = H/slices;
+  for(let i=0;i<slices;i++){
+    const off = Math.sin(t*2.4 + i*0.8)*1.8;
+    ctx.drawImage(textCv,
+      0, i*sh*DPR, textCv.width, sh*DPR,
+      off, i*sh, W, sh+0.5);
+  }
+}
+
+/* ==========================================================================
+   The shell
+   ========================================================================== */
+let shell = null;   // {x,y,r,born,taken}
+
+function drawShell(sh){
+  const age = t - sh.born;
+  let a = clamp(age/1.6, 0, 1);
+  if(sh.taken) a *= clamp(1 - (t - sh.takenAt)/1.4, 0, 1);
+  const r = sh.r * (0.82 + 0.18*clamp(age/1.2,0,1));
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.translate(sh.x, sh.y);
+
+  /* the dent of damp sand it settled into */
+  const dent = ctx.createRadialGradient(0, r*0.12, r*0.1, 0, r*0.12, r*1.25);
+  dent.addColorStop(0,   'rgba(92,32,52,0.30)');
+  dent.addColorStop(0.55,'rgba(92,32,52,0.14)');
+  dent.addColorStop(1,   'rgba(92,32,52,0)');
+  ctx.save();
+  ctx.scale(1, 0.38);
+  ctx.beginPath();
+  ctx.arc(0, r*0.32, r*1.25, 0, 6.283);
+  ctx.fillStyle = dent;
+  ctx.fill();
+  ctx.restore();
+
+  const A0 = Math.PI*1.08, A1 = Math.PI*1.92;   // the fan opens upward
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  for(let i=0;i<=48;i++){
+    const th = A0 + (A1-A0)*i/48;
+    const scallop = 1 + 0.045*Math.cos((th - A0)/(A1-A0) * Math.PI * 9);
+    ctx.lineTo(Math.cos(th)*r*scallop, Math.sin(th)*r*scallop*0.98);
+  }
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, 0, 0, -r);
+  g.addColorStop(0,   '#fff3e8');
+  g.addColorStop(0.5, '#ffdde6');
+  g.addColorStop(1,   '#ffc2d6');
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  /* ribs */
+  for(let i=1;i<10;i++){
+    const th = A0 + (A1-A0)*i/10;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(Math.cos(th)*r*0.97, Math.sin(th)*r*0.95);
+    ctx.strokeStyle = 'rgba(196,116,142,0.42)';
+    ctx.lineWidth = 0.9;
+    ctx.stroke();
+  }
+  /* the two little ears at the hinge */
+  ctx.beginPath();
+  ctx.moveTo(-r*0.30, 0); ctx.lineTo(-r*0.44, -r*0.14); ctx.lineTo(-r*0.16, -r*0.05);
+  ctx.moveTo( r*0.30, 0); ctx.lineTo( r*0.44, -r*0.14); ctx.lineTo( r*0.16, -r*0.05);
+  ctx.fillStyle = 'rgba(255,235,238,0.9)';
+  ctx.fill();
+
+  /* still wet — it catches what's left of the sun */
+  const gl = 0.35 + 0.35*Math.sin(t*1.3);
+  ctx.beginPath();
+  ctx.ellipse(-r*0.22, -r*0.42, r*0.16, r*0.07, -0.5, 0, 6.283);
+  ctx.fillStyle = 'rgba(255,255,255,'+ (0.5*gl+0.3) +')';
+  ctx.fill();
+  ctx.restore();
+
+  if(!sh.taken){
+    /* it keeps catching your eye until you pick it up */
+    const b = 0.55 + 0.45*Math.sin(t*1.1);
+    const g2 = ctx.createRadialGradient(sh.x, sh.y - sh.r*0.4, sh.r*0.3, sh.x, sh.y - sh.r*0.4, sh.r*3.2);
+    g2.addColorStop(0, 'rgba(255,246,235,' + (0.16*a*b).toFixed(3) + ')');
+    g2.addColorStop(1, 'rgba(255,246,235,0)');
+    ctx.fillStyle = g2;
+    ctx.beginPath();
+    ctx.arc(sh.x, sh.y - sh.r*0.4, sh.r*3.2, 0, 6.283);
+    ctx.fill();
+    for(let i=0;i<3;i++){
+      const ph = (t*0.55 + i*0.37) % 1;
+      const ang = hash(i*7.1 + Math.floor(t*0.55 + i*0.37))*6.283;
+      const d = sh.r*(1.2 + ph*0.9);
+      const sx = sh.x + Math.cos(ang)*d, sy = sh.y - sh.r*0.4 + Math.sin(ang)*d*0.45;
+      ctx.globalAlpha = a * Math.sin(ph*Math.PI) * 0.8;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 1.1, 0, 6.283);
+      ctx.fillStyle = 'rgba(255,250,240,0.9)';
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+/* a little sand kicked up while you write */
+const grains = [];
+function puff(x,y){
+  for(let i=0;i<3;i++){
+    grains.push({x, y, vx: rand(-14,14), vy: rand(-26,-8), a: 1, r: rand(0.6,1.6)});
+  }
+}
+function drawGrains(dt){
+  for(let i=grains.length-1;i>=0;i--){
+    const g = grains[i];
+    g.x += g.vx*dt; g.y += g.vy*dt; g.vy += 46*dt; g.a -= dt*0.9;
+    if(g.a <= 0){ grains.splice(i,1); continue; }
+    ctx.beginPath();
+    ctx.arc(g.x, g.y, g.r, 0, 6.283);
+    ctx.fillStyle = 'rgba(255,238,222,'+ clamp(g.a,0,1)*0.8 +')';
+    ctx.fill();
+  }
+}
+
+/* ==========================================================================
+   Sound — wind, distant surf, and each wash as it happens. Generated.
+   ========================================================================== */
+const snd = { on:false, ac:null };
+function audioInit(){
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if(!AC) return false;
+  const ac = snd.ac = new AC();
+  const len = ac.sampleRate*3;
+  const buf = ac.createBuffer(1, len, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  let lp = 0;
+  for(let i=0;i<len;i++){ lp = lp*0.965 + (Math.random()*2-1)*0.035; d[i] = lp*7; }
+  snd.buf = buf;
+  snd.master = ac.createGain(); snd.master.gain.value = 0; snd.master.connect(ac.destination);
+
+  /* surf, a long way out */
+  const s1 = ac.createBufferSource(); s1.buffer = buf; s1.loop = true;
+  snd.surfF = ac.createBiquadFilter(); snd.surfF.type='lowpass'; snd.surfF.frequency.value=340;
+  snd.surfG = ac.createGain(); snd.surfG.gain.value = 0.5;
+  s1.connect(snd.surfF).connect(snd.surfG).connect(snd.master); s1.start();
+
+  /* wind over the sand */
+  const s2 = ac.createBufferSource(); s2.buffer = buf; s2.loop = true; s2.playbackRate.value = 1.7;
+  snd.windF = ac.createBiquadFilter(); snd.windF.type='bandpass'; snd.windF.frequency.value=760; snd.windF.Q.value=0.7;
+  snd.windG = ac.createGain(); snd.windG.gain.value = 0.16;
+  s2.connect(snd.windF).connect(snd.windG).connect(snd.master); s2.start();
+  return true;
+}
+function washSound(w){
+  if(!snd.on || !snd.ac) return;
+  const ac = snd.ac, now = ac.currentTime;
+  const src = ac.createBufferSource(); src.buffer = snd.buf; src.loop = true;
+  src.playbackRate.value = 0.9 + Math.random()*0.3;
+  const f = ac.createBiquadFilter(); f.type='bandpass'; f.Q.value = 0.55;
+  const g = ac.createGain();
+  const strength = 0.22 + 0.75*((w.reach - S.shore)/(S.maxReach - S.shore));
+  const tAdv = now + w.adv, tHold = tAdv + w.hold, tEnd = tHold + w.ret;
+  f.frequency.setValueAtTime(280, now);
+  f.frequency.linearRampToValueAtTime(1500, tAdv);
+  f.frequency.linearRampToValueAtTime(900, tHold);
+  f.frequency.linearRampToValueAtTime(420, tEnd);
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.linearRampToValueAtTime(0.9*strength, tAdv);
+  g.gain.linearRampToValueAtTime(0.62*strength, tHold);
+  g.gain.linearRampToValueAtTime(0.0001, tEnd);
+  src.connect(f).connect(g).connect(snd.master);
+  src.start(now); src.stop(tEnd + 0.2);
+}
+function chime(){
+  if(!snd.on || !snd.ac) return;
+  const ac = snd.ac, now = ac.currentTime;
+  [783.99, 1174.66].forEach((hz,i) => {
+    const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = hz;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, now + i*0.12);
+    g.gain.exponentialRampToValueAtTime(0.09/(i+1), now + i*0.12 + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + i*0.12 + 3.2);
+    o.connect(g).connect(snd.master);
+    o.start(now + i*0.12); o.stop(now + i*0.12 + 3.4);
+  });
+}
+const soundBtn = $('soundToggle');
+soundBtn.onclick = () => {
+  if(!snd.ac && !audioInit()){ soundBtn.textContent = 'sound · unavailable'; return; }
+  snd.on = !snd.on;
+  if(snd.on && snd.ac.state === 'suspended') snd.ac.resume();
+  snd.master.gain.setTargetAtTime(snd.on ? 0.5 : 0, snd.ac.currentTime, 0.6);
+  soundBtn.textContent = 'sound · ' + (snd.on ? 'on' : 'off');
+  soundBtn.setAttribute('aria-pressed', String(snd.on));
+};
+function audioFrame(){
+  if(!snd.on || !snd.ac) return;
+  const now = snd.ac.currentTime;
+  /* the wind comes and goes, the way it does */
+  const gust = 0.10 + 0.09*(0.5 + 0.5*Math.sin(t*0.19)) + 0.05*(0.5+0.5*Math.sin(t*0.53));
+  snd.windG.gain.setTargetAtTime(gust, now, 1.2);
+  snd.windF.frequency.setTargetAtTime(620 + 320*(0.5+0.5*Math.sin(t*0.23)), now, 1.5);
+}
+
+/* ==========================================================================
+   The flow
+   ========================================================================== */
+const hintEl = $('hint');
+let hintTimer = null;
+const scrim = $('scrim');
+function show(id){
+  document.querySelectorAll('.layer').forEach(l => l.classList.toggle('on', l.id === id));
+  scrim.classList.toggle('on', id !== 'restLayer');
+}
+function hideLayers(){
+  document.querySelectorAll('.layer').forEach(l => l.classList.remove('on'));
+  scrim.classList.remove('on');
+}
+function setHint(html){
+  clearTimeout(hintTimer);
+  if(hintEl.style.opacity === '1' && hintEl.innerHTML !== html){
+    hintEl.style.opacity = '0';
+    hintTimer = setTimeout(() => { hintEl.innerHTML = html; hintEl.style.opacity = '1'; }, 900);
+  } else {
+    hintEl.innerHTML = html;
+    hintEl.style.opacity = '1';
+  }
+}
+function fadeHint(){ clearTimeout(hintTimer); hintEl.style.opacity = '0'; }
+
+/* a sequence you can cancel by walking away from it */
+let epoch = 0;
+const timers = [];
+function after(sec, fn){
+  const e = epoch;
+  timers.push(setTimeout(() => { if(e === epoch) fn(); }, sec*1000));
+}
+function stopSequence(){ epoch++; timers.forEach(clearTimeout); timers.length = 0; }
+
+/* shells you've been left, kept on this device only */
+function shellsGet(){ try{ return Math.max(0, parseInt(localStorage.getItem('writteninsand.shells')) || 0); }catch(e){ return 0; } }
+function shellsAdd(){ try{ localStorage.setItem('writteninsand.shells', String(shellsGet()+1)); }catch(e){} }
+const SHELL_SVG = '<svg viewBox="0 0 24 22" aria-hidden="true">'
+  + '<path d="M2.2 5.2 Q4 1.6 6.2 4.6 Q8.2 1.2 10 3.8 Q12 .6 14 3.8 Q15.8 1.2 17.8 4.6 Q20 1.6 21.8 5.2 C21 13 17.4 18.4 12 21.2 C6.6 18.4 3 13 2.2 5.2 Z" fill="#ffd3e0" stroke="rgba(255,255,255,.6)" stroke-width=".9"/>'
+  + '<path d="M12 21 L12 3 M12 21 L6.6 5 M12 21 L17.4 5 M12 21 L3.4 7.4 M12 21 L20.6 7.4" stroke="rgba(171,18,94,.32)" stroke-width=".8" fill="none"/></svg>';
+function renderShelf(){
+  const n = shellsGet();
+  $('shelfLabel').textContent = n === 0 ? ''
+    : n === 1 ? 'one shell on your windowsill'
+    : n + ' shells on your windowsill';
+  const box = $('shells');
+  box.innerHTML = '';
+  for(let i=0;i<Math.min(n,40);i++){
+    const s = document.createElement('span');
+    s.innerHTML = SHELL_SVG;
+    s.style.transform = 'rotate(' + ((hash(i*3.1)-0.5)*26).toFixed(1) + 'deg)';
+    s.style.display = 'inline-flex';
+    box.appendChild(s);
+  }
+}
+renderShelf();
+
+function resetBeach(){
+  stopSequence();
+  clearInterval(writeTimer);
+  washes.length = 0;
+  residue.length = 0;
+  grains.length = 0;
+  shell = null;
+  sentence = '';
+  glyphs = [];
+  written = 0;
+  erased = false;
+  tctx.setTransform(DPR,0,0,DPR,0,0);
+  tctx.clearRect(0,0,W,H);
+  wetInit();
+  fadeHint();
+}
+
+/* ---------- writing ---------- */
+let writeTimer = null;
+function startWriting(text){
+  hideLayers();
+  ambientOn = false;
+  $('mark').style.opacity = '0';
+  phase = 'writing';
+  sentence = text;
+  erased = false;
+  layoutSentence();
+  written = 0;
+  renderSentence(0);
+  clearInterval(writeTimer);
+  const step = reduced ? 26 : 52;
+  writeTimer = setInterval(() => {
+    written++;
+    carveGlyph(written-1);
+    const g = glyphs[written-1];
+    if(g && !reduced && written % 2 === 0) puff(g.x, g.y + g.dy + 2);
+    if(written >= glyphs.length){
+      clearInterval(writeTimer);
+      after(1.0, () => runTide(true));
+      phase = 'waiting';
+    }
+  }, step);
+}
+
+/* ---------- the tide sequence ---------- */
+function runTide(hasWords){
+  stopSequence();
+  ambientOn = false;
+  const span = S.maxReach - S.shore;
+  const bottom = glyphs.length
+    ? Math.max(...glyphs.map(g => g.y + g.dy + g.size*0.30))
+    : S.textY;
+  const top = glyphs.length
+    ? Math.min(...glyphs.map(g => g.y + g.dy - g.size*0.78))
+    : S.textY - H*0.06;
+  /* the big one takes the words; the ones before it stop short, on purpose */
+  const frac  = clamp((bottom + H*0.05 - S.shore) / span, 0.72, 1);
+  const near  = clamp((top - H*0.025 - S.shore) / span, 0.12, 0.94);
+
+  const L = reduced ? 0.6 : 1;      // a shorter walk if you asked for less motion
+  const at = s => s*L;
+
+  after(at(0.4), () => setHint(hasWords
+    ? 'The wind reads it first.<span class="sub">the water is still a way out</span>'
+    : 'Nothing written. The tide has no opinion about that.<span class="sub">stay as long as you like</span>'));
+  after(at(4.2), fadeHint);
+  after(at(4.8), () => spawnWash(near*0.34));
+  after(at(7.4), () => setHint('The tide turned a while ago.<span class="sub">it always comes in sets</span>'));
+  after(at(8.6), () => spawnWash(near*0.62));
+  after(at(11.4), fadeHint);
+  after(at(12.4), () => spawnWash(near*0.92));
+  after(at(16.2), () => setHint(hasWords
+    ? 'Here it is. Let it be taken.'
+    : 'Here it comes anyway.'));
+  after(at(16.8), () => {
+    phase = 'washing';
+    spawnWash(frac, { big:true, adv:2.7, hold:1.8, ret:4.8 });
+  });
+  after(at(21.0), fadeHint);
+  after(at(25.4), () => {
+    shell = { x: W/2, y: S.textY + H*0.02, r: clamp(Math.min(W,H)*0.072, 26, 54), born: t, taken:false };
+    phase = 'shell';
+  });
+  after(at(26.2), () => setHint(hasWords
+    ? 'The beach is clean.<span class="sub">nobody can read it now · not even you</span>'
+    : 'The beach is clean.<span class="sub">it was already clean · that counts too</span>'));
+  after(at(30.0), () => setHint('the water left you something<span class="sub">touch it</span>'));
+  after(at(34.0), () => { ambientOn = true; nextAmbient = t + 3; });
+}
+
+function takeShell(){
+  if(!shell || shell.taken) return;
+  shell.taken = true;
+  shell.takenAt = t;
+  stopSequence();
+  ambientOn = true;
+  nextAmbient = t + 4;
+  chime();
+  shellsAdd();
+  renderShelf();
+  fadeHint();
+  const had = !!sentence;
+  $('closeEyebrow').textContent = had ? 'taken' : 'stood there anyway';
+  $('closeTitle').textContent = had ? 'the water didn’t flinch' : 'the tide came for you too';
+  $('closeText').innerHTML = had
+    ? 'You said it to something far older than you, and it took the words the way it takes everything — without argument, without keeping a record.<br><em>You can set it down now. It belongs to the sea.</em>'
+    : 'You didn’t owe the beach an explanation, and it came all the way up for you anyway.<br><em>Some days the forgiveness is being allowed to just stand there.</em>';
+  const n = shellsGet();
+  $('shellNote').innerHTML = '<div class="privacy">' + (n === 1 ? 'one shell on your windowsill' : n + ' shells on your windowsill') + '</div>';
+  after(0.6, () => { phase = 'close'; show('close'); });
+}
+
+/* ---------- buttons ---------- */
+$('begin').onclick = () => {
+  show('ask');
+  $('mark').style.opacity = '0';
+  phase = 'ask';
+  try{ $('words').focus({preventScroll:true}); }catch(e){ $('words').focus(); }
+};
+function submitWords(){
+  let v = $('words').value.trim().replace(/\s+/g,' ');
+  if(!v){ startSilent(); return; }
+  if(!/[.!?…]$/.test(v)) v += '.';
+  startWriting('I’m sorry for ' + v);
+}
+$('write').onclick = submitWords;
+$('words').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); submitWords(); } });
+function startSilent(){
+  hideLayers();
+  ambientOn = false;
+  $('mark').style.opacity = '0';
+  $('words').blur();
+  sentence = '';
+  glyphs = [];
+  phase = 'waiting';
+  after(0.8, () => runTide(false));
+}
+$('silent').onclick = startSilent;
+$('again').onclick = () => {
+  resetBeach();
+  ambientOn = true;
+  $('words').value = '';
+  show('ask');
+  phase = 'ask';
+  try{ $('words').focus({preventScroll:true}); }catch(e){}
+};
+$('stay').onclick = () => {
+  hideLayers();
+  phase = 'rest';
+  ambientOn = true;
+  after(1.6, () => show('restLayer'));
+};
+$('backHome').onclick = () => {
+  resetBeach();
+  ambientOn = true;
+  $('words').value = '';
+  $('mark').style.opacity = '';
+  phase = 'intro';
+  renderShelf();
+  show('intro');
+};
+
+/* touching the shell */
+function pointAt(e){
+  const r = cv.getBoundingClientRect();
+  const p = (e.touches && e.touches[0]) || e;
+  return { x: p.clientX - r.left, y: p.clientY - r.top };
+}
+cv.addEventListener('pointerdown', e => {
+  if(!shell || shell.taken) return;
+  const p = pointAt(e);
+  if(Math.hypot(p.x - shell.x, p.y - shell.y) < Math.max(46, shell.r*2.4)) takeShell();
+});
+
+/* ==========================================================================
+   The loop
+   ========================================================================== */
+let last = performance.now()/1000;
+function frame(now){
+  now /= 1000;
+  const dt = Math.min(0.05, Math.max(0, now - last));
+  last = now; t += dt;
+
+  /* the sand dries */
+  for(let i=0;i<COLS;i++){
+    if(wetLevel[i] > 0){
+      wetLevel[i] = Math.max(0, wetLevel[i] - dt*0.055);
+      if(wetLevel[i] === 0) wetY[i] = S.shore;
+    }
+  }
+  for(let i=residue.length-1;i>=0;i--){
+    residue[i].a -= dt*0.16;
+    if(residue[i].a <= 0) residue.splice(i,1);
+  }
+  /* small washes keep arriving whenever nothing is scripted */
+  if(ambientOn && t > nextAmbient){
+    spawnWash(rand(0.10, 0.24));
+    nextAmbient = t + rand(6.5, 10.5);
+  }
+  for(let i=washes.length-1;i>=0;i--) if(washDone(washes[i])) washes.splice(i,1);
+
+  let submerged = false;
+  for(const w of washes){
+    if(w.peak > 0.05 && washEdge(w, W/2, t) > S.textY - H*0.03){ submerged = true; break; }
+  }
+
+  drawSky();
+  drawSea();
+  drawSand();
+  drawWords(submerged);
+  for(const w of washes) drawWash(w, t);
+  if(submerged){
+    /* still there, just under moving water — until the water takes them */
+    ctx.save();
+    ctx.globalAlpha = 0.42;
+    drawWords(true);
+    ctx.restore();
+  }
+  if(shell){
+    drawShell(shell);
+    if(shell.taken && t - shell.takenAt > 1.6) shell = null;
+  }
+  drawGrains(dt);
+
+  /* a soft dark edge, so the middle is where your eye goes */
+  const v = ctx.createRadialGradient(W/2, H*0.52, Math.min(W,H)*0.30, W/2, H*0.52, Math.max(W,H)*0.78);
+  v.addColorStop(0, 'rgba(43,11,32,0)');
+  v.addColorStop(1, 'rgba(43,11,32,0.42)');
+  ctx.fillStyle = v;
+  ctx.fillRect(0,0,W,H);
+
+  audioFrame();
+  requestAnimationFrame(frame);
+}
+
+/* ---------- go ---------- */
+grainPattern = ctx.createPattern(makeGrain(), 'repeat');
+addEventListener('resize', resize);
+addEventListener('orientationchange', () => setTimeout(resize, 250));
+resize();
+requestAnimationFrame(frame);
+
+/* the handwriting font may land after we've measured; re-measure when it does */
+if(document.fonts && document.fonts.load){
+  document.fonts.load('40px Caveat').then(() => {
+    if(sentence && !erased){ layoutSentence(); renderSentence(written); }
+  }).catch(()=>{});
+}
+})();
+</script>
+</body>
+</html>
