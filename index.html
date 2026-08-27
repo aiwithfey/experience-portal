@@ -6,6 +6,42 @@
 <title>Experience Portal — AI Goddesses</title>
 <meta name="description" content="Every little interactive experience I build, gathered in one place for the AI Goddesses community. Open a door and play — most take two minutes.">
 <link rel="icon" href="assets/logo-mark.png">
+<script>
+/* Must sit ABOVE the Google Fonts <link>: a classic script placed after a
+   pending stylesheet cannot execute until that sheet resolves, which would
+   put the dismiss timer behind the very request it exists to cover. The
+   element is looked up lazily, so running before <body> is parsed is fine. */
+(function () {
+  var MIN = 750, MAX = 2600, t0 = Date.now(), done = false;
+
+  /* The font stylesheet blocks rendering, so the loader may not become
+     visible until well after this script runs. Restart the minimum from the
+     first painted frame, otherwise a slow sheet makes the loader flash. */
+  if (window.requestAnimationFrame) requestAnimationFrame(function () { t0 = Date.now(); });
+
+  function reveal() {
+    if (done) return;
+    done = true;
+    /* hold a beat so a warm cache doesn't flash the loader for one frame */
+    setTimeout(function () {
+      document.documentElement.classList.add('is-ready');
+      setTimeout(function () {
+        var el = document.getElementById('loader');
+        if (el) el.setAttribute('hidden', '');
+      }, 700);
+    }, Math.max(0, MIN - (Date.now() - t0)));
+  }
+
+  setTimeout(reveal, MAX);            /* armed first, before anything can throw */
+
+  new Promise(function (r) {
+    if (document.readyState === 'complete') r();
+    else window.addEventListener('load', r, { once: true });
+  }).then(function () {
+    return document.fonts && document.fonts.ready;
+  }).then(reveal, reveal);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Fragment+Mono:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -325,6 +361,70 @@
   }
   .startover:hover{color:var(--berry);}
 
+  /* ======================================================= portal loader
+     Covers the first paint so the webfont swap and the palm door's
+     generated SVG land behind it. Deliberately uses only websafe fonts,
+     so the loader itself never restyles while you are looking at it. */
+  .portal-loader{
+    position:fixed; inset:0; z-index:300;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:26px; background:var(--rose-50);
+    transition:opacity 560ms var(--ease-soft), transform 560ms var(--ease-soft);
+  }
+  .portal-loader[hidden]{display:none;}
+  .pl-stage{position:relative; display:flex; align-items:center; justify-content:center;}
+  /* the arch is the portal's own door silhouette */
+  .pl-arch{
+    position:relative; width:76px; height:108px; overflow:hidden;
+    border:1.5px solid var(--pink-200); border-radius:999px 999px 6px 6px;
+    background:rgba(255,255,255,.5);
+  }
+  .pl-light{
+    position:absolute; left:-20%; right:-20%; bottom:-10%; height:120%;
+    background:radial-gradient(58% 54% at 50% 100%, rgba(255,186,211,.95) 0%, rgba(255,186,211,.35) 45%, transparent 72%);
+    animation:plRise 2.6s var(--ease-soft) infinite;
+  }
+  .pl-star{position:absolute; width:19px; height:19px; color:var(--berry); animation:twinkle 2.6s ease-in-out infinite;}
+  .pl-mote{position:absolute; animation:plFloat 3.4s ease-in-out infinite;}
+  .pl-mote svg{width:11px; height:11px; display:block;}
+  .pl-mote.m1{top:6px; left:-30px; animation-delay:-.4s;}
+  .pl-mote.m2{bottom:14px; right:-32px; animation-delay:-1.7s;}
+  .pl-word{
+    font-family:Georgia,'Times New Roman',serif; font-size:17px; letter-spacing:-.01em;
+    color:var(--berry-800);
+  }
+  .pl-rule{position:relative; width:118px; height:1px; background:var(--pink-200); overflow:hidden;}
+  .pl-rule span{
+    position:absolute; inset:0; width:42%; background:var(--berry);
+    animation:plSweep 1.5s var(--ease-soft) infinite;
+  }
+  @keyframes plRise{
+    0%,100%{transform:translateY(16%) scale(.9); opacity:.5;}
+    50%    {transform:translateY(0)    scale(1.06); opacity:1;}
+  }
+  @keyframes plSweep{0%{transform:translateX(-105%);}100%{transform:translateX(245%);}}
+  @keyframes plFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+  @keyframes doorIn{from{opacity:0; transform:translateY(20px);}to{opacity:1; transform:none;}}
+
+  .is-ready .portal-loader{opacity:0; transform:scale(1.05); pointer-events:none;}
+  /* `backwards` only, so with no JS at all the doors are simply visible */
+  .is-ready .doors > *{animation:doorIn 620ms var(--ease-soft) backwards;}
+  .is-ready .doors > *:nth-child(1){animation-delay:120ms;}
+  .is-ready .doors > *:nth-child(2){animation-delay:185ms;}
+  .is-ready .doors > *:nth-child(3){animation-delay:250ms;}
+  .is-ready .doors > *:nth-child(4){animation-delay:315ms;}
+  .is-ready .doors > *:nth-child(5){animation-delay:380ms;}
+  .is-ready .doors > *:nth-child(6){animation-delay:445ms;}
+  .is-ready .doors > *:nth-child(7){animation-delay:510ms;}
+  .is-ready .doors > *:nth-child(8){animation-delay:575ms;}
+  .is-ready .doors > *:nth-child(9){animation-delay:640ms;}
+
+  @media (prefers-reduced-motion:reduce){
+    .pl-light,.pl-star,.pl-mote,.pl-rule span{animation:none !important;}
+    .portal-loader{transition-duration:200ms !important;}
+    .is-ready .doors > *{animation:none !important;}
+  }
+
   /* ==================================================== opening a door
      Clicking a door grows a panel out of that exact card until it fills
      the screen, then cross-fades to the destination page's own background
@@ -472,6 +572,20 @@
 </style>
 </head>
 <body>
+
+<noscript><style>.portal-loader{display:none !important;}</style></noscript>
+<div class="portal-loader" id="loader" role="status" aria-label="Opening the portal">
+  <div class="pl-stage">
+    <span class="pl-mote m1"><svg viewBox="0 0 24 24" fill="var(--pink)" aria-hidden="true"><path d="M12 0c.6 5.7 3.9 9 9.6 9.6C15.9 10.2 12.6 13.5 12 19.2 11.4 13.5 8.1 10.2 2.4 9.6 8.1 9 11.4 5.7 12 0Z"/></svg></span>
+    <span class="pl-mote m2"><svg viewBox="0 0 24 24" fill="var(--pink-200)" aria-hidden="true"><path d="M12 0c.6 5.7 3.9 9 9.6 9.6C15.9 10.2 12.6 13.5 12 19.2 11.4 13.5 8.1 10.2 2.4 9.6 8.1 9 11.4 5.7 12 0Z"/></svg></span>
+    <div class="pl-arch">
+      <span class="pl-light"></span>
+    </div>
+    <svg class="pl-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c.6 5.7 3.9 9 9.6 9.6C15.9 10.2 12.6 13.5 12 19.2 11.4 13.5 8.1 10.2 2.4 9.6 8.1 9 11.4 5.7 12 0Z"/></svg>
+  </div>
+  <div class="pl-word">Experience Portal</div>
+  <div class="pl-rule"><span></span></div>
+</div>
 
 <header class="topbar">
   <a class="brand" href="#top">
