@@ -325,6 +325,41 @@
   }
   .startover:hover{color:var(--berry);}
 
+  /* ==================================================== opening a door
+     Clicking a door grows a panel out of that exact card until it fills
+     the screen, then cross-fades to the destination page's own background
+     colour so the real page paints in behind it with no white flash. */
+  .doorfx{position:fixed; inset:0; z-index:200; pointer-events:none;}
+  .doorfx-panel{
+    position:fixed; overflow:hidden;
+    box-shadow:0 30px 80px -30px rgba(110,14,61,.5);
+    transition:top 560ms var(--ease-soft), left 560ms var(--ease-soft),
+               width 560ms var(--ease-soft), height 560ms var(--ease-soft),
+               border-radius 560ms var(--ease-soft);
+  }
+  .doorfx-wash{
+    position:absolute; inset:0; opacity:0;
+    transition:opacity 320ms ease 200ms;
+  }
+  .doorfx-copy{
+    position:absolute; left:0; right:0; bottom:0;
+    transition:opacity 260ms var(--ease-soft), transform 560ms var(--ease-soft);
+  }
+  .doorfx.go .doorfx-wash{opacity:1;}
+  .doorfx.go .doorfx-copy{opacity:0; transform:translateY(24px);}
+
+  .is-opening .topbar,
+  .is-opening main{
+    opacity:.45;
+    transition:opacity 380ms var(--ease-soft);
+  }
+  .is-opening{overflow:hidden;}
+
+  @media (prefers-reduced-motion:reduce){
+    .doorfx-panel,.doorfx-wash,.doorfx-title,
+    .is-opening .topbar,.is-opening main{transition:none !important;}
+  }
+
   /* =============================================================== DESKTOP
      Mockup: 1280 frame. Header 22px/40px + hairline. Hero 46px 40px 34px with
      the scroll arrows pinned bottom-right. Strip: gap 18px, padding 0 40px 46px,
@@ -693,6 +728,91 @@
   document.getElementById('scrollNext').addEventListener('click', function () { scrollByCard(1); });
 
   render();
+})();
+</script>
+
+<script>
+/* Grow the clicked door until it fills the screen, then navigate. Runs after
+   the listener above, so "opened" is already saved before we leave. */
+(function () {
+  var doorsEl = document.getElementById('doors');
+  if (!doorsEl) return;
+
+  /* each experience's own page background, so the flood lands on the exact
+     colour the next document paints — no white flash between the two */
+  var DEST_BG = {
+    balloons:'#E8EFF2', water:'#050d14', glass:'#03040A', card:'#07302F',
+    ripple:'#FBF4EC',   home:'#1a1410',  palm:'#2f7fae'
+  };
+  var DUR = 560;
+  var fx = null, timer = null;
+
+  function clear() {
+    if (timer) { clearTimeout(timer); timer = null; }
+    if (fx && fx.parentNode) fx.parentNode.removeChild(fx);
+    fx = null;
+    document.documentElement.classList.remove('is-opening');
+  }
+  /* coming back (incl. from bfcache) must not restore a screen-filling panel */
+  window.addEventListener('pageshow', clear);
+
+  doorsEl.addEventListener('click', function (e) {
+    if (e.defaultPrevented || fx) return;
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var door = e.target.closest('.door[data-key]');
+    if (!door) return;
+    var href = door.getAttribute('href');
+    if (!href || door.getAttribute('target') === '_blank') return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    e.preventDefault();
+
+    var r = door.getBoundingClientRect();
+    var cs = getComputedStyle(door);
+
+    var panel = document.createElement('div');
+    panel.className = 'doorfx-panel';
+    panel.style.top = r.top + 'px';
+    panel.style.left = r.left + 'px';
+    panel.style.width = r.width + 'px';
+    panel.style.height = r.height + 'px';
+    panel.style.borderRadius = cs.borderRadius;
+    panel.style.backgroundColor = cs.backgroundColor;
+    if (cs.backgroundImage !== 'none') panel.style.backgroundImage = cs.backgroundImage;
+
+    /* Only the card's background and copy travel — the art stays behind on
+       the card. Cloning the art meant repainting it at growing size every
+       frame, which cost more than it added; the experience's own animation
+       picks up on the page we land on. */
+    var bodyEl = door.querySelector('.door-body');
+    if (bodyEl) {
+      var bodyClone = bodyEl.cloneNode(true);
+      bodyClone.classList.add('doorfx-copy');
+      bodyClone.style.margin = '0';
+      panel.appendChild(bodyClone);
+    }
+
+    var wash = document.createElement('div');
+    wash.className = 'doorfx-wash';
+    wash.style.background = DEST_BG[door.getAttribute('data-key')] || cs.backgroundColor;
+    panel.appendChild(wash);
+
+    fx = document.createElement('div');
+    fx.className = 'doorfx';
+    fx.appendChild(panel);
+    document.body.appendChild(fx);
+    document.documentElement.classList.add('is-opening');
+
+    void panel.offsetWidth;               /* commit the start rect */
+    fx.classList.add('go');
+    panel.style.top = '0px';
+    panel.style.left = '0px';
+    panel.style.width = '100%';
+    panel.style.height = '100%';
+    panel.style.borderRadius = '0px';
+
+    timer = setTimeout(function () { window.location.href = href; }, DUR);
+  });
 })();
 </script>
 
