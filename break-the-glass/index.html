@@ -69,6 +69,14 @@
     transition:opacity 1s ease 2.4s,background .3s,color .3s;}
   #again:hover,#again:focus-visible{background:rgba(220,232,255,.1);color:#fff;}
   :focus-visible{outline:1px solid rgba(220,232,255,.8);outline-offset:4px;}
+
+  /* artist tag — deliberately a sibling of #stage, never inside it, so
+     reaching for it can never land a hit on the glass */
+  #credit{position:fixed;left:1.4rem;bottom:max(2.2vh,1rem);z-index:11;
+    font-family:inherit;font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;
+    color:rgba(220,232,255,.42);text-decoration:none;cursor:pointer;
+    transition:color .4s ease;}
+  #credit:hover,#credit:focus-visible{color:rgba(220,232,255,.9);}
 </style>
 </head>
 <body>
@@ -94,6 +102,8 @@
   <div id="hint">hit the glass</div>
   <button id="again">Again</button>
 </div>
+
+<a id="credit" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a>
 
 <script>
 (() => {

@@ -455,6 +455,22 @@
   }
   
   .closing-inner.visible .closing-mark { opacity: 1; }
+
+  /* artist tag — the piece is a scroll, so it belongs at the end of the
+     scroll rather than floating over the reading */
+  .closing-credit {
+    display: inline-block;
+    margin-top: 3.2rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: #6d5c46;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 1.6s ease 2.2s, color 0.6s ease;
+  }
+  .closing-inner.visible .closing-credit { opacity: 1; }
+  .closing-credit:hover, .closing-credit:focus-visible { color: #e8b878; }
   
   /* Ripple effect */
   .ripple {
@@ -612,6 +628,7 @@
         </div>
         <div class="closing-mark"></div>
         <div class="closing-echo">perhaps it was never a place at all.</div>
+        <a class="closing-credit" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a>
       </div>
     </div>
   </section>
