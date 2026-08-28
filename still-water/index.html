@@ -199,6 +199,17 @@
     #soundToggle{top:calc(env(safe-area-inset-top, 0px) + 42px);right:8px;}
   }
   video{display:none;}
+  /* artist tag: quiet enough to ignore, reachable when looked for */
+  .credit{
+    position:fixed;left:14px;
+    bottom:calc(env(safe-area-inset-bottom, 0px) + 12px);
+    z-index:6;
+    font-family:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;
+    font-size:9.5px;letter-spacing:.22em;text-transform:lowercase;
+    color:var(--dim);text-decoration:none;opacity:.6;
+    transition:opacity .6s,color .6s;
+  }
+  .credit:hover,.credit:focus-visible{opacity:1;color:var(--mist);outline:none;}
 </style>
 
 <canvas id="water"></canvas>
@@ -253,6 +264,10 @@
   <p id="reflectHint">Be still. The water is learning your face.</p>
   <button id="release">let the reflection go</button>
 </div>
+
+<!-- the water listens on window, so keep this click out of it -->
+<a class="credit" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer"
+   onpointerdown="event.stopPropagation()">by AI with Fey</a>
 
 <script>
 (() => {
