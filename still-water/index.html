@@ -614,7 +614,18 @@ const hint = $('hint');
 function show(id){
   for(const s of ['intro','choose','name','still']) $(s).classList.toggle('on', s===id);
 }
-$('begin').onclick = ()=>{ phase='choose'; show('choose'); };
+/* Once you step off the shore, the phone's back gesture should bring you
+   back to the shore rather than out of the piece entirely. One pushed entry
+   covers the whole way in, so back always lands on the shore from wherever
+   you are; from the shore itself, back leaves as normal. */
+let steppedIn = false;
+function stepIn(){
+  if(steppedIn || !window.history || !history.pushState) return;
+  try{ history.pushState({stillwater:1}, ''); steppedIn = true; }catch(e){}
+}
+addEventListener('popstate', ()=>{ if(steppedIn){ steppedIn = false; backToShore(); } });
+
+$('begin').onclick = ()=>{ stepIn(); phase='choose'; show('choose'); };
 const NAME_COPY = {
   vortex:{prompt:'If the loop has words,<br>give them to the water.', ph:'the thought that keeps circling…'},
   waves:{prompt:'If this wave has a name,<br>give it to the water.', ph:'the feeling that keeps arriving…'},
@@ -643,7 +654,9 @@ function backToShore(){
   phase='intro'; T=1; mode=null; ripples.length=0; letters.length=0;
   reflectStop(); renderShore(); show('intro'); hint.style.opacity=0;
 }
-$('leave').onclick = backToShore;
+/* go back through history when we put an entry there, so the button and the
+   back gesture stay in step; otherwise just walk back to the shore */
+$('leave').onclick = ()=>{ if(steppedIn) history.back(); else backToShore(); };
 $('stir').onclick = ()=>{
   phase='choose'; T=1; mode=null; ripples.length=0; letters.length=0;
   reflectStop(); show('choose'); hint.style.opacity=0;
