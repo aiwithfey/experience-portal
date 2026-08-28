@@ -70,12 +70,17 @@
   #again:hover,#again:focus-visible{background:rgba(220,232,255,.1);color:#fff;}
   :focus-visible{outline:1px solid rgba(220,232,255,.8);outline-offset:4px;}
 
-  /* artist tag — deliberately a sibling of #stage, never inside it, so
-     reaching for it can never land a hit on the glass */
+  /* Artist tag — deliberately a sibling of #stage, never inside it, so
+     reaching for it can never land a hit on the glass.
+     Held back until the glass breaks and shown last, after the reveal has
+     finished settling: before that the screen belongs to the question, and
+     on a narrow phone a bottom corner sits too close to the hint. */
   #credit{position:fixed;left:1.4rem;bottom:max(2.2vh,1rem);z-index:11;
     font-family:inherit;font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;
     color:rgba(220,232,255,.42);text-decoration:none;cursor:pointer;
-    transition:color .4s ease;}
+    opacity:0;pointer-events:none;
+    transition:opacity 1.2s ease 4.8s,color .4s ease;}
+  body.broken #credit{opacity:1;pointer-events:auto;}
   #credit:hover,#credit:focus-visible{color:rgba(220,232,255,.9);}
 </style>
 </head>
@@ -355,7 +360,13 @@ function spawnFX(x,y,power){
 
 let lastT = 0;
 function fxLoop(t){
-  const dt = Math.min((t-lastT)/1000, .05); lastT = t;
+  /* Clamp at zero as well as at the top: spawnFX seeds lastT with
+     performance.now(), but the rAF timestamp is the frame's start, which can
+     be earlier — so dt could come out negative on the first frame. That ran
+     the ring radius backwards past zero, arc() threw, and the throw escaped
+     before this loop rescheduled itself, leaving fxRunning stuck true and
+     killing every dust burst for the rest of the session. */
+  const dt = Math.min(Math.max((t-lastT)/1000, 0), .05); lastT = t;
   fx.clearRect(0,0,W,H);
 
   for(const p of parts){
@@ -614,6 +625,7 @@ let shardList = [], shatterT0 = 0;
 
 function shatter(hx,hy){
   broken = true;
+  document.body.classList.add('broken');   // brings in the credit, last
   const hole = holePath();
 
   // seeds: dense around impacts, sparse elsewhere
