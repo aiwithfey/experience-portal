@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tideline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=DM+Sans:opsz,wght@9..40,300;9..40,400&family=Fragment+Mono&family=Libre+Baskerville:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   SECTION 1 — TOKENS + BASE (MOBILE FIRST)
+   ========================================================================== */
+:root{
+  --sand-100:#F7EBD6;
+  --sand-600:#B08A5E;
+  --sand-900:#5C4028;
+  --sea-700:#2E5C63;
+  --sea-900:#173A44;
+  --foam:#FBF7EF;
+  --font-display:"Libre Baskerville",Georgia,serif;
+  --font-body:"DM Sans",system-ui,sans-serif;
+  --font-mono:"Fragment Mono",ui-monospace,monospace;
+  --font-hand:"Architects Daughter",cursive;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#1B3A42}
+body{font-family:var(--font-body);color:var(--sand-900);overscroll-behavior:none}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+
+.layer{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;pointer-events:none}
+.layer.on{pointer-events:auto}
+
+#intro{
+  width:100%;max-width:520px;display:flex;flex-direction:column;gap:20px;
+  transform:translateY(-4vh);
+  transition:opacity .9s var(--ease),transform .9s var(--ease);
+}
+#intro.gone{opacity:0;transform:translateY(-7vh);pointer-events:none}
+
+.eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(92,64,40,.5)}
+.prompt{font-family:var(--font-display);font-size:22px;line-height:1.45;font-weight:400;color:rgba(72,48,28,.92);text-shadow:0 1px 0 rgba(255,250,240,.55)}
+
+#field{
+  width:100%;min-height:74px;resize:none;
+  background:none;border:none;border-bottom:1px solid rgba(92,64,40,.26);
+  border-radius:0;padding:4px 2px 12px;
+  font-family:var(--font-body);font-size:16px;line-height:1.7;font-weight:300;
+  color:rgba(72,48,28,.94);
+  outline:none;transition:border-color .3s var(--ease);
+}
+#field::placeholder{color:rgba(92,64,40,.38)}
+#field:focus{border-bottom-color:rgba(92,64,40,.55)}
+
+.row{display:flex;align-items:center;justify-content:space-between;gap:14px}
+#count{font-family:var(--font-mono);font-size:11px;color:rgba(92,64,40,.45)}
+#count.near{color:#B0642A}
+
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+button:focus-visible,a:focus-visible,textarea:focus-visible{outline:2px solid rgba(72,48,28,.75);outline-offset:3px;border-radius:2px}
+
+.btn{padding:11px 20px;border-radius:2px;background:none;color:rgba(72,48,28,.92);
+  border:1px solid rgba(92,64,40,.34);font-size:14px;
+  transition:transform .25s var(--ease),opacity .25s var(--ease),background .25s var(--ease),border-color .25s var(--ease)}
+.btn:hover{transform:translateY(-1px);background:rgba(255,250,240,.5);border-color:rgba(92,64,40,.6)}
+.btn[disabled]{opacity:.4;cursor:default;transform:none}
+
+#closing{flex-direction:column;align-items:center;gap:26px;transform:translateY(26vh);opacity:0;transition:opacity 1.6s var(--ease);text-align:center}
+#closing.on{opacity:1}
+#closing .line{font-family:var(--font-display);font-style:italic;font-size:17px;color:rgba(92,64,40,.62)}
+.ghost{padding:10px 18px;border-radius:2px;border:1px solid rgba(92,64,40,.28);font-size:13px;color:rgba(92,64,40,.7);transition:border-color .3s var(--ease),color .3s var(--ease)}
+.ghost:hover{border-color:rgba(92,64,40,.55);color:rgba(92,64,40,.95)}
+
+#credit{
+  position:fixed;left:0;right:0;bottom:14px;z-index:20;
+  text-align:center;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.09em;
+  color:rgba(72,48,28,.42);text-decoration:none;
+  text-shadow:0 1px 0 rgba(255,250,240,.5);
+  transition:color .3s var(--ease);
+  padding:6px 12px;
+}
+#credit b{font-weight:400;color:rgba(72,48,28,.62);border-bottom:1px solid rgba(72,48,28,.24);padding-bottom:1px}
+#credit:hover{color:rgba(72,48,28,.7)}
+#credit:hover b{color:rgba(72,48,28,.92);border-bottom-color:rgba(72,48,28,.55)}
+
+#sound{
+  position:fixed;right:16px;top:16px;z-index:20;width:38px;height:38px;border-radius:999px;
+  display:grid;place-items:center;background:rgba(23,58,68,.38);
+  border:1px solid rgba(251,247,239,.26);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+  color:rgba(251,247,239,.86);transition:background .3s var(--ease)}
+#sound:hover{background:rgba(23,58,68,.6)}
+#sound svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#sound .off{display:none}
+#sound.muted .on{display:none}
+#sound.muted .off{display:block}
+
+/* ==========================================================================
+   SECTION 2 — DESKTOP OVERRIDES
+   ========================================================================== */
+@media (min-width:760px){
+  #intro{max-width:580px;gap:24px}
+  .prompt{font-size:27px}
+  #field{min-height:86px;font-size:17px}
+  #closing .line{font-size:19px}
+  #sound{right:26px;top:26px}
+  #credit{bottom:20px;font-size:11px}
+}
+@media (prefers-reduced-motion:reduce){#intro,#closing,.btn{transition-duration:.01ms}}
+</style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     SECTION 3 — HTML ELEMENTS
+     ========================================================================== -->
+<canvas id="scene"></canvas>
+
+<button id="sound" aria-label="Toggle sound">
+  <svg class="on" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+  <svg class="off" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 10l4 4M21 10l-4 4"/></svg>
+</button>
+
+<div class="layer on" id="introLayer">
+  <div id="intro">
+    <span class="eyebrow">Ask forgiveness &middot; 2 min</span>
+    <h1 class="prompt">What do you want to ask forgiveness for?</h1>
+    <textarea id="field" maxlength="140" rows="3" placeholder="Say it plainly. No one else will read it." aria-label="What you want to ask forgiveness for"></textarea>
+    <div class="row">
+      <span id="count">0 / 140</span>
+      <button class="btn" id="go" disabled>Write it in the sand</button>
+    </div>
+  </div>
+</div>
+
+<a id="credit" href="https://www.instagram.com/aiwithfey/" target="_blank" rel="noopener noreferrer">Made with love by <b>AI with Fey</b></a>
+
+<div class="layer" id="closing">
+  <p class="line">The water has it now.</p>
+  <button class="ghost" id="again">Write another</button>
+</div>
+
+<script>
+/* ==========================================================================
+   SECTION 4 — CONFIG & STATE
+   Flat top-down beach. You are looking down at your own feet.
+   The sea sits along the TOP edge; every wave sweeps down across the frame.
+   There is no horizon and no depth scaling anywhere in this file.
+   ========================================================================== */
+const cv = document.getElementById('scene');
+const ctx = cv.getContext('2d');
+
+let W=0, H=0, DPR=1;
+let restY = 0;                       // where the water sits between sets
+let textL=0, textR=0, textT=0, textB=0;
+
+const TIME = { charsPerSec:12, beat:650, dryTime:11000, shellDelay:1500, shellFade:1800 };
+
+/* Four waves. Each one runs a little further up the sand, and each one only
+   pulls PART of the way back — so the water is always creeping closer. */
+const WAVES = [
+  { reach:0.40, up:1450, hold:260, back:1750, giveBack:0.62, gap:420, peak:0.09 },
+  { reach:0.70, up:1500, hold:280, back:1800, giveBack:0.62, gap:440, peak:0.12 },
+  { reach:0.92, up:1550, hold:340, back:1850, giveBack:0.58, gap:460, peak:0.16 },
+  { reach:1.00, up:2000, hold:640, back:3300, giveBack:1.00, gap:0,   peak:0.23 }
+];
+// reach 0..1 is measured toward the TOP EDGE of the writing. The first three
+// stop short of it. Only the fourth crosses, and it clears the far edge.
+
+let state='intro';                   // intro | tracing | waves | settle | done
+let t0=0, last=0, raf=null;
+
+const carve=document.createElement('canvas'), cctx=carve.getContext('2d');
+const grain=document.createElement('canvas'), gctx=grain.getContext('2d');
+const sand =document.createElement('canvas'), sctx=sand.getContext('2d');
+
+let glyphs=[], fontSize=38, lineH=0, traceMs=0, drawnGlyphs=0;
+let written=false;                   // true once the words are actually in the sand
+
+/* ==========================================================================
+   SECTION 5 — STATIC SAND (drawn once)
+   Ripples run PARALLEL to the shore, i.e. vertically, because the water
+   arrives from the side.
+   ========================================================================== */
+function noiseTile(size,block,amp){
+  const c=document.createElement('canvas'); c.width=c.height=size;
+  const x=c.getContext('2d'), img=x.createImageData(size,size);
+  for(let j=0;j<size;j+=block) for(let i=0;i<size;i+=block){
+    const v=128+(Math.random()*2-1)*amp;
+    for(let b=0;b<block;b++) for(let a=0;a<block;a++){
+      const p=((j+b)*size+(i+a))*4;
+      img.data[p]=v; img.data[p+1]=v*0.97; img.data[p+2]=v*0.9; img.data[p+3]=255;
+    }
+  }
+  x.putImageData(img,0,0); return c;
+}
+
+function buildSand(){
+  sand.width=cv.width; sand.height=cv.height;
+  sctx.setTransform(DPR,0,0,DPR,0,0);
+  sctx.clearRect(0,0,W,H);
+
+  // damp at the water's side, drying as it runs away from the sea
+  const g=sctx.createLinearGradient(0,restY,0,H);
+  g.addColorStop(0,'#C4A275'); g.addColorStop(0.16,'#D9BC8E');
+  g.addColorStop(0.55,'#EAD3AC'); g.addColorStop(1,'#F5E7C9');
+  sctx.fillStyle=g; sctx.fillRect(0,0,W,H);
+
+  const fine=noiseTile(256,1,44), coarse=noiseTile(256,3,26);
+  sctx.globalCompositeOperation='overlay';
+  sctx.globalAlpha=0.32; sctx.fillStyle=sctx.createPattern(fine,'repeat'); sctx.fillRect(0,0,W,H);
+  sctx.globalAlpha=0.17; sctx.fillStyle=sctx.createPattern(coarse,'repeat'); sctx.fillRect(0,0,W,H);
+  sctx.globalCompositeOperation='source-over'; sctx.globalAlpha=1;
+
+  // tide ridges, parallel to the shoreline
+  const n=18;
+  for(let i=0;i<n;i++){
+    const base=restY+(H-restY)*(i/n)+Math.random()*12;
+    const amp=5+Math.random()*13, k=0.004+Math.random()*0.006, ph=Math.random()*99;
+    const fade=1-i/n;
+    for(const [off,col] of [[0,'rgba(148,114,76,'+(0.05+0.07*fade)+')'],[-1.7,'rgba(255,244,220,'+(0.05+0.08*fade)+')']]){
+      sctx.beginPath();
+      for(let x=-20;x<=W+20;x+=9){
+        const y=base+off+Math.sin(x*k+ph)*amp+Math.sin(x*k*2.7+ph*1.7)*amp*0.34;
+        x===-20?sctx.moveTo(x,y):sctx.lineTo(x,y);
+      }
+      sctx.strokeStyle=col; sctx.lineWidth=1.4; sctx.stroke();
+    }
+  }
+
+  // grit, denser nearer the water
+  for(let i=0;i<150;i++){
+    const x=Math.random()*W, y=restY+Math.pow(Math.random(),0.7)*(H-restY);
+    const r=0.7+Math.random()*2.2, a=Math.random()*3;
+    sctx.beginPath(); sctx.ellipse(x+0.7,y+0.7,r,r*0.7,a,0,7);
+    sctx.fillStyle='rgba(122,92,60,0.16)'; sctx.fill();
+    sctx.beginPath(); sctx.ellipse(x,y,r,r*0.7,a,0,7);
+    sctx.fillStyle=Math.random()<0.3?'rgba(255,250,238,0.5)':'rgba(168,132,90,0.28)'; sctx.fill();
+  }
+
+  // the band that never fully dries
+  const damp=sctx.createLinearGradient(0,restY,0,restY+H*0.14);
+  damp.addColorStop(0,'rgba(80,56,34,0.36)'); damp.addColorStop(1,'rgba(80,56,34,0)');
+  sctx.fillStyle=damp; sctx.fillRect(0,restY,W,H*0.14);
+}
+
+/* ==========================================================================
+   SECTION 6 — THE WRITING
+   Every letter gets its own jitter, so it reads as a finger, not a font.
+   Each glyph is painted onto the carve layer exactly once, when it appears.
+   ========================================================================== */
+function handFont(c){
+  c.font = fontSize+'px "Architects Daughter", cursive';
+  c.textBaseline = 'alphabetic';
+}
+
+function layoutText(str){
+  fontSize = Math.max(24, Math.min(W*0.042, 46));
+  lineH = fontSize*1.55;
+  handFont(cctx);
+
+  const maxW = Math.min(W*0.78, 720);
+  const words = str.trim().split(/\s+/);
+  let rows=[], cur='';
+  for(const w of words){
+    const test = cur ? cur+' '+w : w;
+    if(cctx.measureText(test).width > maxW && cur){ rows.push(cur); cur=w; }
+    else cur=test;
+  }
+  if(cur) rows.push(cur);
+  rows = rows.slice(0,5);
+
+  const blockH = rows.length*lineH;
+  const cx = W*0.5;
+  const cy = restY + (H-restY)*0.54;
+
+  glyphs=[]; textL=1e9; textR=-1e9;
+  rows.forEach((row,ri)=>{
+    const rw = cctx.measureText(row).width;
+    let x = cx - rw/2;
+    const y = cy - blockH/2 + lineH*(ri+0.72);
+    for(const ch of row){
+      const w = cctx.measureText(ch).width;
+      if(ch!==' '){
+        glyphs.push({
+          ch, x, y,
+          dx:(Math.random()-0.5)*fontSize*0.055,
+          dy:(Math.random()-0.5)*fontSize*0.10,
+          rot:(Math.random()-0.5)*0.075,
+          sc:0.94+Math.random()*0.13
+        });
+        textL=Math.min(textL,x); textR=Math.max(textR,x+w);
+      }
+      x += w;
+    }
+  });
+  textT = cy-blockH/2; textB = cy+blockH/2;
+  traceMs = Math.max(1500, (glyphs.length/TIME.charsPerSec)*1000);
+  drawnGlyphs = 0;
+}
+
+// one letter, pressed into the sand. light comes from the upper left.
+function carveGlyph(gl){
+  const c=cctx;
+  c.save();
+  c.translate(gl.x+gl.dx, gl.y+gl.dy);
+  c.rotate(gl.rot); c.scale(gl.sc,gl.sc);
+  handFont(c);
+  c.lineJoin='round'; c.lineCap='round';
+  c.strokeStyle='rgba(255,248,229,0.52)'; c.lineWidth=fontSize*0.15; c.strokeText(gl.ch, 1.5, 1.8);
+  c.strokeStyle='rgba(102,72,44,0.34)';   c.lineWidth=fontSize*0.11; c.strokeText(gl.ch,-1.5,-1.7);
+  c.fillStyle='rgba(255,251,236,0.36)';   c.fillText(gl.ch, 1.2, 1.4);
+  c.fillStyle='rgba(92,64,38,0.50)';      c.fillText(gl.ch,-1.0,-1.1);
+  c.fillStyle='rgba(124,94,62,0.30)';     c.fillText(gl.ch, 0, 0);
+  c.restore();
+
+  // sand shoved aside by the fingertip
+  for(let i=0;i<9;i++){
+    const a=Math.random()*Math.PI*2, r=fontSize*0.16+Math.random()*fontSize*0.30;
+    gctx.beginPath();
+    gctx.arc(gl.x+gl.dx+Math.cos(a)*r, gl.y+gl.dy-fontSize*0.28+Math.sin(a)*r*0.85, 0.5+Math.random()*1.7, 0,7);
+    gctx.fillStyle = Math.random()<0.7
+      ? 'rgba(253,243,220,'+(0.3+Math.random()*0.45)+')'
+      : 'rgba(120,88,56,'+(0.12+Math.random()*0.2)+')';
+    gctx.fill();
+  }
+}
+
+/* ==========================================================================
+   SECTION 7 — THE WATER (sweeping down from the top)
+   ========================================================================== */
+let waveIdx=-1, wavePhase='idle';
+let waveY=0, waveBase=0, wavePeakY=0, waveTargetY=0, waveStrength=0.4;
+
+function easeUp(t){ return 1-Math.pow(1-t,2.5); }
+function easeBack(t){ return t*t*(3-2*t); }
+
+// scallop runs along X, since the front is a horizontal line
+function edgeAt(x,t,s){
+  return (Math.sin(x*0.0128+t*0.0016)*10
+        + Math.sin(x*0.0059-t*0.0011)*6
+        + Math.sin(x*0.0271+t*0.0026)*2.8)*s;
+}
+function waterAt(x,t){ return waveY + edgeAt(x,t,waveStrength); }
+
+function edgeCurve(c,t,off,step){
+  step=step||7;
+  let px=-16, py=waterAt(px,t)+off;
+  c.lineTo(px,py);
+  for(let x=-16+step; x<=W+16; x+=step){
+    const y=waterAt(x,t)+off;
+    c.quadraticCurveTo(px,py,(px+x)/2,(py+y)/2);
+    px=x; py=y;
+  }
+  c.lineTo(W+16,py);
+}
+function waterPath(c,t,off){
+  c.beginPath(); c.moveTo(-16,-60); edgeCurve(c,t,off); c.lineTo(W+16,-60); c.closePath();
+}
+
+function startWave(i){
+  waveIdx=i; wavePhase='up'; t0=performance.now();
+  const w=WAVES[i];
+  wavePeakY = (i===WAVES.length-1)
+    ? Math.min(H-8, textB + Math.max(H*0.10, (H-textB)*0.55))   // clears the far edge
+    : waveBase + (textT-waveBase)*w.reach;                      // stops short of the words
+  waveTargetY = (w.giveBack>=1) ? restY : waveBase + (wavePeakY-waveBase)*(1-w.giveBack);
+  audio.wave(w,i);
+}
+
+/* --- the words are removed while the water is on top of them -------------- */
+function eraseUnderWater(t){
+  if(!written) return;
+  for(const c of [cctx,gctx]){
+    c.save();
+    c.globalCompositeOperation='destination-out';
+    c.globalAlpha=1;    waterPath(c,t,0); c.fill();
+    c.globalAlpha=0.5;  waterPath(c,t,3); c.fill();
+    c.globalAlpha=0.22; waterPath(c,t,6); c.fill();
+    c.restore();
+  }
+}
+
+/* --- wet sand memory: one smooth shape, indexed across the X axis --------- */
+const COLS=96;
+let wetPeak=new Float32Array(COLS);
+let wetAge=0;
+function resetWet(){ for(let i=0;i<COLS;i++) wetPeak[i]=restY; wetAge=0; }
+function smoothPeaks(){
+  for(let p=0;p<2;p++){
+    let prev=wetPeak[0];
+    for(let i=1;i<COLS-1;i++){ const cur=wetPeak[i]; wetPeak[i]=(prev+cur*2+wetPeak[i+1])*0.25; prev=cur; }
+  }
+}
+function updateWet(dt,t){
+  const cw=W/(COLS-1);
+  let touched=false;
+  for(let i=0;i<COLS;i++){
+    const wy=waterAt(i*cw,t);
+    if(wy>wetPeak[i]){ wetPeak[i]=wy; touched=true; }
+  }
+  if(touched){ smoothPeaks(); wetAge=1; }
+  if(wetAge>0) wetAge=Math.max(0,wetAge-dt/TIME.dryTime);
+}
+function wetLineAt(i){
+  const e=wetAge*wetAge*(3-2*wetAge);
+  return restY + (wetPeak[i]-restY)*(0.34+0.66*e);
+}
+function wetPath(c,off){
+  const cw=W/(COLS-1);
+  c.beginPath(); c.moveTo(-16,-60); c.lineTo(-16,wetLineAt(0)+off);
+  let px=-16, py=wetLineAt(0)+off;
+  for(let i=0;i<COLS;i++){
+    const x=i*cw, y=wetLineAt(i)+off;
+    c.quadraticCurveTo(px,py,(px+x)/2,(py+y)/2);
+    px=x; py=y;
+  }
+  c.lineTo(W+16,py); c.lineTo(W+16,-60); c.closePath();
+}
+let wetGrad=null;
+function drawWet(){
+  if(wetAge<=0.004) return;
+  const a=wetAge*wetAge*(3-2*wetAge);
+  ctx.save(); wetPath(ctx,0); ctx.clip();
+  ctx.globalAlpha=a; ctx.fillStyle=wetGrad; ctx.fillRect(0,-60,W,H+60);
+  ctx.restore();
+  ctx.save(); ctx.lineJoin='round';
+  for(let k=0;k<4;k++){
+    wetPath(ctx,k*2.4);
+    ctx.strokeStyle='rgba(76,52,32,'+(a*0.10*(1-k/4))+')'; ctx.lineWidth=5; ctx.stroke();
+  }
+  if(a>0.35){
+    wetPath(ctx,-1.5);
+    ctx.strokeStyle='rgba(255,252,244,'+((a-0.35)*0.32)+')'; ctx.lineWidth=3; ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* --- foam bubbles, capped --- */
+const bubbles=[]; const MAX_BUBBLES=70;
+function spawnBubbles(t,n){
+  for(let i=0;i<n && bubbles.length<MAX_BUBBLES;i++){
+    const x=Math.random()*W;
+    bubbles.push({x, y:waterAt(x,t)-Math.random()*22, r:0.9+Math.random()*3.2, life:1});
+  }
+}
+function drawBubbles(dt){
+  for(let i=bubbles.length-1;i>=0;i--){
+    const b=bubbles[i]; b.life-=dt/900; b.y-=dt*0.004;
+    if(b.life<=0){ bubbles.splice(i,1); continue; }
+    ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,7);
+    ctx.fillStyle='rgba(255,253,247,'+(b.life*0.55)+')'; ctx.fill();
+  }
+}
+
+/* --- the sheet of water: opaque. it covers the sand, it does not tint it --- */
+function drawWater(t){
+  ctx.save(); waterPath(ctx,t,0); ctx.clip();
+  const g=ctx.createLinearGradient(0,-60,0,waveY+10);
+  g.addColorStop(0,'rgba(24,64,74,1)');
+  g.addColorStop(0.42,'rgba(44,100,108,0.99)');
+  g.addColorStop(0.80,'rgba(96,158,158,0.97)');
+  g.addColorStop(1,'rgba(186,224,218,0.94)');
+  ctx.fillStyle=g; ctx.fillRect(0,-60,W,H+60);
+
+  ctx.globalAlpha=0.13; ctx.fillStyle='#EFFCF9';
+  for(let i=0;i<8;i++){
+    const y=-60+(waveY+60)*(i+0.4)/8+Math.sin(t*0.0019+i*1.3)*4;
+    ctx.fillRect(0,y,W,1.2+i*0.2);
+  }
+  ctx.globalAlpha=1; ctx.restore();
+
+  const lip=16+26*waveStrength;
+  ctx.save(); ctx.beginPath();
+  ctx.moveTo(-16,waterAt(-16,t)); edgeCurve(ctx,t,0);
+  for(let x=W+16;x>=-16;x-=7){
+    const n=0.42+0.58*(0.5+0.5*Math.sin(x*0.0172+t*0.0028)*Math.sin(x*0.0058-t*0.0013));
+    ctx.lineTo(x, waterAt(x,t)-lip*n);
+  }
+  ctx.closePath();
+  const fg=ctx.createLinearGradient(0,waveY-lip,0,waveY+2);
+  fg.addColorStop(0,'rgba(248,253,252,0.26)');
+  fg.addColorStop(0.30,'rgba(251,250,244,0.80)');
+  fg.addColorStop(0.72,'rgba(255,255,255,0.97)');
+  fg.addColorStop(1,'rgba(255,255,255,1)');
+  ctx.fillStyle=fg; ctx.fill(); ctx.restore();
+
+  ctx.beginPath(); ctx.moveTo(-16,waterAt(-16,t)); edgeCurve(ctx,t,0);
+  ctx.strokeStyle='rgba(255,255,255,'+(0.30+0.35*waveStrength)+')';
+  ctx.lineWidth=1.8; ctx.stroke();
+
+  ctx.save(); ctx.beginPath();
+  ctx.moveTo(-16,waterAt(-16,t)); edgeCurve(ctx,t,0); edgeCurve(ctx,t,8);
+  ctx.closePath(); ctx.fillStyle='rgba(90,64,40,0.10)'; ctx.fill(); ctx.restore();
+}
+
+/* ==========================================================================
+   SECTION 8 — THE SHELL (an exchange, not a verdict)
+   ========================================================================== */
+let shell=null, shellAlpha=0, shellStart=0;
+function makeShell(){
+  const size=Math.max(24,Math.min(W*0.036,46));
+  const c=document.createElement('canvas');
+  c.width=c.height=Math.ceil(size*2.8*DPR);
+  const x=c.getContext('2d'); x.setTransform(DPR,0,0,DPR,0,0);
+  const cx=size*1.4, cy=size*1.85, R=size;
+  const hues=[['#FBE7DE','#E9B9A6','#C98F79'],['#FDF4E3','#EBD9B4','#C9AE80'],
+              ['#F1E8F4','#D6C3DF','#AF97BE'],['#FDEBD2','#F0C79A','#CE9E6D']][Math.floor(Math.random()*4)];
+  x.translate(cx,cy); x.rotate((Math.random()-0.5)*0.9); x.translate(-cx,-cy);
+  x.beginPath(); x.ellipse(cx+R*0.16,cy-R*0.22,R*1.06,R*0.6,0,0,7);
+  x.fillStyle='rgba(88,62,40,0.18)'; x.fill();
+  x.beginPath(); x.moveTo(cx,cy); x.arc(cx,cy,R,Math.PI*1.10,Math.PI*1.90); x.closePath();
+  const g=x.createLinearGradient(cx,cy,cx,cy-R);
+  g.addColorStop(0,hues[2]); g.addColorStop(0.45,hues[1]); g.addColorStop(1,hues[0]);
+  x.fillStyle=g; x.fill();
+  x.save(); x.clip();
+  for(let i=0;i<=11;i++){
+    const a=Math.PI*1.10+(Math.PI*0.80)*(i/11);
+    x.beginPath(); x.moveTo(cx,cy); x.lineTo(cx+Math.cos(a)*R*1.05, cy+Math.sin(a)*R*1.05);
+    x.strokeStyle=i%2?'rgba(255,255,255,0.42)':'rgba(120,84,62,0.2)'; x.lineWidth=R*0.055; x.stroke();
+  }
+  x.restore();
+  x.beginPath(); x.arc(cx,cy,R,Math.PI*1.10,Math.PI*1.90);
+  x.strokeStyle='rgba(255,255,255,0.6)'; x.lineWidth=R*0.05; x.stroke();
+  x.beginPath(); x.ellipse(cx,cy,R*0.13,R*0.09,0,0,7); x.fillStyle=hues[2]; x.fill();
+  x.beginPath(); x.ellipse(cx-R*0.22,cy-R*0.42,R*0.2,R*0.1,-0.5,0,7);
+  x.fillStyle='rgba(255,255,255,0.5)'; x.fill();
+  return { img:c, w:c.width/DPR, h:c.height/DPR,
+           x: textL+(textR-textL)*(0.28+Math.random()*0.44),
+           y: textB + H*0.055 + Math.random()*H*0.04 };
+}
+
+/* ==========================================================================
+   SECTION 9 — SOUND (generated, no files)
+   ========================================================================== */
+const audio=(()=>{
+  let ac=null,buf=null,master=null,on=true,started=false;
+  function noiseBuffer(){
+    const len=ac.sampleRate*4,b=ac.createBuffer(1,len,ac.sampleRate),d=b.getChannelData(0);
+    let l0=0,l1=0,l2=0;
+    for(let i=0;i<len;i++){
+      const w=Math.random()*2-1;
+      l0=0.99765*l0+w*0.0990460; l1=0.96300*l1+w*0.2965164; l2=0.57000*l2+w*1.0526913;
+      d[i]=(l0+l1+l2+w*0.1848)*0.16;
+    }
+    return b;
+  }
+  function src(){ const s=ac.createBufferSource(); s.buffer=buf; s.loop=true; return s; }
+  return {
+    init(){
+      if(started) return; started=true;
+      const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+      ac=new AC(); buf=noiseBuffer();
+      master=ac.createGain(); master.gain.value=on?1:0; master.connect(ac.destination);
+      const a=src(),af=ac.createBiquadFilter(); af.type='lowpass'; af.frequency.value=780;
+      const ag=ac.createGain(); ag.gain.value=0.06;
+      a.connect(af); af.connect(ag); ag.connect(master); a.start();
+      const w=src(),wf=ac.createBiquadFilter(); wf.type='lowpass'; wf.frequency.value=340;
+      const wg=ac.createGain(); wg.gain.value=0.05;
+      const lfo=ac.createOscillator(),lg=ac.createGain();
+      lfo.frequency.value=0.055; lg.gain.value=0.03;
+      lfo.connect(lg); lg.connect(wg.gain);
+      w.connect(wf); wf.connect(wg); wg.connect(master); w.start(); lfo.start();
+    },
+    wave(cfg,idx){
+      if(!ac) return;
+      const now=ac.currentTime, s=src(), f=ac.createBiquadFilter(), g=ac.createGain();
+      f.type='bandpass'; f.Q.value=0.7;
+      const peak=cfg.peak||0.14, up=cfg.up/1000, hold=cfg.hold/1000, back=cfg.back/1000;
+      f.frequency.setValueAtTime(430,now);
+      f.frequency.linearRampToValueAtTime(1300,now+up);
+      f.frequency.linearRampToValueAtTime(2400,now+up+hold+back*0.6);
+      g.gain.setValueAtTime(0.0001,now);
+      g.gain.exponentialRampToValueAtTime(peak,now+up*0.75);
+      g.gain.setValueAtTime(peak,now+up+hold);
+      g.gain.exponentialRampToValueAtTime(0.0001,now+up+hold+back);
+      s.connect(f); f.connect(g); g.connect(master);
+      s.start(now); s.stop(now+up+hold+back+0.2);
+      if(idx>0){
+        const s2=src(),f2=ac.createBiquadFilter(),g2=ac.createGain();
+        f2.type='lowpass'; f2.frequency.value=130;
+        g2.gain.setValueAtTime(0.0001,now);
+        g2.gain.exponentialRampToValueAtTime(0.04+idx*0.025,now+up*0.7);
+        g2.gain.exponentialRampToValueAtTime(0.0001,now+up+hold+back*0.7);
+        s2.connect(f2); f2.connect(g2); g2.connect(master);
+        s2.start(now); s2.stop(now+up+hold+back+0.2);
+      }
+    },
+    toggle(){ on=!on; if(master) master.gain.setTargetAtTime(on?1:0,ac.currentTime,0.15); return on; }
+  };
+})();
+
+/* ==========================================================================
+   SECTION 10 — LAYOUT, LOOP, STATE MACHINE
+   ========================================================================== */
+let currentText='';
+
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=window.innerWidth; H=window.innerHeight;
+  for(const c of [cv,carve,grain]){ c.width=W*DPR; c.height=H*DPR; }
+  for(const c of [ctx,cctx,gctx]) c.setTransform(DPR,0,0,DPR,0,0);
+  restY=Math.round(H*0.13);
+  waveY=restY; waveBase=restY;
+  wetGrad=ctx.createLinearGradient(0,restY,0,H);
+  wetGrad.addColorStop(0,'rgba(62,42,25,0.58)');
+  wetGrad.addColorStop(0.5,'rgba(78,54,32,0.47)');
+  wetGrad.addColorStop(1,'rgba(92,64,38,0.34)');
+  buildSand(); resetWet();
+  if(currentText){
+    cctx.clearRect(0,0,W,H); gctx.clearRect(0,0,W,H);
+    layoutText(currentText);
+    // only re-carve if the words were genuinely already in the sand
+    if(written && state!=='tracing'){ for(const gl of glyphs) carveGlyph(gl); drawnGlyphs=glyphs.length; }
+  } else { textL=W*0.15; textR=W*0.85; textT=H*0.46; textB=H*0.62; }
+}
+
+function tick(now){
+  raf=requestAnimationFrame(tick);
+  const dt=Math.min(48,now-last); last=now;
+  const el=now-t0;
+  let finger=null;
+
+  /* ---- state ---- */
+  if(state==='tracing'){
+    const p=Math.min(1,el/traceMs);
+    const want=Math.floor(p*glyphs.length);
+    while(drawnGlyphs<want && drawnGlyphs<glyphs.length){ carveGlyph(glyphs[drawnGlyphs]); drawnGlyphs++; }
+    if(drawnGlyphs>0 && drawnGlyphs<=glyphs.length){
+      const gl=glyphs[Math.min(drawnGlyphs,glyphs.length-1)];
+      finger={x:gl.x+gl.dx, y:gl.y+gl.dy-fontSize*0.28};
+    }
+    if(p>=1){
+      while(drawnGlyphs<glyphs.length){ carveGlyph(glyphs[drawnGlyphs]); drawnGlyphs++; }
+      written=true;
+      state='waves'; t0=now; wavePhase='gap'; waveIdx=-1;
+    }
+  }
+  else if(state==='waves'){
+    if(wavePhase==='gap'){
+      const wait = waveIdx<0 ? TIME.beat : WAVES[waveIdx].gap;
+      waveY=waveBase; waveStrength=0.4;
+      if(el>=wait) startWave(waveIdx+1);
+    } else {
+      const w=WAVES[waveIdx];
+      if(wavePhase==='up'){
+        const p=Math.min(1,el/w.up);
+        waveY=waveBase+(wavePeakY-waveBase)*easeUp(p);
+        waveStrength=Math.min(1,0.45+p*0.7);
+        if(Math.random()<0.55) spawnBubbles(now,2);
+        if(p>=1){ wavePhase='hold'; t0=now; }
+      } else if(wavePhase==='hold'){
+        waveY=wavePeakY+Math.sin(el*0.004)*2;
+        if(Math.random()<0.4) spawnBubbles(now,2);
+        if(el>=w.hold){ wavePhase='back'; t0=now; }
+      } else if(wavePhase==='back'){
+        const p=Math.min(1,el/w.back);
+        waveY=wavePeakY-(wavePeakY-waveTargetY)*easeBack(p);
+        waveStrength=1-p*0.6;
+        if(p<0.7 && Math.random()<0.5) spawnBubbles(now,2);
+        if(p>=1){
+          waveBase=waveTargetY; waveStrength=0.4;
+          if(waveIdx<WAVES.length-1){ wavePhase='gap'; t0=now; }
+          else { state='settle'; shellStart=now+TIME.shellDelay; t0=now; }
+        }
+      }
+      // The water carries the words off while it is on top of them. Nothing
+      // is ever visibly half-erased: only the last wave ever reaches them,
+      // and it clears the far edge before it turns around.
+      if(wavePhase==='up'||wavePhase==='hold') eraseUnderWater(now);
+    }
+  }
+  else if(state==='settle'){
+    if(!shell && now>=shellStart) shell=makeShell();
+    if(shell) shellAlpha=Math.min(1,(now-shellStart)/TIME.shellFade);
+    if(shellAlpha>=1){ closing.classList.add('on'); state='done'; }
+  }
+
+  updateWet(dt,now);
+
+  /* ---- draw ---- */
+  ctx.clearRect(0,0,W,H);
+  ctx.drawImage(sand,0,0,W,H);
+  ctx.drawImage(grain,0,0,W,H);
+  ctx.drawImage(carve,0,0,W,H);
+  drawWet();
+  if(shell&&shellAlpha>0){
+    ctx.globalAlpha=shellAlpha;
+    ctx.drawImage(shell.img, shell.x-shell.w/2, shell.y-shell.h/2, shell.w, shell.h);
+    ctx.globalAlpha=1;
+  }
+  drawWater(now);
+  drawBubbles(dt);
+
+  if(finger){
+    const d=ctx.createRadialGradient(finger.x,finger.y,0,finger.x,finger.y,fontSize*0.24);
+    d.addColorStop(0,'rgba(88,60,36,0.22)'); d.addColorStop(1,'rgba(88,60,36,0)');
+    ctx.fillStyle=d; ctx.beginPath(); ctx.arc(finger.x,finger.y,fontSize*0.24,0,7); ctx.fill();
+  }
+}
+
+/* ==========================================================================
+   SECTION 11 — WIRING
+   ========================================================================== */
+const field=document.getElementById('field');
+const go=document.getElementById('go');
+const count=document.getElementById('count');
+const intro=document.getElementById('intro');
+const introLayer=document.getElementById('introLayer');
+const closing=document.getElementById('closing');
+
+field.addEventListener('input',()=>{
+  const n=field.value.length;
+  count.textContent=n+' / 140';
+  count.classList.toggle('near',n>120);
+  go.disabled=field.value.trim().length<2;
+});
+field.addEventListener('focus',()=>audio.init());
+go.addEventListener('click',begin);
+field.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter'&&!go.disabled) begin();
+});
+
+function begin(){
+  audio.init();
+  currentText=field.value.trim();
+  layoutText(currentText);
+  intro.classList.add('gone'); introLayer.classList.remove('on'); field.blur();
+  setTimeout(()=>{
+    cctx.clearRect(0,0,W,H); gctx.clearRect(0,0,W,H);
+    written=false; drawnGlyphs=0;
+    layoutText(currentText);          // re-measure in case the keyboard resized us
+    state='tracing'; t0=performance.now();
+  },700);
+}
+
+document.getElementById('again').addEventListener('click',()=>{
+  closing.classList.remove('on');
+  shell=null; shellAlpha=0; bubbles.length=0;
+  waveIdx=-1; wavePhase='idle'; waveStrength=0.4;
+  waveY=restY; waveBase=restY;
+  resetWet();
+  cctx.clearRect(0,0,W,H); gctx.clearRect(0,0,W,H);
+  glyphs=[]; currentText=''; written=false; drawnGlyphs=0;
+  field.value=''; count.textContent='0 / 140'; go.disabled=true;
+  setTimeout(()=>{ intro.classList.remove('gone'); introLayer.classList.add('on'); state='intro'; },900);
+});
+
+document.getElementById('sound').addEventListener('click',e=>{
+  audio.init();
+  e.currentTarget.classList.toggle('muted',!audio.toggle());
+});
+
+let rt=null;
+window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(resize,220); });
+
+(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{
+  resize();
+  last=performance.now(); t0=last;
+  raf=requestAnimationFrame(tick);
+});
+</script>
+</body>
+</html>

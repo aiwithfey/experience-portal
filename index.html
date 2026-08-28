@@ -94,6 +94,46 @@
   @keyframes burn{0%,100%{opacity:.5}50%{opacity:1}}
   @keyframes spark{0%,100%{opacity:0}30%{opacity:0}50%{opacity:1}70%{opacity:0}}
   @keyframes beam{0%,100%{opacity:.12}50%{opacity:.5}}
+  /* Water's Edge: writing traced, then taken. The mark is hidden while the
+     water is on top of it, so it is never seen half-erased. */
+  @keyframes draw1{0%{stroke-dashoffset:147;}5.81%{stroke-dashoffset:0;}56%{stroke-dashoffset:0;}56.5%{stroke-dashoffset:147;}100%{stroke-dashoffset:147;}}
+  @keyframes draw2{0%,6.91%{stroke-dashoffset:167;}13.51%{stroke-dashoffset:0;}56%{stroke-dashoffset:0;}56.5%{stroke-dashoffset:167;}100%{stroke-dashoffset:167;}}
+  @keyframes draw3{0%,14.61%{stroke-dashoffset:124;}19.51%{stroke-dashoffset:0;}56%{stroke-dashoffset:0;}56.5%{stroke-dashoffset:124;}100%{stroke-dashoffset:124;}}
+  @keyframes draw4{0%,20.61%{stroke-dashoffset:220;}29.31%{stroke-dashoffset:0;}56%{stroke-dashoffset:0;}56.5%{stroke-dashoffset:220;}100%{stroke-dashoffset:220;}}
+  @keyframes draw5{0%,30.41%{stroke-dashoffset:192;}38.0%{stroke-dashoffset:0;}56%{stroke-dashoffset:0;}56.5%{stroke-dashoffset:192;}100%{stroke-dashoffset:192;}}
+  @keyframes markHide{0%,53%{opacity:1;}56%,78%{opacity:0;}78.5%,100%{opacity:1;}}
+  @keyframes shellIn{0%,70%{opacity:0; transform:scale(.86);}79%,91%{opacity:1; transform:scale(1);}100%{opacity:0; transform:scale(.86);}}
+  @keyframes lipX{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+  /* mobile reach: rests 44px down, runs to 118px — clears the mark at 58–106 */
+  @keyframes tideMobile{
+    0%,42%{transform:translateY(-256px); animation-timing-function:cubic-bezier(.16,.84,.36,1);}
+    57%{transform:translateY(-182px);}
+    62%{transform:translateY(-188px); animation-timing-function:cubic-bezier(.5,0,.5,1);}
+    84%,100%{transform:translateY(-256px);}
+  }
+  @keyframes wetMobile{
+    0%,44%{transform:translateY(-272px); opacity:0; animation-timing-function:cubic-bezier(.16,.84,.36,1);}
+    49%{opacity:.9;}
+    59%{transform:translateY(-188px); opacity:.9;}
+    82%{transform:translateY(-188px); opacity:.7;}
+    96%{transform:translateY(-244px); opacity:0;}
+    100%{transform:translateY(-272px); opacity:0;}
+  }
+  /* desktop reach: rests 50px down, runs to 264px — clears the mark at 178–248 */
+  @keyframes tideDesktop{
+    0%,42%{transform:translateY(-420px); animation-timing-function:cubic-bezier(.16,.84,.36,1);}
+    57%{transform:translateY(-206px);}
+    62%{transform:translateY(-213px); animation-timing-function:cubic-bezier(.5,0,.5,1);}
+    84%,100%{transform:translateY(-420px);}
+  }
+  @keyframes wetDesktop{
+    0%,44%{transform:translateY(-440px); opacity:0; animation-timing-function:cubic-bezier(.16,.84,.36,1);}
+    49%{opacity:.9;}
+    59%{transform:translateY(-213px); opacity:.9;}
+    82%{transform:translateY(-213px); opacity:.7;}
+    96%{transform:translateY(-330px); opacity:0;}
+    100%{transform:translateY(-440px); opacity:0;}
+  }
 
   .desktop-only{display:none !important;}
 
@@ -242,6 +282,12 @@
   .door-palm .door-title{color:var(--white);}
   .door-palm .door-desc{color:rgba(255,255,255,.8);}
 
+  .door-shore{background:linear-gradient(180deg,#fff2f7 0%,#fde6ee 100%);}
+  .door-shore .door-body{background:linear-gradient(180deg, rgba(253,230,238,0) 0%, #fde6ee 52%);}
+  .door-shore .door-tag{color:var(--berry);}
+  .door-shore .door-title{color:var(--ink-900);}
+  .door-shore .door-desc{color:var(--ink-700);}
+
   /* ------------------------------------------------------ "a new door soon" */
   .door-soon{
     position:relative; height:210px; background:var(--rose-50);
@@ -353,6 +399,37 @@
     color:var(--berry-800); opacity:.55;
   }
 
+  /* ------------------------------------------------- Water's Edge door art */
+  .sand-bg{position:absolute; inset:0; background:linear-gradient(180deg,#faf5ec 0%,#fcf1e9 26%,#fdecea 52%,#fde9ec 76%,#fde6ee 100%);}
+  .sand{position:absolute; inset:0; width:100%; height:100%;}
+  /* the mark someone traced with a finger */
+  .mark{position:absolute; left:50%; top:58px; margin-left:-76px; width:152px; height:48px; animation:markHide 11s linear infinite;}
+  .mark path{stroke-linecap:round; stroke-linejoin:round; fill:none;}
+  .mark .w1{stroke-dasharray:147; stroke-dashoffset:147; animation:draw1 11s linear infinite;}
+  .mark .w2{stroke-dasharray:167; stroke-dashoffset:167; animation:draw2 11s linear infinite;}
+  .mark .w3{stroke-dasharray:124; stroke-dashoffset:124; animation:draw3 11s linear infinite;}
+  .mark .w4{stroke-dasharray:220; stroke-dashoffset:220; animation:draw4 11s linear infinite;}
+  .mark .w5{stroke-dasharray:192; stroke-dashoffset:192; animation:draw5 11s linear infinite;}
+  .mark-lip path{stroke:rgba(255,255,255,.95); stroke-width:4.4;}
+  .mark-groove path{stroke:rgba(171,18,94,.6); stroke-width:2;}
+  /* what the water leaves behind */
+  .shell{position:absolute; left:50%; top:80px; margin-left:18px; width:21px; height:17px; opacity:0; animation:shellIn 11s var(--ease-soft) infinite;}
+  /* the darker band of wet sand, drying off */
+  .wet{
+    position:absolute; left:0; top:0; width:100%; height:300px; opacity:0;
+    background:linear-gradient(180deg, rgba(251,199,220,.9) 0%, rgba(251,199,220,.9) 90%, rgba(251,199,220,0) 100%);
+    transform:translateY(-272px); animation:wetMobile 11s linear infinite;
+  }
+  /* the tide */
+  .tide{
+    position:absolute; left:0; top:0; width:100%; height:300px;
+    background:linear-gradient(180deg, rgba(255,255,255,0) 54%, rgba(255,255,255,.34) 100%),
+               repeating-linear-gradient(180deg, rgba(255,255,255,.22) 0 2px, rgba(255,255,255,0) 2px 22px),
+               linear-gradient(180deg,#f9aeca 0%,#ffbed6 46%,#ffd4e4 100%);
+    transform:translateY(-256px); animation:tideMobile 11s linear infinite;
+  }
+  .tide-lip{position:absolute; left:0; bottom:-20px; width:200%; height:24px; animation:lipX 9s linear infinite;}
+
   /* ------------------------------------------------------------ start over */
   .startover-wrap{display:flex; justify-content:center; padding:22px 24px 34px; background:var(--cream);}
   .startover{
@@ -418,11 +495,18 @@
   .is-ready .doors > *:nth-child(7){animation-delay:510ms;}
   .is-ready .doors > *:nth-child(8){animation-delay:575ms;}
   .is-ready .doors > *:nth-child(9){animation-delay:640ms;}
+  .is-ready .doors > *:nth-child(10){animation-delay:705ms;}
 
   @media (prefers-reduced-motion:reduce){
     .pl-light,.pl-star,.pl-mote,.pl-rule span{animation:none !important;}
     .portal-loader{transition-duration:200ms !important;}
     .is-ready .doors > *{animation:none !important;}
+    /* Water's Edge settles on the written state: the mark stays, the shell
+       is there, the water is away. */
+    .mark,.mark path,.mark g,.shell,.wet,.tide,.tide-lip{animation:none !important;}
+    .mark path{stroke-dashoffset:0 !important;}
+    .shell{opacity:1;}
+    .wet{opacity:0;}
   }
 
   /* ==================================================== opening a door
@@ -506,7 +590,8 @@
     .door-glass:hover,
     .door-card:hover,
     .door-home:hover,
-    .door-palm:hover{box-shadow:inset 0 0 0 2px rgba(171,18,94,.4), inset 0 34px 44px -30px rgba(110,14,61,.45);}
+    .door-palm:hover,
+    .door-shore:hover{box-shadow:inset 0 0 0 2px rgba(171,18,94,.4), inset 0 34px 44px -30px rgba(110,14,61,.45);}
     .door-water:hover,
     .door-ripple:hover{box-shadow:inset 0 0 0 2px rgba(255,186,211,.6), inset 0 46px 52px -26px rgba(35,3,18,.9);}
 
@@ -545,6 +630,17 @@
     .home-stage{top:64px; height:90px;}
     .home-word{font-size:38px;}
     .home-label{top:164px; font-size:10px;}
+
+    /* The arch is tall and narrow, so the shore is repositioned and regrown
+       rather than scaled: the mark sits at y 178–248, well inside the mobile
+       crop band, with margin above and below. */
+    .mark{top:178px; margin-left:-104px; width:208px; height:70px;}
+    .mark-lip path{stroke-width:4;}
+    .mark-groove path{stroke-width:1.8;}
+    .shell{top:216px; margin-left:34px; width:28px; height:23px;}
+    .wet{height:470px; transform:translateY(-440px); animation-name:wetDesktop;}
+    .tide{height:470px; transform:translateY(-420px); animation-name:tideDesktop;}
+    .tide-lip{bottom:-23px; height:28px;}
 
     .door-soon{
       flex:none; width:300px; height:446px;
@@ -593,7 +689,7 @@
     <span>Experience Portal</span>
   </a>
   <div class="topbar-meta">
-    <span class="found js-found desktop-only">0 of 7 opened</span>
+    <span class="found js-found desktop-only">0 of 8 opened</span>
     <a class="fey" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a>
   </div>
 </header>
@@ -608,7 +704,7 @@
       <h1>Experience<br> <em>Portal</em></h1>
       <p>Every little interactive experience I build, gathered in one place for the AI Goddesses community. Open a door and play — most take two minutes.</p>
       <div class="hero-progress mobile-only">
-        <span class="found js-found">0 of 7 opened</span>
+        <span class="found js-found">0 of 8 opened</span>
         <span class="rule"></span>
         <span class="more">More arriving</span>
       </div>
@@ -774,6 +870,72 @@
         </div>
       </a>
 
+      <a class="door door-shore" data-key="shore" href="waters-edge/">
+        <span class="door-frame"></span>
+        <div class="door-art">
+          <div class="sand-bg"></div>
+
+          <!-- tide ridges left by the last high water -->
+          <svg class="sand" viewBox="0 0 300 446" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M-10 168 Q40 160 90 168 T190 168 T290 168 T390 168" fill="none" stroke="rgba(224,158,182,.40)" stroke-width="1.4"/>
+            <path d="M-10 202 Q46 212 96 202 T196 202 T296 202 T396 202" fill="none" stroke="rgba(224,158,182,.32)" stroke-width="1.2"/>
+            <path d="M-10 300 Q42 292 92 300 T192 300 T292 300 T392 300" fill="none" stroke="rgba(224,158,182,.28)" stroke-width="1.3"/>
+            <path d="M-10 342 Q48 352 98 342 T198 342 T298 342 T398 342" fill="none" stroke="rgba(224,158,182,.22)" stroke-width="1.1"/>
+            <path d="M-10 386 Q44 378 94 386 T194 386 T294 386 T394 386" fill="none" stroke="rgba(224,158,182,.16)" stroke-width="1"/>
+          </svg>
+
+          <!-- two lines of something written with a fingertip -->
+          <svg class="mark" viewBox="0 0 210 84" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Two lines of cursive writing traced in sand, washed away by a wave, leaving a small shell.">
+            <g class="mark-lip" transform="translate(0.9,1.6)">
+              <path class="w1" d="M9.0 30.8 C9.5 34.8 17.0 34.4 18.9 29.9 C22.6 12.2 32.1 12.2 29.7 29.9 C30.1 8.6 42.0 8.6 34.8 30.9 C37.5 16.3 49.1 14.0 46.7 29.6 C46.7 34.7 52.2 34.3 53.7 30.4 C55.8 18.8 60.9 17.0 58.8 30.1 C60.7 28.6 61.3 24.8 62.8 23.3"/>
+              <path class="w2" d="M72.3 31.1 C88.1 42.2 64.1 42.2 83.9 29.9 C83.7 10.4 96.5 10.4 89.1 31.9 C89.2 11.2 101.9 11.2 95.0 29.9 C94.9 37.7 102.3 37.1 104.3 32.0 C106.2 22.8 125.9 21.4 124.5 31.9 C127.7 15.0 132.1 15.0 129.6 31.2 C131.6 29.7 131.3 29.0 132.8 27.5"/>
+              <path class="w3" d="M142.6 32.6 C145.9 16.0 153.6 16.0 151.1 33.7 C153.7 20.2 166.2 18.1 164.0 32.5 C160.5 21.3 181.7 21.7 174.3 32.7 C176.9 21.6 187.5 21.6 186.5 31.6 C186.7 37.2 194.1 36.7 195.8 33.5 C198.0 32.0 198.5 28.9 200.0 27.4"/>
+              <path class="w4" d="M9.0 66.3 C10.1 42.4 21.1 42.4 14.0 65.3 C12.8 41.0 32.5 41.0 22.4 67.0 C24.3 57.3 38.1 55.8 36.8 65.1 C37.0 69.0 42.4 68.7 43.9 65.2 C52.4 73.2 39.0 73.2 50.0 66.6 C60.2 77.0 44.0 77.0 57.9 65.5 C55.1 49.0 77.1 49.7 68.5 66.1 C68.7 47.1 80.1 47.1 73.4 66.9 C75.5 65.4 75.2 62.3 76.7 60.8"/>
+              <path class="w5" d="M86.0 66.6 C84.2 55.3 98.6 55.8 92.8 67.5 C91.6 53.8 105.6 54.4 99.9 66.3 C96.9 53.4 117.3 54.0 109.8 66.7 C123.7 76.6 102.5 76.6 119.7 67.4 C129.8 76.3 114.1 76.3 127.5 65.8 C128.0 70.1 136.0 69.8 137.9 66.3 C140.7 53.0 148.1 53.0 146.2 67.1 C146.8 45.2 158.2 45.2 151.4 65.9 C153.3 64.4 153.8 60.7 155.3 59.2"/>
+            </g>
+            <g class="mark-groove">
+              <path class="w1" d="M9.0 30.8 C9.5 34.8 17.0 34.4 18.9 29.9 C22.6 12.2 32.1 12.2 29.7 29.9 C30.1 8.6 42.0 8.6 34.8 30.9 C37.5 16.3 49.1 14.0 46.7 29.6 C46.7 34.7 52.2 34.3 53.7 30.4 C55.8 18.8 60.9 17.0 58.8 30.1 C60.7 28.6 61.3 24.8 62.8 23.3"/>
+              <path class="w2" d="M72.3 31.1 C88.1 42.2 64.1 42.2 83.9 29.9 C83.7 10.4 96.5 10.4 89.1 31.9 C89.2 11.2 101.9 11.2 95.0 29.9 C94.9 37.7 102.3 37.1 104.3 32.0 C106.2 22.8 125.9 21.4 124.5 31.9 C127.7 15.0 132.1 15.0 129.6 31.2 C131.6 29.7 131.3 29.0 132.8 27.5"/>
+              <path class="w3" d="M142.6 32.6 C145.9 16.0 153.6 16.0 151.1 33.7 C153.7 20.2 166.2 18.1 164.0 32.5 C160.5 21.3 181.7 21.7 174.3 32.7 C176.9 21.6 187.5 21.6 186.5 31.6 C186.7 37.2 194.1 36.7 195.8 33.5 C198.0 32.0 198.5 28.9 200.0 27.4"/>
+              <path class="w4" d="M9.0 66.3 C10.1 42.4 21.1 42.4 14.0 65.3 C12.8 41.0 32.5 41.0 22.4 67.0 C24.3 57.3 38.1 55.8 36.8 65.1 C37.0 69.0 42.4 68.7 43.9 65.2 C52.4 73.2 39.0 73.2 50.0 66.6 C60.2 77.0 44.0 77.0 57.9 65.5 C55.1 49.0 77.1 49.7 68.5 66.1 C68.7 47.1 80.1 47.1 73.4 66.9 C75.5 65.4 75.2 62.3 76.7 60.8"/>
+              <path class="w5" d="M86.0 66.6 C84.2 55.3 98.6 55.8 92.8 67.5 C91.6 53.8 105.6 54.4 99.9 66.3 C96.9 53.4 117.3 54.0 109.8 66.7 C123.7 76.6 102.5 76.6 119.7 67.4 C129.8 76.3 114.1 76.3 127.5 65.8 C128.0 70.1 136.0 69.8 137.9 66.3 C140.7 53.0 148.1 53.0 146.2 67.1 C146.8 45.2 158.2 45.2 151.4 65.9 C153.3 64.4 153.8 60.7 155.3 59.2"/>
+            </g>
+          </svg>
+
+          <!-- what the sea leaves in exchange -->
+          <svg class="shell" viewBox="0 0 28 23" aria-hidden="true">
+            <path d="M14 21.4 C6.2 20.4 1.6 15.4 2.6 10.8 Q5.2 6.6 7.2 10.2 Q9.7 5.7 12.1 9.9 Q14 5.1 15.9 9.9 Q18.3 5.7 20.8 10.2 Q22.8 6.6 25.4 10.8 C26.4 15.4 21.8 20.4 14 21.4 Z"
+                  fill="rgba(255,242,247,.96)" stroke="rgba(196,33,111,.52)" stroke-width="1.1" stroke-linejoin="round"/>
+            <path d="M14 21 L6.6 12.2 M14 21 L10.2 11.4 M14 21 L14 10.6 M14 21 L17.8 11.4 M14 21 L21.4 12.2"
+                  fill="none" stroke="rgba(196,33,111,.3)" stroke-width=".85" stroke-linecap="round"/>
+            <circle cx="14" cy="20.4" r="1.5" fill="var(--gold)" opacity=".7"/>
+          </svg>
+
+          <!-- the sand it darkens, then dries -->
+          <div class="wet"></div>
+
+          <!-- the water -->
+          <div class="tide">
+            <svg class="tide-lip" viewBox="0 0 800 28" preserveAspectRatio="none" aria-hidden="true">
+              <path fill="rgb(255,196,217)"
+                d="M0 15 Q25 6 50 15 T100 15 T150 15 T200 15 T250 15 T300 15 T350 15 T400 15 T450 15 T500 15 T550 15 T600 15 T650 15 T700 15 T750 15 T800 15 L800 0 L0 0 Z"/>
+              <path fill="none" stroke="rgba(255,255,255,.95)" stroke-width="9" transform="translate(0,-4.4)"
+                d="M0 15 Q25 6 50 15 T100 15 T150 15 T200 15 T250 15 T300 15 T350 15 T400 15 T450 15 T500 15 T550 15 T600 15 T650 15 T700 15 T750 15 T800 15"/>
+              <path fill="none" stroke="rgba(224,49,140,.34)" stroke-width="1.5"
+                d="M0 15 Q25 6 50 15 T100 15 T150 15 T200 15 T250 15 T300 15 T350 15 T400 15 T450 15 T500 15 T550 15 T600 15 T650 15 T700 15 T750 15 T800 15"/>
+            </svg>
+          </div>
+        </div>
+        <div class="door-body">
+          <div class="door-tag-row">
+            <span class="door-tag">Ask forgiveness · 2 min</span>
+            <span class="door-badge">Opened</span>
+          </div>
+          <span class="door-title">Water's Edge</span>
+          <span class="door-desc">Write it in the sand. The water takes it away.</span>
+        </div>
+      </a>
+
       <div class="door-soon">
         <span class="soon-oval"></span>
         <span class="twinkle-a"><svg viewBox="0 0 24 24" fill="var(--pink)"><path d="M12 0c.6 5.7 3.9 9 9.6 9.6C15.9 10.2 12.6 13.5 12 19.2 11.4 13.5 8.1 10.2 2.4 9.6 8.1 9 11.4 5.7 12 0Z"/></svg></span>
@@ -797,7 +959,7 @@
 <script>
 (function () {
   var STORAGE_KEY = 'aig-portal-seen';
-  var KEYS = ['balloons', 'water', 'glass', 'card', 'ripple', 'home', 'palm'];
+  var KEYS = ['balloons', 'water', 'glass', 'card', 'ripple', 'home', 'palm', 'shore'];
   var doorsEl = document.getElementById('doors');
   var foundEls = document.querySelectorAll('.js-found');
 
@@ -856,7 +1018,7 @@
      colour the next document paints — no white flash between the two */
   var DEST_BG = {
     balloons:'#E8EFF2', water:'#050d14', glass:'#03040A', card:'#07302F',
-    ripple:'#FBF4EC',   home:'#1a1410',  palm:'#2f7fae'
+    ripple:'#FBF4EC',   home:'#1a1410',  palm:'#2f7fae', shore:'#1B3A42'
   };
   var DUR = 560;
   var fx = null, timer = null;
