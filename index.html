@@ -217,11 +217,20 @@
     height:238px; padding:0 24px 24px;
     cursor:pointer; text-decoration:none;
   }
-  .door-art{position:absolute; inset:0; overflow:hidden; pointer-events:none;}
+  .door-art{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:1;}
+  /* The hover treatment has to live ABOVE the art. The newer doors fill their
+     whole box with artwork edge to edge, so an inset shadow drawn on the door
+     itself is painted underneath it and never seen — which is why their hover
+     did not match the earlier doors. This overlay carries it instead. */
+  .door::after{
+    content:''; position:absolute; inset:0; z-index:3;
+    border-radius:inherit; pointer-events:none;
+    transition:box-shadow 340ms var(--ease-soft);
+  }
   /* Oval outline inside each door — desktop only, per the mockup. */
-  .door-frame{display:none;}
+  .door-frame{display:none; z-index:2;}
   .door-body{
-    position:relative; display:flex; flex-direction:column; gap:5px;
+    position:relative; z-index:4; display:flex; flex-direction:column; gap:5px;
     margin:0 -24px -24px; padding:36px 24px 24px;
   }
   .door-tag-row{display:flex; align-items:center; gap:8px;}
@@ -430,13 +439,37 @@
   }
   .tide-lip{position:absolute; left:0; bottom:-20px; width:200%; height:24px; animation:lipX 9s linear infinite;}
 
-  /* ------------------------------------------------------------ start over */
-  .startover-wrap{display:flex; justify-content:center; padding:22px 24px 34px; background:var(--cream);}
-  .startover{
-    font-family:var(--font-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
-    color:var(--ink-400); cursor:pointer; padding:8px;
+  /* ---------------------------------------------------------------- footer */
+  .portal-footer{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    flex-wrap:wrap; padding:26px 24px 38px; background:var(--cream);
+    font-family:var(--font-mono); font-size:9.5px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--ink-400);
   }
-  .startover:hover{color:var(--berry);}
+  .portal-footer .sep{color:var(--pink-200);}
+  .footer-link{
+    color:var(--ink-400); text-decoration:none;
+    border-bottom:1px solid transparent; padding-bottom:2px;
+    transition:color var(--dur-base) var(--ease-soft), border-color var(--dur-base) var(--ease-soft);
+  }
+  .footer-link:hover,.footer-link:focus-visible{color:var(--berry); border-bottom-color:var(--berry);}
+
+  /* -------------------------------------------------------- link hover */
+  .brand{transition:opacity var(--dur-base) var(--ease-soft);}
+  .brand:hover,.brand:focus-visible{opacity:.72;}
+  .topbar-meta .fey{
+    border-bottom:1px solid transparent; padding-bottom:1px;
+    transition:color var(--dur-base) var(--ease-soft), opacity var(--dur-base) var(--ease-soft), border-color var(--dur-base) var(--ease-soft);
+  }
+  .topbar-meta .fey:hover,.topbar-meta .fey:focus-visible{opacity:1; color:var(--berry); border-bottom-color:var(--berry);}
+  /* the community, named in the hero copy */
+  .hero p a{
+    color:var(--berry); text-decoration:none; font-weight:500;
+    border-bottom:1px solid var(--pink-200); padding-bottom:1px;
+    transition:color var(--dur-base) var(--ease-soft), border-color var(--dur-base) var(--ease-soft);
+  }
+  .hero p a:hover,.hero p a:focus-visible{color:var(--berry-900); border-bottom-color:var(--berry);}
+  a:focus-visible,.door:focus-visible{outline:2px solid var(--berry); outline-offset:3px;}
 
   /* ======================================================= portal loader
      Covers the first paint so the webfont swap and the palm door's
@@ -586,14 +619,15 @@
       transition:transform 340ms var(--ease-soft), box-shadow 340ms var(--ease-soft);
     }
     .door:hover{transform:translateY(5px);}
-    .door-balloons:hover,
-    .door-glass:hover,
-    .door-card:hover,
-    .door-home:hover,
-    .door-palm:hover,
-    .door-shore:hover{box-shadow:inset 0 0 0 2px rgba(171,18,94,.4), inset 0 34px 44px -30px rgba(110,14,61,.45);}
-    .door-water:hover,
-    .door-ripple:hover{box-shadow:inset 0 0 0 2px rgba(255,186,211,.6), inset 0 46px 52px -26px rgba(35,3,18,.9);}
+    /* on ::after so it reads the same on every door, art or no art */
+    .door-balloons:hover::after,
+    .door-glass:hover::after,
+    .door-card:hover::after,
+    .door-home:hover::after,
+    .door-palm:hover::after,
+    .door-shore:hover::after{box-shadow:inset 0 0 0 2px rgba(171,18,94,.4), inset 0 34px 44px -30px rgba(110,14,61,.45);}
+    .door-water:hover::after,
+    .door-ripple:hover::after{box-shadow:inset 0 0 0 2px rgba(255,186,211,.6), inset 0 46px 52px -26px rgba(35,3,18,.9);}
 
     .door-frame{
       display:block; position:absolute; top:18px; left:18px; right:18px; bottom:96px;
@@ -702,7 +736,7 @@
         A Place I Made for You
       </span>
       <h1>Experience<br> <em>Portal</em></h1>
-      <p>Every little interactive experience I build, gathered in one place for the AI Goddesses community. Open a door and play — most take two minutes.</p>
+      <p>Every little interactive experience I build, gathered in one place for the <a href="https://aigoddesses.community" target="_blank" rel="noopener noreferrer">AI Goddesses</a> community. Open a door and play — most take two minutes.</p>
       <div class="hero-progress mobile-only">
         <span class="found js-found">0 of 8 opened</span>
         <span class="rule"></span>
@@ -951,9 +985,11 @@
     </div>
   </div>
 
-  <div class="startover-wrap">
-    <button class="startover" id="startOver">Start over</button>
-  </div>
+  <footer class="portal-footer">
+    <a class="footer-link" href="https://aigoddesses.community" target="_blank" rel="noopener noreferrer">AI Goddesses</a>
+    <span class="sep" aria-hidden="true">·</span>
+    <a class="footer-link" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a>
+  </footer>
 </main>
 
 <script>
@@ -987,11 +1023,6 @@
     var seen = getSeen();
     seen[door.getAttribute('data-key')] = true;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(seen)); } catch (err) {}
-    render();
-  });
-
-  document.getElementById('startOver').addEventListener('click', function () {
-    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
     render();
   });
 

@@ -265,6 +265,12 @@ footer{
   padding:3.5rem 1.5rem 4rem;color:var(--ink-soft);font-size:.9rem;
 }
 footer .hand{display:block;margin-bottom:.6rem;font-size:1.5rem}
+footer .credit-link{
+  color:inherit;text-decoration:none;
+  border-bottom:1px solid currentColor;padding-bottom:1px;
+  transition:color .3s ease,border-color .3s ease,opacity .3s ease;
+}
+footer .credit-link:hover,footer .credit-link:focus-visible{color:var(--berry);border-bottom-color:var(--berry)}
 
 /* divider doodle */
 .doodle{width:120px;margin:0 auto;display:block;color:var(--rose);position:relative;z-index:2}
@@ -448,7 +454,7 @@ footer .hand{display:block;margin-bottom:.6rem;font-size:1.5rem}
   <span class="hand">made with love, for the circle 🍓✨</span>
   AI Goddesses · a global community of women learning AI together<br>
   <span style="font-size:.8rem;opacity:.7">every ripple on this page was yours</span><br>
-  <span style="font-size:.78rem;opacity:.6;display:inline-block;margin-top:.9rem">created by <a href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer" style="color:inherit;border-bottom:1px solid currentColor;padding-bottom:1px">AI with Fey</a></span>
+  <span style="font-size:.78rem;opacity:.6;display:inline-block;margin-top:.9rem">created by <a class="credit-link" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a></span>
 </footer>
 
 <script>
