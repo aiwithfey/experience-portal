@@ -96,7 +96,31 @@
             position: absolute;
             inset: 0;
             transform: rotateY(180deg);
-            background: radial-gradient(circle at center, #4c2a70 0%, #2b1544 65%, #190b29 100%);
+            background: radial-gradient(circle at center, #3a1d5c 0%, #231038 62%, #190b29 100%);
+            border: 2px solid rgba(253, 224, 71, 0.6);
+        }
+        /* the back is the whole card: frame and corner stars sit on its edges */
+        .oracle-back::before {
+            content: "";
+            position: absolute;
+            inset: 10px;
+            border: 1px dashed rgba(253, 224, 71, 0.45);
+            border-radius: 10px;
+            pointer-events: none;
+        }
+        .oracle-back .back-star {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+        }
+        .oracle-back .back-star.tl { top: 22px; left: 22px; }
+        .oracle-back .back-star.tr { top: 22px; right: 22px; }
+        .oracle-back .back-star.bl { bottom: 22px; left: 22px; }
+        .oracle-back .back-star.br { bottom: 22px; right: 22px; }
+        .oracle-back .back-emblem {
+            width: 78%;
+            max-height: 82%;
+            overflow: visible;
         }
 
         /* Living animations for each Celestial Muse SVG */
@@ -130,7 +154,7 @@
     
         /* artist tag, kept quiet in the corner like the other experiences */
         #credit{
-            position:fixed; left:14px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:40;
+            display:block; width:max-content; margin:28px auto calc(4px + env(safe-area-inset-bottom));
             font-family:'Inter',system-ui,sans-serif; font-size:9.5px; letter-spacing:.24em; text-transform:uppercase;
             color:#F3EAD3; text-decoration:none; opacity:.42; transition:opacity .6s ease;
         }
@@ -217,8 +241,12 @@
                     </div>
 
                     <!-- Designed Oracle Pack Back Face -->
-                    <div aria-hidden="true" class="oracle-face oracle-back rounded-2xl shadow-2xl w-full h-full border border-yellow-300/35 p-5 flex items-center justify-center overflow-hidden">
-                        <svg viewBox="0 0 600 820" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <div aria-hidden="true" class="oracle-face oracle-back rounded-2xl shadow-2xl w-full h-full flex items-center justify-center overflow-hidden">
+                        <svg class="back-star tl" viewBox="0 0 32 32"><path d="M16 0 L20 12 L32 16 L20 20 L16 32 L12 20 L0 16 L12 12 Z" fill="#FDE047" opacity="0.85"/></svg>
+                        <svg class="back-star tr" viewBox="0 0 32 32"><path d="M16 0 L20 12 L32 16 L20 20 L16 32 L12 20 L0 16 L12 12 Z" fill="#FDE047" opacity="0.85"/></svg>
+                        <svg class="back-star bl" viewBox="0 0 32 32"><path d="M16 0 L20 12 L32 16 L20 20 L16 32 L12 20 L0 16 L12 12 Z" fill="#FDE047" opacity="0.85"/></svg>
+                        <svg class="back-star br" viewBox="0 0 32 32"><path d="M16 0 L20 12 L32 16 L20 20 L16 32 L12 20 L0 16 L12 12 Z" fill="#FDE047" opacity="0.85"/></svg>
+                        <svg viewBox="100 170 400 480" class="back-emblem" xmlns="http://www.w3.org/2000/svg">
                             <defs>
                                 <radialGradient id="back-nebula" cx="50%" cy="50%" r="58%">
                                     <stop offset="0%" stop-color="#6b3fa0" stop-opacity="0.45"/>
@@ -231,18 +259,7 @@
                                     <stop offset="100%" stop-color="#C98A1A"/>
                                 </linearGradient>
                             </defs>
-                            <rect width="600" height="820" rx="20" fill="#231038"/>
                             <circle cx="300" cy="410" r="280" fill="url(#back-nebula)" class="animate-breathe"/>
-
-                            <!-- Outer & Inner Filigree Borders -->
-                            <rect x="24" y="24" width="552" height="772" rx="16" fill="none" stroke="url(#back-gold)" stroke-width="2" opacity="0.8"/>
-                            <rect x="38" y="38" width="524" height="744" rx="12" fill="none" stroke="url(#back-gold)" stroke-width="1" stroke-dasharray="6 6" opacity="0.55"/>
-
-                            <!-- Corner Star Flourishes -->
-                            <path d="M 64 64 L 68 76 L 80 80 L 68 84 L 64 96 L 60 84 L 48 80 L 60 76 Z" fill="#FDE047" opacity="0.85"/>
-                            <path d="M 536 64 L 540 76 L 552 80 L 540 84 L 536 96 L 532 84 L 520 80 L 532 76 Z" fill="#FDE047" opacity="0.85"/>
-                            <path d="M 64 724 L 68 736 L 80 740 L 68 744 L 64 756 L 60 744 L 48 740 L 60 736 Z" fill="#FDE047" opacity="0.85"/>
-                            <path d="M 536 724 L 540 736 L 552 740 L 540 744 L 536 756 L 532 744 L 520 740 L 532 736 Z" fill="#FDE047" opacity="0.85"/>
 
                             <!-- Rotating Celestial Rings -->
                             <g style="transform-origin: 300px 410px;" class="animate-spin-halo" opacity="0.65">
