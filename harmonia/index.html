@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harmonia: Offline Self-Care Ritual</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2canvas for downloading the ritual card -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-title {
+            font-family: 'Cinzel Decorative', serif;
+        }
+        .font-serif-body {
+            font-family: 'Cormorant Garamond', serif;
+        }
+        .bg-brand-gradient {
+            background: radial-gradient(circle at top center, #4c2a70 0%, #2b1642 50%, #190c29 100%);
+        }
+        .text-brand-cream {
+            color: #F3EAD3;
+        }
+        .pulse-glow {
+            box-shadow: 0 0 25px rgba(253, 224, 71, 0.4), 0 0 50px rgba(253, 224, 71, 0.2);
+            animation: pulse-heart 2.5s infinite ease-in-out;
+        }
+        @keyframes pulse-heart {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 25px rgba(253, 224, 71, 0.4), 0 0 50px rgba(253, 224, 71, 0.2);
+            }
+            50% {
+                transform: scale(1.06);
+                box-shadow: 0 0 40px rgba(253, 224, 71, 0.7), 0 0 80px rgba(253, 224, 71, 0.35);
+            }
+        }
+        .halo-loader {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .halo-loader .ring {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border: 3px solid #FDE047;
+            border-radius: 50%;
+            animation: halo-expand 1.6s infinite ease-out;
+            opacity: 0;
+        }
+        .halo-loader .ring:nth-child(2) {
+            animation-delay: -0.8s;
+        }
+        @keyframes halo-expand {
+            0% { width: 0; height: 0; opacity: 1; }
+            100% { width: 110px; height: 110px; opacity: 0; }
+        }
+        .screen.hidden {
+            display: none !important;
+        }
+        #notification, #journal-modal-container {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        /* 3D Oracle Card Flip & Designed Back Side */
+        .oracle-stage {
+            perspective: 1400px;
+            width: 100%;
+        }
+        .oracle-flip-card {
+            position: relative;
+            width: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: rotateY(180deg);
+        }
+        .oracle-flip-card.is-flipped {
+            transform: rotateY(0deg);
+        }
+        .oracle-face {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .oracle-back {
+            position: absolute;
+            inset: 0;
+            transform: rotateY(180deg);
+            background: radial-gradient(circle at center, #4c2a70 0%, #2b1544 65%, #190b29 100%);
+        }
+
+        /* Living animations for each Celestial Muse SVG */
+        @keyframes slow-breathe {
+            0%, 100% { transform: scale(1); opacity: 0.85; }
+            50% { transform: scale(1.06); opacity: 1; }
+        }
+        @keyframes float-up {
+            0% { transform: translateY(10px); opacity: 0; }
+            45% { opacity: 0.9; }
+            100% { transform: translateY(-18px); opacity: 0; }
+        }
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulse-heart-glow {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.12); opacity: 1; }
+        }
+        @keyframes gentle-sway {
+            0%, 100% { transform: rotate(-2.5deg); }
+            50% { transform: rotate(2.5deg); }
+        }
+        .animate-breathe { transform-origin: center; animation: slow-breathe 6s ease-in-out infinite; }
+        .animate-float-1 { animation: float-up 5s ease-in-out infinite; }
+        .animate-float-2 { animation: float-up 7s ease-in-out infinite 1.8s; }
+        .animate-spin-halo { transform-origin: 400px 360px; animation: spin-slow 48s linear infinite; }
+        .animate-heart { transform-origin: center; animation: pulse-heart-glow 4s ease-in-out infinite; }
+        .animate-sway { transform-origin: 400px 550px; animation: gentle-sway 7s ease-in-out infinite; }
+    
+        /* artist tag, kept quiet in the corner like the other experiences */
+        #credit{
+            position:fixed; left:14px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:40;
+            font-family:'Inter',system-ui,sans-serif; font-size:9.5px; letter-spacing:.24em; text-transform:uppercase;
+            color:#F3EAD3; text-decoration:none; opacity:.42; transition:opacity .6s ease;
+        }
+        #credit:hover,#credit:focus-visible{opacity:.9;}
+    </style>
+</head>
+<body class="bg-brand-gradient text-brand-cream min-h-screen py-8 overflow-y-auto flex flex-col justify-center">
+
+    <!-- Main App Container -->
+    <div id="app" class="w-full max-w-md mx-auto text-center px-4">
+
+        <!-- Initial Screen -->
+        <div id="ritual-screen" class="screen flex flex-col items-center justify-center space-y-8 min-h-[80vh]">
+            <div class="space-y-2">
+                <h3 class="font-title text-xs md:text-sm tracking-widest text-yellow-200/80 uppercase">44-Card Offline Oracle Deck</h3>
+                <h1 class="font-title text-4xl md:text-5xl tracking-widest text-white drop-shadow-md">HARMONIA</h1>
+                <h2 class="font-title text-xl md:text-2xl tracking-wider text-brand-cream opacity-85">SELF-CARE RITUAL</h2>
+            </div>
+
+            <div class="relative flex items-center justify-center w-44 h-44 md:w-52 md:h-52 my-4">
+                <button id="generate-random-btn" aria-label="Draw Random Ritual Card" class="w-full h-full bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-400 rounded-full flex items-center justify-center text-purple-950 focus:outline-none focus:ring-4 focus:ring-yellow-200/50 pulse-glow cursor-pointer transition-transform active:scale-95">
+                    <svg class="w-20 h-20 drop-shadow-sm" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <p class="text-lg md:text-xl text-brand-cream font-light italic tracking-wide">Click the Heart to Draw a Card</p>
+
+            <button id="personalize-btn" class="bg-white/15 hover:bg-white/25 border border-yellow-300/30 backdrop-blur-sm text-white font-medium py-3 px-8 rounded-full transition-all duration-300 shadow-lg">
+                ✨ Match Ritual to Your Mood
+            </button>
+        </div>
+
+        <!-- Personalization / Mood Match Screen -->
+        <div id="personalize-screen" class="screen hidden flex flex-col items-center justify-center space-y-6 min-h-[80vh]">
+            <h2 class="font-title text-2xl md:text-3xl text-brand-cream">How are you feeling today?</h2>
+            <p class="text-sm text-brand-cream/75 max-w-xs">Share your mood, energy, or what you need right now to draw a fitting card from the 44-card deck.</p>
+
+            <!-- Quick Mood Chips for Offline Convenience -->
+            <div class="flex flex-wrap justify-center gap-2 max-w-sm">
+                <button type="button" data-mood="stressed, tense shoulders and jaw" class="mood-chip text-xs bg-white/10 hover:bg-white/20 border border-yellow-300/25 text-brand-cream px-3.5 py-1.5 rounded-full transition-colors">Tense & Stressed</button>
+                <button type="button" data-mood="exhausted, drained and tired" class="mood-chip text-xs bg-white/10 hover:bg-white/20 border border-yellow-300/25 text-brand-cream px-3.5 py-1.5 rounded-full transition-colors">Tired & Drained</button>
+                <button type="button" data-mood="overwhelmed, anxious and scattered" class="mood-chip text-xs bg-white/10 hover:bg-white/20 border border-yellow-300/25 text-brand-cream px-3.5 py-1.5 rounded-full transition-colors">Overwhelmed</button>
+                <button type="button" data-mood="needing warmth, tea and comfort" class="mood-chip text-xs bg-white/10 hover:bg-white/20 border border-yellow-300/25 text-brand-cream px-3.5 py-1.5 rounded-full transition-colors">Needing Comfort</button>
+                <button type="button" data-mood="seeking clarity, calm and stillness" class="mood-chip text-xs bg-white/10 hover:bg-white/20 border border-yellow-300/25 text-brand-cream px-3.5 py-1.5 rounded-full transition-colors">Seeking Stillness</button>
+            </div>
+
+            <textarea id="feeling-input" class="w-full h-28 p-4 rounded-2xl bg-white/10 border border-yellow-300/20 placeholder-white/40 text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 resize-none" placeholder="e.g., tight jaw, tired eyes, needing a quiet pause..."></textarea>
+
+            <button id="create-personalized-btn" class="w-full bg-gradient-to-r from-yellow-300 to-amber-300 text-purple-950 font-bold py-3.5 px-8 rounded-full transition-transform hover:scale-105 shadow-lg">
+                Draw Matching Ritual
+            </button>
+
+            <button id="back-to-ritual-btn" class="text-white/70 hover:text-white py-2 px-4 text-sm transition-colors">
+                ← Back to Heart
+            </button>
+        </div>
+
+        <!-- Brief Transition Screen -->
+        <div id="loading-screen" class="screen hidden flex flex-col items-center justify-center space-y-6 min-h-[80vh]">
+            <div class="halo-loader">
+                <div class="ring"></div>
+                <div class="ring"></div>
+            </div>
+            <p id="loading-text" class="text-lg text-brand-cream italic tracking-wide">Calling the muses...</p>
+        </div>
+
+        <!-- Reveal Screen -->
+        <div id="reveal-screen" class="screen hidden flex flex-col items-center justify-center space-y-5">
+            <p id="flip-nudge-text" class="text-xs sm:text-sm text-yellow-200/90 italic tracking-wide">
+                ✦ Tap or click the card to flip it now, or wait a moment as it turns...
+            </p>
+            <div class="oracle-stage">
+                <div id="oracle-flip-card" role="button" tabindex="0" aria-label="Flip ritual card" class="oracle-flip-card cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-300/60 rounded-2xl">
+                    <!-- Front Face (Ritual Card) -->
+                    <div id="card-container" class="oracle-face bg-gradient-to-b from-[#4a2c6b] to-[#321b4d] p-6 rounded-2xl shadow-2xl w-full border border-yellow-300/25">
+                        <div id="card-header-title" class="text-xs font-title tracking-widest text-yellow-300/80 mb-3 uppercase">Harmonia Ritual</div>
+                        <div id="svg-artwork-frame" class="aspect-square bg-black/30 rounded-xl overflow-hidden flex items-center justify-center border border-yellow-300/30 shadow-inner">
+                            <!-- Animated SVG injected here -->
+                        </div>
+                        <p id="tip-text" class="font-serif-body text-2xl font-medium text-center px-2 pt-6 leading-relaxed italic text-brand-cream"></p>
+                        <p id="affirmation-text" class="text-xs uppercase tracking-widest text-yellow-200/80 mt-4 pt-3 border-t border-yellow-300/15"></p>
+                    </div>
+
+                    <!-- Designed Oracle Pack Back Face -->
+                    <div aria-hidden="true" class="oracle-face oracle-back rounded-2xl shadow-2xl w-full h-full border border-yellow-300/35 p-5 flex items-center justify-center overflow-hidden">
+                        <svg viewBox="0 0 600 820" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <radialGradient id="back-nebula" cx="50%" cy="50%" r="58%">
+                                    <stop offset="0%" stop-color="#6b3fa0" stop-opacity="0.45"/>
+                                    <stop offset="60%" stop-color="#351952" stop-opacity="0.25"/>
+                                    <stop offset="100%" stop-color="#170926" stop-opacity="0"/>
+                                </radialGradient>
+                                <linearGradient id="back-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#FFFBEB"/>
+                                    <stop offset="50%" stop-color="#FDE047"/>
+                                    <stop offset="100%" stop-color="#C98A1A"/>
+                                </linearGradient>
+                            </defs>
+                            <rect width="600" height="820" rx="20" fill="#231038"/>
+                            <circle cx="300" cy="410" r="280" fill="url(#back-nebula)" class="animate-breathe"/>
+
+                            <!-- Outer & Inner Filigree Borders -->
+                            <rect x="24" y="24" width="552" height="772" rx="16" fill="none" stroke="url(#back-gold)" stroke-width="2" opacity="0.8"/>
+                            <rect x="38" y="38" width="524" height="744" rx="12" fill="none" stroke="url(#back-gold)" stroke-width="1" stroke-dasharray="6 6" opacity="0.55"/>
+
+                            <!-- Corner Star Flourishes -->
+                            <path d="M 64 64 L 68 76 L 80 80 L 68 84 L 64 96 L 60 84 L 48 80 L 60 76 Z" fill="#FDE047" opacity="0.85"/>
+                            <path d="M 536 64 L 540 76 L 552 80 L 540 84 L 536 96 L 532 84 L 520 80 L 532 76 Z" fill="#FDE047" opacity="0.85"/>
+                            <path d="M 64 724 L 68 736 L 80 740 L 68 744 L 64 756 L 60 744 L 48 740 L 60 736 Z" fill="#FDE047" opacity="0.85"/>
+                            <path d="M 536 724 L 540 736 L 552 740 L 540 744 L 536 756 L 532 744 L 520 740 L 532 736 Z" fill="#FDE047" opacity="0.85"/>
+
+                            <!-- Rotating Celestial Rings -->
+                            <g style="transform-origin: 300px 410px;" class="animate-spin-halo" opacity="0.65">
+                                <circle cx="300" cy="410" r="185" fill="none" stroke="url(#back-gold)" stroke-width="1.3" stroke-dasharray="4 9"/>
+                                <circle cx="300" cy="410" r="152" fill="none" stroke="#E9D5FF" stroke-width="1" opacity="0.5"/>
+                            </g>
+                            <circle cx="300" cy="410" r="122" fill="#2c1445" stroke="url(#back-gold)" stroke-width="1.8"/>
+
+                            <!-- Crescent & Sacred Stars -->
+                            <path d="M 272 248 A 34 34 0 1 0 326 286 A 27 27 0 1 1 272 248 Z" fill="#FEF9C3" opacity="0.9"/>
+                            <circle cx="300" cy="185" r="3" fill="#FDE047"/>
+                            <circle cx="300" cy="635" r="3" fill="#FDE047"/>
+                            <circle cx="155" cy="410" r="3" fill="#FEF9C3"/>
+                            <circle cx="445" cy="410" r="3" fill="#FEF9C3"/>
+
+                            <!-- Central Heart Emblem -->
+                            <g class="animate-heart" style="transform-origin: 300px 410px;">
+                                <path d="M 300 452 C 252 418, 238 378, 268 362 C 284 353, 300 367, 300 378 C 300 367, 316 353, 332 362 C 362 378, 348 418, 300 452 Z"
+                                      fill="url(#back-gold)"/>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <button id="journal-prompt-btn" class="w-full bg-gradient-to-r from-purple-500/30 to-indigo-500/30 hover:from-purple-500/40 hover:to-indigo-500/40 border border-yellow-300/30 backdrop-blur-sm text-yellow-200 font-semibold py-3 px-6 rounded-full transition-all duration-300 shadow-md">
+                ✨ Go Deeper (Journal Prompt)
+            </button>
+
+            <div class="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full">
+                <button id="back-btn" class="w-full sm:w-auto flex-grow bg-white/15 hover:bg-white/25 text-white font-semibold py-3 px-6 rounded-full transition-colors duration-300">
+                    Another Ritual
+                </button>
+                <button id="download-btn" class="w-full sm:w-auto flex-grow bg-yellow-300 hover:bg-yellow-200 text-purple-950 font-bold py-3 px-6 rounded-full transition-colors duration-300 flex items-center justify-center space-x-2 shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>Download Card</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed bottom-5 left-1/2 -translate-x-1/2 translate-y-20 opacity-0 bg-emerald-600 text-white py-2.5 px-6 rounded-full shadow-xl z-50 text-sm font-medium pointer-events-none"></div>
+
+    <!-- Journal Prompt Modal -->
+    <div id="journal-modal-container" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none z-40">
+        <div id="journal-modal-content" class="bg-[#3d2259] p-8 rounded-2xl shadow-2xl w-full max-w-md text-center space-y-5 border border-yellow-300/30">
+            <h3 class="font-title text-xl text-yellow-300 tracking-wide">A Moment for Reflection</h3>
+            <p id="journal-prompt-text" class="font-serif-body text-2xl italic text-brand-cream leading-relaxed"></p>
+            <button id="close-journal-modal-btn" class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2.5 px-8 rounded-full transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const ritualScreen = document.getElementById('ritual-screen');
+        const personalizeScreen = document.getElementById('personalize-screen');
+        const loadingScreen = document.getElementById('loading-screen');
+        const revealScreen = document.getElementById('reveal-screen');
+
+        const generateRandomBtn = document.getElementById('generate-random-btn');
+        const personalizeBtn = document.getElementById('personalize-btn');
+        const createPersonalizedBtn = document.getElementById('create-personalized-btn');
+        const backToRitualBtn = document.getElementById('back-to-ritual-btn');
+        const backBtn = document.getElementById('back-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const journalPromptBtn = document.getElementById('journal-prompt-btn');
+        const closeJournalModalBtn = document.getElementById('close-journal-modal-btn');
+        const moodChips = document.querySelectorAll('.mood-chip');
+
+        const cardHeaderTitle = document.getElementById('card-header-title');
+        const svgArtworkFrame = document.getElementById('svg-artwork-frame');
+        const tipText = document.getElementById('tip-text');
+        const affirmationText = document.getElementById('affirmation-text');
+        const loadingText = document.getElementById('loading-text');
+        const oracleFlipCard = document.getElementById('oracle-flip-card');
+        const cardContainer = document.getElementById('card-container');
+        const notification = document.getElementById('notification');
+        const feelingInput = document.getElementById('feeling-input');
+        const journalModalContainer = document.getElementById('journal-modal-container');
+        const journalPromptText = document.getElementById('journal-prompt-text');
+        const flipNudgeText = document.getElementById('flip-nudge-text');
+
+        let currentCardIndex = 0;
+        let autoFlipTimer = null;
+
+        function clearAutoFlipTimer() {
+            if (autoFlipTimer !== null) {
+                clearTimeout(autoFlipTimer);
+                autoFlipTimer = null;
+            }
+        }
+
+        function setCardFlipped(flipped) {
+            clearAutoFlipTimer();
+            if (flipped) {
+                oracleFlipCard.classList.add('is-flipped');
+                oracleFlipCard.setAttribute('aria-label', 'Ritual card revealed; tap to view card back');
+                flipNudgeText.textContent = "✦ Tap or click the card anytime to peek at the back";
+            } else {
+                oracleFlipCard.classList.remove('is-flipped');
+                oracleFlipCard.setAttribute('aria-label', 'Card back shown; tap or click to flip ritual card');
+                flipNudgeText.textContent = "✦ Tap or click the card to flip it now (auto-flips in 5s)";
+            }
+        }
+
+        /**
+         * Wraps each ritual's SVG art with unique gradient/filter IDs
+         * so multiple renders never conflict.
+         */
+        const createSvgWrapper = (index, innerContent) => `
+            <svg viewBox="0 0 800 800" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="bg-${index}" cx="50%" cy="42%" r="68%">
+                        <stop offset="0%" stop-color="#5E3582"/>
+                        <stop offset="55%" stop-color="#31184A"/>
+                        <stop offset="100%" stop-color="#170A26"/>
+                    </radialGradient>
+                    <radialGradient id="aura-${index}" cx="50%" cy="45%" r="48%">
+                        <stop offset="0%" stop-color="#FDE047" stop-opacity="0.35"/>
+                        <stop offset="55%" stop-color="#C084FC" stop-opacity="0.16"/>
+                        <stop offset="100%" stop-color="#170A26" stop-opacity="0"/>
+                    </radialGradient>
+                    <linearGradient id="gold-${index}" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#FFFBEB"/>
+                        <stop offset="45%" stop-color="#FDE047"/>
+                        <stop offset="100%" stop-color="#D97706"/>
+                    </linearGradient>
+                    <linearGradient id="muse-${index}" x1="15%" y1="0%" x2="85%" y2="100%">
+                        <stop offset="0%" stop-color="#4C286E"/>
+                        <stop offset="50%" stop-color="#33174D"/>
+                        <stop offset="100%" stop-color="#220E36"/>
+                    </linearGradient>
+                    <filter id="glow-${index}" x="-25%" y="-25%" width="150%" height="150%">
+                        <feGaussianBlur stdDeviation="8" result="blur"/>
+                        <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                    </filter>
+                </defs>
+                <rect width="800" height="800" fill="url(#bg-${index})"/>
+                <circle cx="400" cy="360" r="320" fill="url(#aura-${index})" class="animate-breathe"/>
+                ${innerContent}
+            </svg>
+        `;
+
+        /**
+         * Complete 44-Card Offline Harmonia Ritual Deck
+         */
+        const rituals = [
+            {
+                title: "01 · Release & Unclench",
+                tip: "Unclench your jaw, drop your shoulders away from your ears, and take one slow, restorative breath.",
+                affirmation: "I release what I cannot control and return to my center.",
+                journalPrompt: "Where in my jaw, neck, or shoulders am I holding tension that no longer belongs to me today?",
+                tags: ["stressed", "tense", "jaw", "shoulders", "breath", "tight"],
+                renderArt: (i) => `
+                    <g class="animate-spin-halo" opacity="0.6">
+                        <circle cx="400" cy="360" r="245" fill="none" stroke="url(#gold-${i})" stroke-width="1" stroke-dasharray="3 9"/>
+                        <circle cx="400" cy="360" r="215" fill="none" stroke="url(#gold-${i})" stroke-width="1.5" opacity="0.7"/>
+                    </g>
+                    <path d="M365 215 C 280 225, 225 310, 240 420 C 250 490, 210 560, 160 610 C 240 595, 295 535, 315 460"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="2" opacity="0.5"/>
+                    <path d="M 190 730 C 210 615, 265 555, 345 525 C 365 495, 370 455, 362 422 C 388 424, 412 418, 424 402 C 429 395, 427 386, 423 381 C 430 377, 431 370, 425 365 C 436 361, 444 353, 442 344 C 439 334, 425 320, 422 302 C 418 265, 390 230, 350 232 C 305 234, 282 275, 285 325 C 288 375, 315 415, 312 465 C 308 515, 250 545, 190 730 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5" stroke-linejoin="round"/>
+                    <path d="M 345 525 C 420 505, 515 545, 580 650 C 605 690, 615 720, 620 740 L 190 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 386 312 Q 398 320, 410 311" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 372 405 Q 398 412, 418 395" fill="none" stroke="#FDE047" stroke-width="1.2" opacity="0.6" stroke-linecap="round"/>
+                    <g filter="url(#glow-${i})" class="animate-breathe">
+                        <path d="M 432 374 C 485 375, 515 335, 565 340 C 615 345, 640 390, 695 370"
+                              fill="none" stroke="url(#gold-${i})" stroke-width="2.5" stroke-linecap="round"/>
+                        <path d="M 435 380 C 495 395, 535 365, 590 375 C 635 383, 665 415, 715 395"
+                              fill="none" stroke="#E9D5FF" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+                    </g>
+                    <path d="M 480 480 Q 515 510, 535 555" fill="none" stroke="url(#gold-${i})" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.75"/>
+                    <circle cx="565" cy="340" r="3" fill="#FFFBEB"/>
+                    <circle cx="620" cy="320" r="2.5" fill="#FDE047" class="animate-float-1"/>
+                `
+            },
+            {
+                title: "02 · Hand Over Heart",
+                tip: "Place one warm hand over the center of your chest and feel the steady, quiet rhythm of your own heartbeat.",
+                affirmation: "I am safe inside myself; my presence is my sanctuary.",
+                journalPrompt: "What reassurance does my heart need to hear from me right now?",
+                tags: ["heart", "anxious", "lonely", "safe", "comfort", "warm"],
+                renderArt: (i) => `
+                    <circle cx="400" cy="360" r="230" fill="none" stroke="url(#gold-${i})" stroke-width="1.2" opacity="0.5"/>
+                    <circle cx="400" cy="360" r="195" fill="none" stroke="#E9D5FF" stroke-width="1" stroke-dasharray="4 8" opacity="0.45"/>
+                    <path d="M 210 740 C 225 600, 290 540, 355 515 C 365 485, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 515 C 510 540, 575 600, 590 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 320 320 C 265 360, 240 460, 265 560 M 480 320 C 535 360, 560 460, 535 560"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="1.8" opacity="0.55"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <g filter="url(#glow-${i})" class="animate-heart">
+                        <circle cx="400" cy="575" r="55" fill="url(#aura-${i})"/>
+                        <path d="M 400 605 C 365 580, 355 552, 378 540 C 390 534, 400 545, 400 552 C 400 545, 410 534, 422 540 C 445 552, 435 580, 400 605 Z"
+                              fill="#FEF9C3" opacity="0.9"/>
+                    </g>
+                    <path d="M 525 650 C 495 620, 465 595, 435 580 C 415 570, 392 572, 378 582 C 392 588, 412 590, 425 595 C 405 596, 382 596, 372 604 C 388 610, 408 610, 422 612 C 405 616, 386 618, 380 625 C 398 630, 422 628, 442 632 C 465 638, 488 665, 510 705"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                `
+            },
+            {
+                title: "03 · Mindful Elixir",
+                tip: "Sip a warm cup of herbal tea or water slowly, feeling the gentle warmth travel down and soften your chest.",
+                affirmation: "I nourish my body with unhurried grace and intention.",
+                journalPrompt: "How can I slow down my pace for the next hour and savor something simple?",
+                tags: ["tea", "warm", "comfort", "tired", "nourish", "slow"],
+                renderArt: (i) => `
+                    <path d="M 330 140 A 165 165 0 1 0 510 380 A 135 135 0 1 1 330 140 Z"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="1.5" opacity="0.6"/>
+                    <path d="M 180 740 C 200 610, 250 540, 320 510 C 335 480, 338 445, 332 415 C 358 416, 380 408, 390 392 C 395 384, 392 375, 388 370 C 395 365, 396 358, 390 352 C 402 346, 408 338, 405 328 C 400 315, 388 300, 385 280 C 380 240, 350 208, 310 212 C 265 216, 242 260, 248 315 C 254 365, 280 405, 278 455 C 275 505, 225 545, 180 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 320 510 C 385 495, 460 540, 505 630 L 535 740 L 180 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 352 294 Q 364 302, 376 293" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 435 455 C 435 505, 535 505, 535 455 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <ellipse cx="485" cy="455" rx="50" ry="10" fill="#FDE047" opacity="0.25" stroke="url(#gold-${i})" stroke-width="1.8"/>
+                    <path d="M 380 570 C 420 540, 455 515, 485 505 C 510 498, 532 485, 542 470"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="2.5" stroke-linecap="round"/>
+                    <g filter="url(#glow-${i})" class="animate-breathe">
+                        <path d="M 465 435 C 450 395, 485 365, 468 320 C 455 285, 480 255, 470 225"
+                              fill="none" stroke="url(#gold-${i})" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M 495 440 C 515 400, 485 360, 505 315 C 520 280, 495 250, 508 215"
+                              fill="none" stroke="#E9D5FF" stroke-width="1.6" stroke-linecap="round" opacity="0.8"/>
+                    </g>
+                    <path d="M 468 320 Q 450 310, 445 325 Q 460 332, 468 320 Z" fill="#FDE047" class="animate-float-1"/>
+                    <path d="M 505 315 Q 523 305, 528 320 Q 513 327, 505 315 Z" fill="#E9D5FF" class="animate-float-2"/>
+                `
+            },
+            {
+                title: "04 · Open to the Light",
+                tip: "Step near a sunlit window or open sky, tilt your chin upward, and let natural light wash across your face.",
+                affirmation: "I welcome warmth, clarity, and gentle renewal into my spirit.",
+                journalPrompt: "What feels hopeful or illuminating in my life right now, even in a small way?",
+                tags: ["light", "sun", "hopeful", "drained", "renew", "energy"],
+                renderArt: (i) => `
+                    <g stroke="url(#gold-${i})" stroke-width="1.2" opacity="0.45" class="animate-breathe">
+                        <line x1="590" y1="180" x2="420" y2="330"/>
+                        <line x1="630" y1="240" x2="430" y2="370"/>
+                        <line x1="530" y1="140" x2="390" y2="300"/>
+                        <line x1="660" y1="310" x2="440" y2="410"/>
+                    </g>
+                    <circle cx="600" cy="180" r="65" fill="url(#aura-${i})" class="animate-breathe"/>
+                    <circle cx="600" cy="180" r="24" fill="#FEF9C3" opacity="0.9"/>
+                    <path d="M 170 740 C 195 620, 250 560, 325 535 C 355 505, 370 465, 372 430 C 398 438, 422 436, 438 422 C 446 415, 446 405, 443 398 C 452 396, 456 388, 451 381 C 464 380, 475 373, 476 363 C 476 351, 465 332, 468 312 C 474 272, 452 230, 410 222 C 362 214, 328 250, 320 302 C 312 355, 330 402, 315 455 C 300 505, 240 545, 170 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 325 535 C 405 520, 495 565, 560 675 L 590 740 L 170 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 410 222 C 452 230, 474 272, 468 312 C 465 332, 476 351, 476 363 C 475 373, 464 380, 451 381 C 456 388, 452 396, 443 398 C 446 405, 446 415, 438 422"
+                          fill="none" stroke="#FEF9C3" stroke-width="3.5" filter="url(#glow-${i})"/>
+                    <path d="M 426 312 Q 440 322, 452 315" fill="none" stroke="#FEF9C3" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 370 225 C 280 220, 210 295, 200 415 C 192 500, 150 565, 110 610"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="2" opacity="0.6" class="animate-sway"/>
+                `
+            },
+            {
+                title: "05 · Temple & Brow Softening",
+                tip: "Close your eyes and trace slow, feather-light circles along your temples and the space between your eyebrows.",
+                affirmation: "I soften my thoughts and welcome deep mental stillness.",
+                journalPrompt: "What thought has been looping in my mind that I can set aside until tomorrow?",
+                tags: ["head", "overwhelmed", "thinking", "stillness", "focus", "brow"],
+                renderArt: (i) => `
+                    <g class="animate-breathe">
+                        <circle cx="400" cy="300" r="145" fill="none" stroke="url(#gold-${i})" stroke-width="1.2" opacity="0.6"/>
+                        <circle cx="400" cy="300" r="185" fill="none" stroke="#E9D5FF" stroke-width="1" stroke-dasharray="5 7" opacity="0.45"/>
+                        <circle cx="400" cy="300" r="225" fill="none" stroke="url(#gold-${i})" stroke-width="0.8" opacity="0.3"/>
+                    </g>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 352 342 Q 368 352, 384 342" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 416 342 Q 432 352, 448 342" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 400 292 L 404 304 L 416 308 L 404 312 L 400 324 L 396 312 L 384 308 L 396 304 Z" fill="#FEF9C3" filter="url(#glow-${i})"/>
+                    <path d="M 245 640 C 240 530, 265 415, 316 335 C 322 325, 330 328, 326 340 C 320 358, 314 380, 312 400"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="2.4" stroke-linecap="round"/>
+                    <path d="M 555 640 C 560 530, 535 415, 484 335 C 478 325, 470 328, 474 340 C 480 358, 486 380, 488 400"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="2.4" stroke-linecap="round"/>
+                    <circle cx="318" cy="332" r="18" fill="none" stroke="#FDE047" stroke-width="1.3" stroke-dasharray="3 4"/>
+                    <circle cx="482" cy="332" r="18" fill="none" stroke="#FDE047" stroke-width="1.3" stroke-dasharray="3 4"/>
+                `
+            },
+            {
+                title: "06 · Crown & Neck Stretch",
+                tip: "Gently tilt one ear toward your shoulder, lengthening the side of your neck as though making space for light.",
+                affirmation: "I let go of the weight I have been carrying.",
+                journalPrompt: "What responsibility have I been carrying on my own that I could soften or share?",
+                tags: ["neck", "stretch", "stiff", "heavy", "weight", "posture"],
+                renderArt: (i) => `
+                    <path d="M 200 460 A 210 210 0 1 1 600 460" fill="none" stroke="url(#gold-${i})" stroke-width="1.5" opacity="0.55"/>
+                    <path d="M 230 460 A 180 180 0 1 1 570 460" fill="none" stroke="#E9D5FF" stroke-width="1" stroke-dasharray="4 6" opacity="0.4"/>
+                    <path d="M 210 740 C 230 605, 290 545, 360 520 C 380 485, 395 450, 405 422 C 375 402, 365 362, 378 318 C 392 262, 435 230, 478 242 C 520 254, 542 300, 530 356 C 520 398, 492 426, 460 434 C 448 462, 442 492, 445 520 C 510 545, 570 605, 590 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 488 246 C 555 275, 585 365, 565 470 C 555 525, 575 585, 610 625"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="2.2" opacity="0.7"/>
+                    <path d="M 505 260 C 575 295, 605 385, 585 495"
+                          fill="none" stroke="#E9D5FF" stroke-width="1.3" opacity="0.45"/>
+                    <path d="M 412 325 Q 425 338, 442 333" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 472 342 Q 485 355, 502 350" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <g filter="url(#glow-${i})" class="animate-breathe">
+                        <path d="M 382 415 Q 355 465, 295 535" fill="none" stroke="#FEF9C3" stroke-width="2.2" stroke-dasharray="4 6"/>
+                        <circle cx="382" cy="415" r="3.5" fill="#FEF9C3"/>
+                        <circle cx="352" cy="468" r="4" fill="#FDE047"/>
+                        <circle cx="295" cy="535" r="3.5" fill="#FEF9C3"/>
+                    </g>
+                `
+            },
+            {
+                title: "07 · Golden Grounding",
+                tip: "Plant both feet firmly on the earth and imagine luminous roots anchoring your energy calmly into the ground.",
+                affirmation: "I am rooted, supported, and steady in this moment.",
+                journalPrompt: "What anchors me when everything around me feels uncertain or fast?",
+                tags: ["grounding", "unsettled", "scatter", "earth", "roots", "steady"],
+                renderArt: (i) => `
+                    <line x1="110" y1="560" x2="690" y2="560" stroke="url(#gold-${i})" stroke-width="1.5" opacity="0.6"/>
+                    <ellipse cx="400" cy="560" rx="220" ry="22" fill="none" stroke="#E9D5FF" stroke-width="1" opacity="0.4"/>
+                    <path d="M 275 560 C 280 485, 320 440, 368 422 C 374 398, 376 375, 374 356 C 350 344, 338 316, 340 282 C 342 238, 368 208, 400 208 C 432 208, 458 238, 460 282 C 462 316, 450 344, 426 356 C 424 375, 426 398, 432 422 C 480 440, 520 485, 525 560 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 366 286 Q 378 294, 390 286" fill="none" stroke="#FDE047" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M 410 286 Q 422 294, 434 286" fill="none" stroke="#FDE047" stroke-width="1.8" stroke-linecap="round"/>
+                    <g filter="url(#glow-${i})" class="animate-breathe" fill="none" stroke-linecap="round">
+                        <path d="M 400 560 C 400 615, 395 665, 400 725" stroke="#FEF9C3" stroke-width="2.5"/>
+                        <path d="M 375 560 C 355 610, 305 645, 255 695" stroke="url(#gold-${i})" stroke-width="2"/>
+                        <path d="M 425 560 C 445 610, 495 645, 545 695" stroke="url(#gold-${i})" stroke-width="2"/>
+                        <path d="M 340 560 C 300 595, 235 615, 185 655" stroke="#E9D5FF" stroke-width="1.5" opacity="0.75"/>
+                        <path d="M 460 560 C 500 595, 565 615, 615 655" stroke="#E9D5FF" stroke-width="1.5" opacity="0.75"/>
+                    </g>
+                    <circle cx="400" cy="645" r="3.5" fill="#FEF9C3"/>
+                    <circle cx="315" cy="642" r="3" fill="#FDE047"/>
+                    <circle cx="485" cy="642" r="3" fill="#FDE047"/>
+                `
+            },
+            {
+                title: "08 · Breath of Fresh Air",
+                tip: "Open a window or step outdoors for one quiet minute, letting cool air sweep away stagnant thoughts.",
+                affirmation: "With every fresh breeze, my energy clears and renews.",
+                journalPrompt: "What stale habit or mindset could use a breath of fresh air today?",
+                tags: ["air", "fresh", "stagnant", "stuff", "outside", "clear"],
+                renderArt: (i) => `
+                    <g fill="none" stroke-linecap="round" class="animate-breathe">
+                        <path d="M 110 260 C 220 220, 310 295, 420 250 C 510 215, 580 160, 680 185"
+                              stroke="url(#gold-${i})" stroke-width="2" opacity="0.75"/>
+                        <path d="M 130 330 C 250 300, 340 370, 470 320 C 560 285, 620 245, 700 265"
+                              stroke="#E9D5FF" stroke-width="1.5" opacity="0.6"/>
+                        <path d="M 150 470 C 260 440, 370 500, 510 455 C 590 430, 645 395, 710 410"
+                              stroke="url(#gold-${i})" stroke-width="1.5" opacity="0.5"/>
+                    </g>
+                    <path d="M 185 740 C 205 615, 260 555, 340 525 C 360 495, 365 455, 358 422 C 384 424, 408 418, 420 402 C 425 395, 423 386, 419 381 C 426 377, 427 370, 421 365 C 432 361, 440 353, 438 344 C 435 334, 421 320, 418 302 C 414 265, 386 230, 346 232 C 301 234, 278 275, 281 325 C 284 375, 311 415, 308 465 C 304 515, 245 545, 185 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 340 525 C 415 505, 510 545, 575 650 L 610 740 L 185 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 340 232 C 250 215, 165 260, 115 330 M 325 245 C 235 240, 155 295, 105 375 M 310 265 C 225 275, 150 335, 110 420"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="2" opacity="0.7"/>
+                    <path d="M 382 312 Q 394 320, 406 311" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 520 220 Q 540 205, 550 222 Q 533 233, 520 220 Z" fill="#FDE047" class="animate-float-1"/>
+                    <path d="M 610 310 Q 630 295, 640 312 Q 623 323, 610 310 Z" fill="#FEF9C3" class="animate-float-2"/>
+                    <path d="M 480 390 Q 498 378, 506 392 Q 491 402, 480 390 Z" fill="#E9D5FF" class="animate-float-1"/>
+                `
+            },
+            {
+                title: "09 · Sacred Gratitude",
+                tip: "Name one quiet, miraculous thing your body carried you through today and offer it silent thanks.",
+                affirmation: "I honor my body as a vessel of resilience and wonder.",
+                journalPrompt: "What did my body do for me today that deserves quiet appreciation?",
+                tags: ["grateful", "gratitude", "thankful", "body", "appreciate", "grace"],
+                renderArt: (i) => `
+                    <g opacity="0.55" stroke="url(#gold-${i})" stroke-width="1.2" fill="none">
+                        <path d="M 400 130 C 445 205, 445 295, 400 370 C 355 295, 355 205, 400 130 Z"/>
+                        <path d="M 235 200 C 310 225, 365 285, 400 370 C 315 350, 260 285, 235 200 Z"/>
+                        <path d="M 565 200 C 490 225, 435 285, 400 370 C 485 350, 540 285, 565 200 Z"/>
+                    </g>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 400 475 C 384 505, 378 555, 384 605 L 400 612 L 416 605 C 422 555, 416 505, 400 475 Z"
+                          fill="url(#muse-${i})" stroke="#FEF9C3" stroke-width="2.2"/>
+                    <line x1="400" y1="475" x2="400" y2="612" stroke="url(#gold-${i})" stroke-width="1.5"/>
+                    <g filter="url(#glow-${i})" class="animate-heart">
+                        <circle cx="400" cy="442" r="24" fill="url(#aura-${i})"/>
+                        <path d="M 400 422 L 404 438 L 420 442 L 404 446 L 400 462 L 396 446 L 380 442 L 396 438 Z" fill="#FEF9C3"/>
+                    </g>
+                `
+            },
+            {
+                title: "10 · Cosmic Stillness",
+                tip: "Close your eyes for three slow breaths and imagine your mind as a calm night sky reflecting quiet starlight.",
+                affirmation: "Beneath every passing thought, my inner sky remains vast and peaceful.",
+                journalPrompt: "If my inner world is a wide night sky, what small star of peace is still shining right now?",
+                tags: ["stillness", "calm", "night", "peace", "quiet", "mind"],
+                renderArt: (i) => `
+                    <g class="animate-spin-halo" opacity="0.65">
+                        <circle cx="400" cy="340" r="250" fill="none" stroke="url(#gold-${i})" stroke-width="1.2" stroke-dasharray="2 8"/>
+                        <circle cx="400" cy="340" r="210" fill="none" stroke="#E9D5FF" stroke-width="1" opacity="0.5"/>
+                    </g>
+                    <path d="M 205 740 C 225 605, 290 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 510 545, 575 605, 595 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 338 Q 370 348, 385 338" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 338 Q 430 348, 445 338" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 392 282 A 10 10 0 1 0 408 282 A 8 8 0 1 1 392 282 Z" fill="#FEF9C3"/>
+                    <g filter="url(#glow-${i})" class="animate-breathe">
+                        <polyline points="400,295 375,375 400,455 350,565 400,635 450,565 400,455 425,375 400,295"
+                                  fill="none" stroke="url(#gold-${i})" stroke-width="1.3" opacity="0.75"/>
+                        <circle cx="400" cy="295" r="3" fill="#FEF9C3"/>
+                        <circle cx="400" cy="455" r="4" fill="#FDE047"/>
+                        <circle cx="350" cy="565" r="3" fill="#FEF9C3"/>
+                        <circle cx="450" cy="565" r="3" fill="#FEF9C3"/>
+                        <circle cx="400" cy="635" r="3.5" fill="#FDE047"/>
+                    </g>
+                    <path d="M 245 220 L 248 232 L 260 235 L 248 238 L 245 250 L 242 238 L 230 235 L 242 232 Z" fill="#FDE047" class="animate-float-1"/>
+                    <path d="M 555 240 L 558 252 L 570 255 L 558 258 L 555 270 L 552 258 L 540 255 L 552 252 Z" fill="#FEF9C3" class="animate-float-2"/>
+                `
+            },
+            {
+                title: "11 · Cool Water Blessing",
+                tip: "Cup cool water in your hands and splash your face, washing away the heaviness of the hours behind you.",
+                affirmation: "I refresh my spirit and begin this moment anew.",
+                journalPrompt: "What part of today am I ready to wash clean and leave behind?",
+                tags: ["water", "cool", "refresh", "heavy", "reset", "clean"],
+                renderArt: (i) => `
+                    <g class="animate-breathe" fill="none" stroke="url(#gold-${i})" opacity="0.55">
+                        <ellipse cx="400" cy="560" rx="230" ry="42" stroke-width="1.4"/>
+                        <ellipse cx="400" cy="560" rx="165" ry="28" stroke="#E9D5FF" stroke-width="1.1" stroke-dasharray="4 6"/>
+                    </g>
+                    <path d="M 205 740 C 225 605, 290 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 510 545, 575 605, 595 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 310 530 C 345 575, 455 575, 490 530 C 460 548, 340 548, 310 530 Z"
+                          fill="#FEF9C3" opacity="0.3" stroke="url(#gold-${i})" stroke-width="2.2"/>
+                    <g filter="url(#glow-${i})">
+                        <path d="M 365 495 Q 355 512, 365 518 Q 375 512, 365 495 Z" fill="#FEF9C3" class="animate-float-1"/>
+                        <path d="M 435 485 Q 425 502, 435 508 Q 445 502, 435 485 Z" fill="#FDE047" class="animate-float-2"/>
+                        <path d="M 400 465 Q 392 480, 400 486 Q 408 480, 400 465 Z" fill="#E9D5FF" class="animate-float-1"/>
+                    </g>
+                `
+            },
+            {
+                title: "12 · Shoulder Rolls & Wings",
+                tip: "Roll your shoulders slowly up, back, and down three times, letting stagnant tension melt from between your blades.",
+                affirmation: "I move with fluid ease and lighten every burden.",
+                journalPrompt: "What feels lighter when I stop trying to control every outcome?",
+                tags: ["shoulders", "wings", "ease", "stiff", "move", "light"],
+                renderArt: (i) => `
+                    <g filter="url(#glow-${i})" class="animate-breathe" fill="none" stroke-linecap="round">
+                        <path d="M 335 480 C 230 390, 145 270, 175 185 C 215 240, 275 320, 345 435"
+                              stroke="url(#gold-${i})" stroke-width="2.2"/>
+                        <path d="M 325 515 C 210 450, 125 365, 135 280 C 185 325, 250 390, 335 475"
+                              stroke="#E9D5FF" stroke-width="1.6" opacity="0.75"/>
+                        <path d="M 465 480 C 570 390, 655 270, 625 185 C 585 240, 525 320, 455 435"
+                              stroke="url(#gold-${i})" stroke-width="2.2"/>
+                        <path d="M 475 515 C 590 450, 675 365, 665 280 C 615 325, 550 390, 465 475"
+                              stroke="#E9D5FF" stroke-width="1.6" opacity="0.75"/>
+                    </g>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 285 525 A 28 28 0 1 1 315 548" fill="none" stroke="#FEF9C3" stroke-width="1.8" stroke-dasharray="4 4"/>
+                    <path d="M 515 525 A 28 28 0 1 0 485 548" fill="none" stroke="#FEF9C3" stroke-width="1.8" stroke-dasharray="4 4"/>
+                `
+            },
+            {
+                title: "13 · Digital Sunset",
+                tip: "Step away from glowing screens for five minutes and let your eyes rest on something distant, soft, and still.",
+                affirmation: "I reclaim my attention and rest in quiet presence.",
+                journalPrompt: "Where has my attention been pulled today that I want to gently call back?",
+                tags: ["screen", "eyes", "sunset", "tired", "distracted", "rest"],
+                renderArt: (i) => `
+                    <circle cx="520" cy="490" r="95" fill="url(#aura-${i})" class="animate-breathe"/>
+                    <path d="M 445 490 A 75 75 0 0 1 595 490 Z" fill="#FDE047" opacity="0.85"/>
+                    <line x1="120" y1="490" x2="680" y2="490" stroke="url(#gold-${i})" stroke-width="1.5" opacity="0.7"/>
+                    <path d="M 165 740 C 185 615, 240 555, 320 525 C 340 495, 345 455, 338 422 C 364 424, 388 418, 400 402 C 405 395, 403 386, 399 381 C 406 377, 407 370, 401 365 C 412 361, 420 353, 418 344 C 415 334, 401 320, 398 302 C 394 265, 366 230, 326 232 C 281 234, 258 275, 261 325 C 264 375, 291 415, 288 465 C 284 515, 225 545, 165 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 320 525 C 395 505, 480 545, 535 650 L 565 740 L 165 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 362 312 Q 374 320, 386 311" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="480" cy="360" r="3" fill="#FEF9C3" class="animate-float-1"/>
+                    <circle cx="585" cy="395" r="2.5" fill="#FDE047" class="animate-float-2"/>
+                    <circle cx="630" cy="430" r="3" fill="#E9D5FF" class="animate-float-1"/>
+                `
+            },
+            {
+                title: "14 · Warm Palm Veil",
+                tip: "Rub your palms together until they feel pleasantly warm, then rest them gently over closed eyes without pressing.",
+                affirmation: "My own warmth is a quiet balm for tired eyes.",
+                journalPrompt: "What do I need to stop straining to see clearly for a few minutes?",
+                tags: ["eyes", "warm", "palms", "tired", "dark", "rest"],
+                renderArt: (i) => `
+                    <g filter="url(#glow-${i})" class="animate-breathe">
+                        <circle cx="400" cy="340" r="150" fill="url(#aura-${i})"/>
+                        <circle cx="400" cy="340" r="195" fill="none" stroke="url(#gold-${i})" stroke-width="1" stroke-dasharray="5 9" opacity="0.5"/>
+                    </g>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 285 455 C 295 365, 335 315, 385 305" fill="none" stroke="url(#gold-${i})" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M 515 455 C 505 365, 465 315, 415 305" fill="none" stroke="url(#gold-${i})" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="400" cy="308" r="5" fill="#FEF9C3" class="animate-heart"/>
+                `
+            },
+            {
+                title: "15 · Sacred Hum",
+                tip: "Hum a low note while placing fingertips lightly on your collarbone, noticing where the gentle buzz travels.",
+                affirmation: "Sound helps dissolve what words cannot reach.",
+                journalPrompt: "What unspoken feeling is asking for a gentle outlet rather than overthinking?",
+                tags: ["hum", "voice", "sound", "vibration", "throat", "release"],
+                renderArt: (i) => `
+                    <g filter="url(#glow-${i})" class="animate-breathe" fill="none" stroke-linecap="round">
+                        <path d="M 320 265 C 250 220, 180 230, 130 190 M 315 280 C 235 265, 175 295, 115 285 M 318 295 C 245 315, 195 355, 140 375"
+                              stroke="url(#gold-${i})" stroke-width="1.7"/>
+                        <path d="M 435 365 C 510 345, 585 355, 675 315 M 438 378 C 520 375, 595 395, 685 375 M 436 390 C 510 405, 575 435, 650 455"
+                              stroke="#E9D5FF" stroke-width="1.5" opacity="0.8"/>
+                    </g>
+                    <path d="M 195 740 C 215 615, 270 555, 345 525 C 365 495, 370 455, 363 422 C 389 424, 412 418, 424 402 C 429 395, 427 386, 423 381 C 430 377, 431 370, 425 365 C 436 361, 444 353, 442 344 C 439 334, 425 320, 422 302 C 418 265, 390 230, 350 232 C 305 234, 282 275, 285 325 C 288 375, 315 415, 312 465 C 308 515, 250 545, 195 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 345 525 C 420 505, 515 545, 580 650 L 610 740 L 195 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 288 285 C 315 225, 395 215, 422 285 C 385 265, 325 265, 288 285 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2"/>
+                    <path d="M 386 312 Q 398 320, 410 311" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <g class="animate-heart">
+                        <circle cx="585" cy="540" r="24" fill="url(#aura-${i})" stroke="url(#gold-${i})" stroke-width="1.5"/>
+                        <circle cx="585" cy="540" r="6" fill="#FEF9C3"/>
+                    </g>
+                    <circle cx="130" cy="190" r="3" fill="#FEF9C3" class="animate-float-1"/>
+                    <circle cx="675" cy="315" r="3.5" fill="#FDE047" class="animate-float-2"/>
+                `
+            },
+            {
+                title: "16 · Barefoot Connection",
+                tip: "Slip off your shoes for a moment and notice the cool, steady texture of the floor beneath your soles.",
+                affirmation: "The earth holds me effortlessly wherever I stand.",
+                journalPrompt: "How does returning to simple physical sensations shift my mood right now?",
+                tags: ["feet", "barefoot", "floor", "grounded", "standing", "earth"],
+                renderArt: (i) => `
+                    <path d="M 110 640 Q 400 580, 690 640" fill="none" stroke="url(#gold-${i})" stroke-width="2" opacity="0.75"/>
+                    <path d="M 400 175 C 425 175, 442 198, 440 230 C 438 258, 425 278, 412 286 C 412 305, 415 322, 422 335 C 460 355, 480 415, 470 500 L 455 612 L 420 612 L 415 495 L 385 495 L 380 612 L 345 612 L 330 500 C 320 415, 340 355, 378 335 C 385 322, 388 305, 388 286 C 375 278, 362 258, 360 230 C 358 198, 375 175, 400 175 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.3"/>
+                    <path d="M 332 455 C 295 520, 285 575, 295 610 L 505 610 C 515 575, 505 520, 468 455"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="1.8" opacity="0.85"/>
+                    <g class="animate-breathe" fill="none" stroke="#FEF9C3">
+                        <ellipse cx="400" cy="614" rx="85" ry="12" stroke-width="1.6"/>
+                        <ellipse cx="400" cy="614" rx="145" ry="20" stroke-width="1.1" stroke-dasharray="4 6" opacity="0.7"/>
+                    </g>
+                    <path d="M 250 612 Q 245 585, 262 572 M 550 612 Q 555 585, 538 572"
+                          fill="none" stroke="#FDE047" stroke-width="1.6" stroke-linecap="round" class="animate-sway"/>
+                `
+            },
+            {
+                title: "17 · Gentle Boundary",
+                tip: "Imagine a soft, luminous sphere of golden light surrounding you—letting peace in and letting urgency stay outside.",
+                affirmation: "My energy is sacred; I choose what enters my space.",
+                journalPrompt: "Where do I need a softer or clearer boundary to protect my peace today?",
+                tags: ["boundary", "drained", "overwhelmed", "space", "protect", "energy"],
+                renderArt: (i) => `
+                    <g filter="url(#glow-${i})" class="animate-breathe">
+                        <circle cx="400" cy="430" r="255" fill="url(#aura-${i})" stroke="url(#gold-${i})" stroke-width="2"/>
+                        <circle cx="400" cy="430" r="235" fill="none" stroke="#E9D5FF" stroke-width="1" stroke-dasharray="3 7" opacity="0.65"/>
+                    </g>
+                    <path d="M 245 645 C 260 545, 310 500, 362 480 C 370 455, 372 428, 370 405 C 345 392, 330 362, 332 325 C 334 275, 362 240, 400 240 C 438 240, 466 275, 468 325 C 470 362, 455 392, 430 405 C 428 428, 430 455, 438 480 C 490 500, 540 545, 555 645 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.4"/>
+                    <path d="M 362 325 Q 375 334, 388 325" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 412 325 Q 425 334, 438 325" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="400" cy="175" r="4.5" fill="#FEF9C3"/>
+                    <circle cx="655" cy="430" r="4.5" fill="#FDE047"/>
+                    <circle cx="145" cy="430" r="4.5" fill="#FDE047"/>
+                `
+            },
+            {
+                title: "18 · Soft Gaze",
+                tip: "Allow your eyes to unfocus gently, taking in the whole room at once rather than fixing on a single detail.",
+                affirmation: "I soften my focus and let the world unfold without force.",
+                journalPrompt: "What happens when I stop forcing clarity and let the big picture soften?",
+                tags: ["gaze", "eyes", "focus", "tense", "wide", "soft"],
+                renderArt: (i) => `
+                    <path d="M 225 220 A 135 135 0 0 0 225 460 A 105 105 0 0 1 225 220 Z"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="1.5" opacity="0.6" class="animate-breathe"/>
+                    <path d="M 575 220 A 135 135 0 0 1 575 460 A 105 105 0 0 0 575 220 Z"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="1.5" opacity="0.6" class="animate-breathe"/>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 350 336 Q 368 326, 386 336 Q 368 344, 350 336 Z" fill="#FEF9C3" opacity="0.85"/>
+                    <path d="M 414 336 Q 432 326, 450 336 Q 432 344, 414 336 Z" fill="#FEF9C3" opacity="0.85"/>
+                    <g stroke="#FDE047" stroke-width="1" opacity="0.45" class="animate-breathe">
+                        <line x1="368" y1="336" x2="220" y2="290"/>
+                        <line x1="432" y1="336" x2="580" y2="290"/>
+                    </g>
+                `
+            },
+            {
+                title: "19 · Heart-Opening Stretch",
+                tip: "Clasp your hands behind your back, draw your shoulder blades together, and lift your sternum toward the sky.",
+                affirmation: "I open my heart with courage, softness, and trust.",
+                journalPrompt: "Where am I guarding my heart out of habit when it might be safe to open a fraction more?",
+                tags: ["chest", "open", "heart", "stretch", "courage", "posture"],
+                renderArt: (i) => `
+                    <g class="animate-spin-halo" opacity="0.55" stroke="url(#gold-${i})" stroke-width="1.2" fill="none">
+                        <circle cx="400" cy="460" r="190"/>
+                        <circle cx="400" cy="460" r="145" stroke-dasharray="4 6"/>
+                    </g>
+                    <path d="M 175 740 C 200 625, 255 565, 330 540 C 365 510, 382 470, 385 435 C 412 442, 435 440, 450 426 C 458 418, 458 408, 455 402 C 464 400, 468 392, 463 385 C 476 384, 487 377, 488 367 C 488 355, 477 336, 480 316 C 486 276, 464 234, 422 226 C 374 218, 340 254, 332 306 C 324 359, 342 406, 327 459 C 312 509, 245 545, 175 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 330 540 C 415 515, 515 565, 575 675 L 605 740 L 175 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 436 316 Q 450 326, 462 319" fill="none" stroke="#FEF9C3" stroke-width="2" stroke-linecap="round"/>
+                    <g filter="url(#glow-${i})" class="animate-heart">
+                        <path d="M 465 535 C 495 505, 535 505, 560 535 C 535 555, 495 555, 465 535 Z" fill="#FEF9C3" opacity="0.85"/>
+                        <path d="M 465 535 C 485 485, 520 465, 545 480 C 535 510, 500 530, 465 535 Z" fill="#FDE047" opacity="0.75"/>
+                    </g>
+                `
+            },
+            {
+                title: "20 · Lunar Stillness",
+                tip: "Dim one bright light around you and let your nervous system downshift into the quiet rhythm of twilight.",
+                affirmation: "I honor my need for rest, shadow, and gentle deceleration.",
+                journalPrompt: "What pace feels sustainable and kind for the rest of my evening?",
+                tags: ["moon", "twilight", "dim", "evening", "rest", "tired"],
+                renderArt: (i) => `
+                    <g filter="url(#glow-${i})" class="animate-breathe">
+                        <path d="M 490 140 A 230 230 0 1 0 560 570 A 185 185 0 1 1 490 140 Z"
+                              fill="url(#aura-${i})" stroke="url(#gold-${i})" stroke-width="2"/>
+                    </g>
+                    <path d="M 225 740 C 245 615, 300 555, 360 530 C 370 500, 373 465, 370 440 C 340 425, 323 390, 325 345 C 327 285, 360 245, 405 245 C 450 245, 483 285, 485 345 C 487 390, 470 425, 440 440 C 437 465, 440 495, 450 530 C 510 555, 565 615, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.4"/>
+                    <path d="M 360 345 Q 375 355, 390 345" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 420 345 Q 435 355, 450 345" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="535" y1="220" x2="535" y2="335" stroke="#FDE047" stroke-width="1.2" opacity="0.7"/>
+                    <circle cx="535" cy="340" r="5" fill="#FEF9C3" class="animate-float-1"/>
+                    <line x1="595" y1="290" x2="595" y2="395" stroke="#E9D5FF" stroke-width="1.2" opacity="0.7"/>
+                    <circle cx="595" cy="400" r="4" fill="#FDE047" class="animate-float-2"/>
+                `
+            },
+            {
+                title: "21 · Quiet Glass of Water",
+                tip: "Step away from what you're doing for sixty seconds and drink a full glass of room-temperature water.",
+                affirmation: "I tend to my thirst before asking more of myself.",
+                journalPrompt: "What basic need—water, rest, food, or quiet—have I been postponing today?",
+                tags: ["water", "drink", "thirsty", "pause", "reset", "simple"],
+                renderArt: (i) => `
+                    <g filter="url(#glow-${i})" class="animate-breathe">
+                        <ellipse cx="400" cy="590" rx="185" ry="30" fill="none" stroke="url(#gold-${i})" stroke-width="1.5" opacity="0.65"/>
+                        <ellipse cx="400" cy="590" rx="115" ry="18" fill="none" stroke="#FEF9C3" stroke-width="1.2" stroke-dasharray="4 6"/>
+                    </g>
+                    <path d="M 185 740 C 205 615, 260 555, 340 525 C 360 495, 365 455, 358 422 C 384 424, 408 418, 420 402 C 425 395, 423 386, 419 381 C 426 377, 427 370, 421 365 C 432 361, 440 353, 438 344 C 435 334, 421 320, 418 302 C 414 265, 386 230, 346 232 C 301 234, 278 275, 281 325 C 284 375, 311 415, 308 465 C 304 515, 245 545, 185 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 340 525 C 415 505, 510 545, 575 650 L 610 740 L 185 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 382 312 Q 394 320, 406 311" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 455 430 L 535 430 L 515 520 C 512 535, 478 535, 475 520 Z" fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.2"/>
+                    <path d="M 495 365 C 512 390, 512 408, 495 418 C 478 408, 478 390, 495 365 Z" fill="#FEF9C3" class="animate-float-1"/>
+                `
+            },
+            {
+                title: "22 · Setting Tools Down",
+                tip: "Put your pen or phone down for a moment and let your hands rest flat on a solid table or your lap.",
+                affirmation: "Nothing breaks if I set the task down for a breath.",
+                journalPrompt: "What feels urgent right now that can actually wait ten minutes?",
+                tags: ["pause", "hands", "table", "overwhelmed", "busy", "stop"],
+                renderArt: (i) => `
+                    <path d="M 140 540 Q 400 505, 660 540" fill="none" stroke="url(#gold-${i})" stroke-width="2" opacity="0.7"/>
+                    <circle cx="400" cy="330" r="190" fill="none" stroke="#E9D5FF" stroke-width="1" stroke-dasharray="3 8" opacity="0.45" class="animate-spin-halo"/>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 230 538 C 275 525, 330 528, 365 538" fill="none" stroke="#FEF9C3" stroke-width="2.4" stroke-linecap="round"/>
+                    <path d="M 435 538 C 470 528, 525 525, 570 538" fill="none" stroke="#FEF9C3" stroke-width="2.4" stroke-linecap="round"/>
+                    <circle cx="400" cy="200" r="4" fill="#FEF9C3" class="animate-float-1"/>
+                `
+            },
+            {
+                title: "23 · Spine Alignment",
+                tip: "Imagine a delicate golden thread lifting gently from the crown of your head, lengthening your spine effortlessly.",
+                affirmation: "I stand tall in my quiet dignity and inner grace.",
+                journalPrompt: "How do I carry myself when I trust my own quiet steadiness?",
+                tags: ["spine", "tall", "posture", "dignity", "centered", "align"],
+                renderArt: (i) => `
+                    <line x1="400" y1="95" x2="400" y2="740" stroke="url(#gold-${i})" stroke-width="1.6" stroke-dasharray="4 6" opacity="0.8"/>
+                    <g filter="url(#glow-${i})" class="animate-heart">
+                        <path d="M 400 125 L 406 145 L 426 151 L 406 157 L 400 177 L 394 157 L 374 151 L 394 145 Z" fill="#FEF9C3"/>
+                    </g>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <g class="animate-breathe">
+                        <circle cx="400" cy="235" r="4" fill="#FEF9C3"/>
+                        <circle cx="400" cy="465" r="4.5" fill="#FDE047"/>
+                        <circle cx="400" cy="575" r="5" fill="#FEF9C3"/>
+                        <circle cx="400" cy="675" r="4" fill="#FDE047"/>
+                    </g>
+                `
+            },
+            {
+                title: "24 · Botanical Aroma",
+                tip: "Pause to breathe in a calming scent—lavender, citrus, rain, or warm tea—letting fragrance anchor you in the present.",
+                affirmation: "My senses guide me gently home to the here and now.",
+                journalPrompt: "What scent, texture, or song immediately helps me feel grounded and calm?",
+                tags: ["scent", "aroma", "lavender", "senses", "present", "calm"],
+                renderArt: (i) => `
+                    <g class="animate-sway" fill="none" stroke="url(#gold-${i})" stroke-width="1.8" stroke-linecap="round">
+                        <path d="M 525 690 C 515 560, 535 430, 505 310"/>
+                        <path d="M 565 690 C 575 580, 595 475, 575 365" stroke="#E9D5FF" stroke-width="1.4"/>
+                    </g>
+                    <g fill="#FDE047" class="animate-breathe">
+                        <ellipse cx="496" cy="335" rx="9" ry="5" transform="rotate(-30 496 335)"/>
+                        <ellipse cx="520" cy="355" rx="9" ry="5" transform="rotate(30 520 355)"/>
+                        <ellipse cx="502" cy="385" rx="10" ry="5" transform="rotate(-25 502 385)"/>
+                        <ellipse cx="526" cy="408" rx="10" ry="5" transform="rotate(25 526 408)"/>
+                    </g>
+                    <path d="M 175 740 C 195 615, 250 555, 330 525 C 350 495, 355 455, 348 422 C 374 424, 398 418, 410 402 C 415 395, 413 386, 409 381 C 416 377, 417 370, 411 365 C 422 361, 430 353, 428 344 C 425 334, 411 320, 408 302 C 404 265, 376 230, 336 232 C 291 234, 268 275, 271 325 C 274 375, 301 415, 298 465 C 294 515, 235 545, 175 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 330 525 C 405 505, 490 545, 545 650 L 575 740 L 175 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 372 312 Q 384 320, 396 311" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 495 345 Q 455 325, 432 348" fill="none" stroke="#FEF9C3" stroke-width="1.6" stroke-dasharray="3 5" class="animate-float-1"/>
+                `
+            },
+            {
+                title: "25 · Self-Compassion Embrace",
+                tip: "Wrap your arms gently around your own shoulders and give yourself a slow, reassuring squeeze.",
+                affirmation: "I offer myself the same tenderness I give to those I love.",
+                journalPrompt: "What harsh standard can I soften with a little self-compassion today?",
+                tags: ["embrace", "hug", "compassion", "kind", "tender", "sad"],
+                renderArt: (i) => `
+                    <circle cx="400" cy="450" r="240" fill="url(#aura-${i})" class="animate-breathe"/>
+                    <circle cx="400" cy="450" r="215" fill="none" stroke="url(#gold-${i})" stroke-width="1.2" opacity="0.5"/>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 255 645 C 295 585, 415 555, 515 565 C 495 585, 445 595, 395 605"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M 545 645 C 505 585, 385 555, 285 565 C 305 585, 355 595, 405 605"
+                          fill="none" stroke="#FEF9C3" stroke-width="2.2" stroke-linecap="round"/>
+                `
+            },
+            {
+                title: "26 · Mindful Listening",
+                tip: "Close your eyes and listen for the furthest sound you can hear, letting ambient noise wash over you without judgment.",
+                affirmation: "I listen deeply and rest in spacious awareness.",
+                journalPrompt: "What subtle truth inside me am I only noticing when the noise quiets down?",
+                tags: ["listen", "sound", "quiet", "ears", "still", "aware"],
+                renderArt: (i) => `
+                    <g fill="none" stroke-linecap="round" class="animate-breathe">
+                        <path d="M 485 265 A 95 95 0 0 1 485 415" stroke="#FEF9C3" stroke-width="2"/>
+                        <path d="M 525 230 A 145 145 0 0 1 525 450" stroke="url(#gold-${i})" stroke-width="1.6"/>
+                        <path d="M 565 195 A 195 195 0 0 1 565 485" stroke="#E9D5FF" stroke-width="1.2" opacity="0.65"/>
+                    </g>
+                    <path d="M 185 740 C 205 615, 260 555, 340 525 C 360 495, 365 455, 358 422 C 384 424, 408 418, 420 402 C 425 395, 423 386, 419 381 C 426 377, 427 370, 421 365 C 432 361, 440 353, 438 344 C 435 334, 421 320, 418 302 C 414 265, 386 230, 346 232 C 301 234, 278 275, 281 325 C 284 375, 311 415, 308 465 C 304 515, 245 545, 185 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 340 525 C 415 505, 510 545, 575 650 L 610 740 L 185 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 382 312 Q 394 320, 406 311" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 332 355 A 10 10 0 1 0 345 368 A 8 8 0 1 1 332 355 Z" fill="#FEF9C3" class="animate-heart"/>
+                `
+            },
+            {
+                title: "27 · Cloud-Watching Mind",
+                tip: "Notice any heavy thought passing through your mind and picture it drifting peacefully across an endless twilight sky.",
+                affirmation: "I am the vast sky, never the passing weather.",
+                journalPrompt: "If this mood or worry is just passing weather, what remains steady underneath it?",
+                tags: ["thoughts", "clouds", "sky", "overthinking", "pass", "calm"],
+                renderArt: (i) => `
+                    <g fill="none" stroke-linecap="round" class="animate-float-1">
+                        <path d="M 135 230 C 175 205, 235 205, 275 230 C 315 215, 365 225, 390 245"
+                              stroke="url(#gold-${i})" stroke-width="2" opacity="0.75"/>
+                    </g>
+                    <g fill="none" stroke-linecap="round" class="animate-float-2">
+                        <path d="M 435 190 C 480 165, 545 165, 590 190 C 625 175, 665 185, 690 205"
+                              stroke="#E9D5FF" stroke-width="1.8" opacity="0.7"/>
+                    </g>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                `
+            },
+            {
+                title: "28 · Inner Sun Warming",
+                tip: "Rest both hands lightly over your solar plexus and breathe warmth into the quiet center just beneath your ribs.",
+                affirmation: "My inner flame burns steady, warm, and unhurried.",
+                journalPrompt: "What gives me quiet vitality when my external energy feels low?",
+                tags: ["warmth", "sun", "center", "cold", "vitality", "belly"],
+                renderArt: (i) => `
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <g filter="url(#glow-${i})" class="animate-breathe">
+                        <circle cx="400" cy="610" r="65" fill="url(#aura-${i})"/>
+                        <circle cx="400" cy="610" r="22" fill="#FEF9C3" opacity="0.9"/>
+                        <g stroke="#FDE047" stroke-width="1.6" stroke-linecap="round">
+                            <line x1="400" y1="560" x2="400" y2="576"/>
+                            <line x1="400" y1="644" x2="400" y2="660"/>
+                            <line x1="350" y1="610" x2="366" y2="610"/>
+                            <line x1="434" y1="610" x2="450" y2="610"/>
+                            <line x1="365" y1="575" x2="376" y2="586"/>
+                            <line x1="424" y1="634" x2="435" y2="645"/>
+                            <line x1="435" y1="575" x2="424" y2="586"/>
+                            <line x1="376" y1="634" x2="365" y2="645"/>
+                        </g>
+                    </g>
+                `
+            },
+            {
+                title: "29 · Unhurried Exhale",
+                tip: "Inhale softly for four counts, then let your exhale stream out twice as long—like silk floating on evening air.",
+                affirmation: "With every long exhale, my body remembers peace.",
+                journalPrompt: "What happens in my body when I lengthen my exhale just a little bit longer?",
+                tags: ["exhale", "breath", "slow", "stressed", "silk", "unwind"],
+                renderArt: (i) => `
+                    <path d="M 165 740 C 185 615, 240 555, 320 525 C 340 495, 345 455, 338 422 C 364 424, 388 418, 400 402 C 405 395, 403 386, 399 381 C 406 377, 407 370, 401 365 C 412 361, 420 353, 418 344 C 415 334, 401 320, 398 302 C 394 265, 366 230, 326 232 C 281 234, 258 275, 261 325 C 264 375, 291 415, 288 465 C 284 515, 225 545, 165 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 320 525 C 395 505, 480 545, 535 650 L 565 740 L 165 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 362 312 Q 374 320, 386 311" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <g filter="url(#glow-${i})" class="animate-breathe" fill="none" stroke-linecap="round">
+                        <path d="M 412 375 C 475 375, 510 315, 575 320 C 635 325, 675 395, 620 435 C 575 465, 525 415, 565 375 C 595 345, 655 360, 705 335"
+                              stroke="url(#gold-${i})" stroke-width="2.3"/>
+                    </g>
+                    <circle cx="620" cy="435" r="3" fill="#FEF9C3" class="animate-float-1"/>
+                    <circle cx="685" cy="340" r="3.5" fill="#FDE047" class="animate-float-2"/>
+                `
+            },
+            {
+                title: "30 · Evening Star Blessing",
+                tip: "Offer yourself one kind sentence before closing the chapter on today: 'I did enough, and I am enough.'",
+                affirmation: "I release today with grace and rest in wholeness.",
+                journalPrompt: "What would I say to a close friend who felt the exact way I feel right now?",
+                tags: ["blessing", "enough", "evening", "grace", "kind", "close"],
+                renderArt: (i) => `
+                    <g class="animate-spin-halo" opacity="0.6">
+                        <circle cx="400" cy="340" r="245" fill="none" stroke="url(#gold-${i})" stroke-width="1.2" stroke-dasharray="3 9"/>
+                    </g>
+                    <path d="M 205 740 C 225 605, 290 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 510 545, 575 605, 595 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 338 Q 370 348, 385 338" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 338 Q 430 348, 445 338" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 335 225 Q 400 185, 465 225" fill="none" stroke="url(#gold-${i})" stroke-width="1.8"/>
+                    <g filter="url(#glow-${i})" class="animate-heart">
+                        <path d="M 400 145 L 406 168 L 429 174 L 406 180 L 400 203 L 394 180 L 371 174 L 394 168 Z" fill="#FEF9C3"/>
+                    </g>
+                    <circle cx="335" cy="225" r="3.5" fill="#FDE047"/>
+                    <circle cx="465" cy="225" r="3.5" fill="#FDE047"/>
+                `
+            },
+            {
+                title: "31 · Palm Map Rhythm",
+                tip: "Trace the intricate lines on your palms with a soft touch, anchoring your energy to the ancient rhythm of your heartbeat.",
+                affirmation: "I am a steady conduit of calm energy, grounded in the magic of the present moment.",
+                journalPrompt: "What helps me feel connected to the present moment when my thoughts race ahead?",
+                tags: ["palm", "hands", "rhythm", "heartbeat", "present", "grounded"],
+                renderArt: (i) => `
+                    <g class="animate-spin-halo" opacity="0.55" fill="none" stroke="url(#gold-${i})">
+                        <circle cx="400" cy="360" r="240" stroke-width="1.2" stroke-dasharray="4 8"/>
+                        <circle cx="400" cy="360" r="195" stroke="#E9D5FF" stroke-width="1" stroke-dasharray="2 7"/>
+                    </g>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 290 565 C 315 615, 355 615, 375 570" fill="none" stroke="url(#gold-${i})" stroke-width="2.2" stroke-linecap="round"/>
+                    <path d="M 510 565 C 485 615, 445 615, 425 570" fill="none" stroke="url(#gold-${i})" stroke-width="2.2" stroke-linecap="round"/>
+                    <g filter="url(#glow-${i})" class="animate-heart">
+                        <path d="M 315 585 Q 332 572, 350 588 M 322 598 Q 338 588, 355 600" fill="none" stroke="#FEF9C3" stroke-width="1.4"/>
+                        <path d="M 485 585 Q 468 572, 450 588 M 478 598 Q 462 588, 445 600" fill="none" stroke="#FEF9C3" stroke-width="1.4"/>
+                    </g>
+                `
+            },
+            {
+                title: "32 · Silent Cosmic Music",
+                tip: "Hum a low, steady note and feel your own sacred vibration realign your spirit with quiet stillness.",
+                affirmation: "My inner stillness harmonizes with the quiet rhythm around me.",
+                journalPrompt: "What feeling of harmony am I longing to invite back into my day?",
+                tags: ["hum", "music", "vibration", "harmony", "spirit", "still"],
+                renderArt: (i) => `
+                    <g filter="url(#glow-${i})" class="animate-breathe" fill="none" stroke-linecap="round">
+                        <path d="M 425 365 C 495 340, 565 290, 655 260" stroke="#FEF9C3" stroke-width="2"/>
+                        <path d="M 428 375 C 505 365, 580 345, 675 325" stroke="url(#gold-${i})" stroke-width="1.6"/>
+                        <path d="M 425 385 C 495 395, 565 415, 645 435" stroke="#E9D5FF" stroke-width="1.3" opacity="0.75"/>
+                    </g>
+                    <path d="M 185 740 C 205 615, 260 555, 340 525 C 360 495, 365 455, 358 422 C 384 424, 408 418, 420 402 C 425 395, 423 386, 419 381 C 426 377, 427 370, 421 365 C 432 361, 440 353, 438 344 C 435 334, 421 320, 418 302 C 414 265, 386 230, 346 232 C 301 234, 278 275, 281 325 C 284 375, 311 415, 308 465 C 304 515, 245 545, 185 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 340 525 C 415 505, 510 545, 575 650 L 610 740 L 185 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 382 312 Q 394 320, 406 311" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="575" cy="285" r="4" fill="#FEF9C3" class="animate-float-1"/>
+                    <circle cx="635" cy="365" r="3" fill="#FDE047" class="animate-float-2"/>
+                `
+            },
+            {
+                title: "33 · Warm Tea & Rising Steam",
+                tip: "Hold a warm mug with both hands and watch the soft steam curl upward before taking a slow sip.",
+                affirmation: "Warmth and stillness can meet me right where I am.",
+                journalPrompt: "How can I create a small pocket of warmth and comfort before my day gets busy?",
+                tags: ["tea", "warm", "mug", "steam", "comfort", "tired"],
+                renderArt: (i) => `
+                    <circle cx="400" cy="430" r="225" fill="url(#aura-${i})" class="animate-breathe"/>
+                    <circle cx="400" cy="430" r="195" fill="none" stroke="url(#gold-${i})" stroke-width="1.1" stroke-dasharray="4 8" opacity="0.5"/>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 345 535 C 345 585, 455 585, 455 535 Z" fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.4"/>
+                    <path d="M 455 545 C 478 545, 478 572, 455 572" fill="none" stroke="url(#gold-${i})" stroke-width="2.2"/>
+                    <g filter="url(#glow-${i})" fill="none" stroke-linecap="round">
+                        <path d="M 378 515 C 355 470, 395 435, 372 390" stroke="#FEF9C3" stroke-width="2" class="animate-float-1"/>
+                        <path d="M 405 510 C 430 465, 390 425, 415 380" stroke="url(#gold-${i})" stroke-width="1.8" class="animate-float-2"/>
+                        <path d="M 428 515 C 452 475, 422 440, 442 405" stroke="#E9D5FF" stroke-width="1.5" class="animate-float-1"/>
+                    </g>
+                `
+            },
+            {
+                title: "34 · Gossamer Starlight Wings",
+                tip: "Imagine soft, weightless wings unfurling behind your back—not to fly away, but to lift the heaviness from your posture.",
+                affirmation: "I carry light rather than weight in every step I take.",
+                journalPrompt: "What expectation am I holding that feels heavier than it needs to be?",
+                tags: ["wings", "heavy", "lift", "posture", "light", "burden"],
+                renderArt: (i) => `
+                    <g filter="url(#glow-${i})" class="animate-breathe" fill="none" stroke-linecap="round">
+                        <path d="M 340 465 C 235 355, 130 230, 155 145 C 215 205, 285 295, 355 425" stroke="#FEF9C3" stroke-width="2.4"/>
+                        <path d="M 330 500 C 205 420, 110 325, 115 235 C 175 280, 250 365, 345 465" stroke="url(#gold-${i})" stroke-width="1.9"/>
+                        <path d="M 325 535 C 215 495, 135 435, 130 365 C 185 395, 255 450, 338 515" stroke="#E9D5FF" stroke-width="1.5" opacity="0.8"/>
+                        <path d="M 460 465 C 565 355, 670 230, 645 145 C 585 205, 515 295, 445 425" stroke="#FEF9C3" stroke-width="2.4"/>
+                        <path d="M 470 500 C 595 420, 690 325, 685 235 C 625 280, 550 365, 455 465" stroke="url(#gold-${i})" stroke-width="1.9"/>
+                        <path d="M 475 535 C 585 495, 665 435, 670 365 C 615 395, 545 450, 462 515" stroke="#E9D5FF" stroke-width="1.5" opacity="0.8"/>
+                    </g>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="155" cy="145" r="4" fill="#FEF9C3" class="animate-float-1"/>
+                    <circle cx="645" cy="145" r="4" fill="#FEF9C3" class="animate-float-2"/>
+                `
+            },
+            {
+                title: "35 · Abstract Tide of Calm",
+                tip: "Picture gentle ocean waves rolling across a quiet shore—rising without hurry and softening as they recede.",
+                affirmation: "Like the tide, my emotions flow and return to stillness.",
+                journalPrompt: "What wave of emotion is moving through me right now, and how can I let it crest and soften?",
+                tags: ["waves", "tide", "emotions", "flow", "calm", "overwhelmed"],
+                renderArt: (i) => `
+                    <g filter="url(#glow-${i})" fill="none" stroke-linecap="round">
+                        <path d="M 90 480 C 190 415, 290 545, 400 475 C 510 405, 610 535, 710 465"
+                              stroke="#FEF9C3" stroke-width="2.2" class="animate-breathe"/>
+                        <path d="M 90 530 C 200 470, 300 590, 400 525 C 500 460, 600 580, 710 515"
+                              stroke="url(#gold-${i})" stroke-width="1.8" class="animate-sway"/>
+                        <path d="M 90 580 C 210 525, 295 635, 400 575 C 505 515, 595 625, 710 565"
+                              stroke="#E9D5FF" stroke-width="1.4" opacity="0.7" class="animate-breathe"/>
+                    </g>
+                    <path d="M 235 640 C 250 545, 305 500, 358 480 C 366 455, 368 428, 366 405 C 342 392, 328 362, 330 325 C 332 275, 360 240, 400 240 C 440 240, 468 275, 470 325 C 472 362, 458 392, 434 405 C 432 428, 434 455, 442 480 C 495 500, 550 545, 565 640 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.4"/>
+                    <path d="M 358 325 Q 372 334, 386 325" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 414 325 Q 428 334, 442 325" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                `
+            },
+            {
+                title: "36 · Velvet Twilight Rest",
+                tip: "Notice where light and shadow meet on a nearby wall or floor, and let your mind trace their quiet edge.",
+                affirmation: "Softness lives right beside the contrast of the day.",
+                journalPrompt: "Where in my day can I find a quiet contrast between rushing and resting?",
+                tags: ["shadow", "light", "wall", "quiet", "notice", "rest"],
+                renderArt: (i) => `
+                    <polygon points="120,120 360,120 680,680 420,680" fill="url(#aura-${i})" class="animate-breathe"/>
+                    <line x1="240" y1="120" x2="550" y2="680" stroke="url(#gold-${i})" stroke-width="1.5" stroke-dasharray="6 8" opacity="0.6"/>
+                    <path d="M 190 740 C 215 620, 275 565, 350 540 C 370 508, 375 470, 368 438 C 394 440, 418 434, 430 418 C 435 411, 433 402, 429 397 C 436 393, 437 386, 431 381 C 442 377, 450 369, 448 360 C 445 350, 431 336, 428 318 C 424 281, 396 246, 356 248 C 311 250, 288 291, 291 341 C 294 391, 321 431, 318 481 C 314 531, 250 560, 190 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 350 540 C 425 520, 520 560, 585 665 L 615 740 L 190 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 392 328 Q 404 336, 416 327" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="540" cy="260" r="3.5" fill="#FEF9C3" class="animate-float-2"/>
+                `
+            },
+            {
+                title: "37 · Golden Thread of Gratitude",
+                tip: "Weave a mental thread connecting three small blessings from today—no matter how ordinary they seem.",
+                affirmation: "Beauty is woven through every ordinary hour of my day.",
+                journalPrompt: "What three small, ordinary moments today quietly supported or comforted me?",
+                tags: ["thread", "blessings", "gratitude", "small", "ordinary", "three"],
+                renderArt: (i) => `
+                    <g filter="url(#glow-${i})" class="animate-breathe" fill="none" stroke-linecap="round">
+                        <path d="M 140 320 C 235 210, 325 460, 420 310 C 515 160, 595 430, 675 290"
+                              stroke="url(#gold-${i})" stroke-width="2"/>
+                        <path d="M 160 365 C 255 255, 345 505, 440 355 C 535 205, 610 465, 665 340"
+                              stroke="#FEF9C3" stroke-width="1.3" opacity="0.7"/>
+                    </g>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="280" cy="335" r="4.5" fill="#FEF9C3" class="animate-heart"/>
+                    <circle cx="420" cy="310" r="5" fill="#FDE047" class="animate-heart"/>
+                    <circle cx="565" cy="320" r="4.5" fill="#FEF9C3" class="animate-heart"/>
+                `
+            },
+            {
+                title: "38 · Dawn Horizon Stretch",
+                tip: "Reach your fingertips gently overhead on an inhale, then sweep your arms wide like morning light opening the sky.",
+                affirmation: "Each new breath brings fresh space and quiet possibility.",
+                journalPrompt: "What fresh possibility feels open to me if I let go of old pressure?",
+                tags: ["stretch", "dawn", "morning", "arms", "open", "fresh"],
+                renderArt: (i) => `
+                    <g class="animate-breathe" fill="none" stroke-linecap="round">
+                        <path d="M 120 420 C 240 210, 560 210, 680 420" stroke="url(#gold-${i})" stroke-width="2" opacity="0.7"/>
+                        <path d="M 160 460 C 265 275, 535 275, 640 460" stroke="#E9D5FF" stroke-width="1.3" stroke-dasharray="4 6" opacity="0.55"/>
+                    </g>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 325 535 C 275 415, 255 285, 285 175" fill="none" stroke="url(#gold-${i})" stroke-width="2.4" stroke-linecap="round"/>
+                    <path d="M 475 535 C 525 415, 545 285, 515 175" fill="none" stroke="url(#gold-${i})" stroke-width="2.4" stroke-linecap="round"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="285" cy="175" r="4.5" fill="#FEF9C3" filter="url(#glow-${i})" class="animate-float-1"/>
+                    <circle cx="515" cy="175" r="4.5" fill="#FEF9C3" filter="url(#glow-${i})" class="animate-float-2"/>
+                `
+            },
+            {
+                title: "39 · Petal & Breeze",
+                tip: "Let go of one tiny worry you have been holding tightly, watching it drift away like a weightless petal on the breeze.",
+                affirmation: "I release what is heavy and make room for ease.",
+                journalPrompt: "What small worry am I holding onto simply out of habit rather than usefulness?",
+                tags: ["worry", "let go", "petal", "breeze", "ease", "release"],
+                renderArt: (i) => `
+                    <path d="M 110 290 C 240 240, 360 360, 510 270 C 590 220, 650 245, 705 215"
+                          fill="none" stroke="url(#gold-${i})" stroke-width="1.6" opacity="0.6" class="animate-breathe"/>
+                    <path d="M 185 740 C 205 615, 260 555, 340 525 C 360 495, 365 455, 358 422 C 384 424, 408 418, 420 402 C 425 395, 423 386, 419 381 C 426 377, 427 370, 421 365 C 432 361, 440 353, 438 344 C 435 334, 421 320, 418 302 C 414 265, 386 230, 346 232 C 301 234, 278 275, 281 325 C 284 375, 311 415, 308 465 C 304 515, 245 545, 185 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 340 525 C 415 505, 510 545, 575 650 L 610 740 L 185 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 382 312 Q 394 320, 406 311" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 465 280 C 485 265, 505 275, 490 292 C 478 302, 462 292, 465 280 Z" fill="#FEF9C3" class="animate-float-1"/>
+                    <path d="M 555 245 C 575 230, 595 240, 580 257 C 568 267, 552 257, 555 245 Z" fill="#FDE047" class="animate-float-2"/>
+                    <path d="M 635 215 C 655 200, 675 210, 660 227 C 648 237, 632 227, 635 215 Z" fill="#E9D5FF" class="animate-float-1"/>
+                `
+            },
+            {
+                title: "40 · Sacred Inner Lantern",
+                tip: "Picture a small, steady lantern glowing softly behind your ribs—illuminating your path without rushing you.",
+                affirmation: "My inner light is steady, warm, and enough for today.",
+                journalPrompt: "What is the very next gentle step I can take without rushing ahead of myself?",
+                tags: ["lantern", "light", "path", "steady", "guide", "warm"],
+                renderArt: (i) => `
+                    <circle cx="400" cy="545" r="95" fill="url(#aura-${i})" class="animate-breathe"/>
+                    <circle cx="400" cy="545" r="135" fill="none" stroke="url(#gold-${i})" stroke-width="1.2" stroke-dasharray="4 7" opacity="0.6" class="animate-spin-halo"/>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <g filter="url(#glow-${i})" class="animate-heart">
+                        <path d="M 400 505 C 422 532, 422 562, 400 578 C 378 562, 378 532, 400 505 Z" fill="#FEF9C3"/>
+                    </g>
+                `
+            },
+            {
+                title: "41 · Astral Drift",
+                tip: "Let go of needing a single 'right' feeling right now—allow mixed emotions to sit side by side without judgment.",
+                affirmation: "I can hold complexity with gentleness and grace.",
+                journalPrompt: "What two feelings am I holding at the same time today, and how can I make room for both?",
+                tags: ["mixed", "complex", "emotions", "orbit", "drift", "grace"],
+                renderArt: (i) => `
+                    <g class="animate-spin-halo" opacity="0.6" fill="none" stroke="url(#gold-${i})">
+                        <circle cx="355" cy="360" r="185" stroke-width="1.2" stroke-dasharray="3 9"/>
+                        <circle cx="445" cy="360" r="185" stroke="#E9D5FF" stroke-width="1.1" stroke-dasharray="6 6"/>
+                    </g>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="230" cy="250" r="4" fill="#FEF9C3" class="animate-float-1"/>
+                    <circle cx="570" cy="250" r="4" fill="#FDE047" class="animate-float-2"/>
+                `
+            },
+            {
+                title: "42 · Dewdrop Clarity",
+                tip: "Take one clear, unhurried breath in through your nose and imagine a single dewdrop clearing a quiet leaf.",
+                affirmation: "Clarity arrives gently when I stop forcing answers.",
+                journalPrompt: "What question am I trying to force an answer to before I am ready?",
+                tags: ["clarity", "dew", "leaf", "breath", "clear", "answers"],
+                renderArt: (i) => `
+                    <path d="M 495 595 C 495 455, 565 345, 655 285 C 645 425, 585 535, 495 595 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2" class="animate-sway"/>
+                    <line x1="495" y1="595" x2="655" y2="285" stroke="#FEF9C3" stroke-width="1.3" opacity="0.65" class="animate-sway"/>
+                    <path d="M 165 740 C 185 615, 240 555, 320 525 C 340 495, 345 455, 338 422 C 364 424, 388 418, 400 402 C 405 395, 403 386, 399 381 C 406 377, 407 370, 401 365 C 412 361, 420 353, 418 344 C 415 334, 401 320, 398 302 C 394 265, 366 230, 326 232 C 281 234, 258 275, 261 325 C 264 375, 291 415, 288 465 C 284 515, 225 545, 165 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 320 525 C 395 505, 470 545, 520 650 L 545 740 L 165 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 362 312 Q 374 320, 386 311" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <g filter="url(#glow-${i})" class="animate-heart">
+                        <circle cx="565" cy="435" r="18" fill="url(#aura-${i})"/>
+                        <path d="M 565 415 C 578 432, 578 448, 565 455 C 552 448, 552 432, 565 415 Z" fill="#FEF9C3"/>
+                    </g>
+                `
+            },
+            {
+                title: "43 · Sanctuary of Silence",
+                tip: "Sit in quietness for thirty seconds with no agenda, no fixing, and nothing to prove—simply existing.",
+                affirmation: "Simply being here is enough.",
+                journalPrompt: "How does it feel to exist for thirty seconds without trying to improve or fix anything?",
+                tags: ["silence", "quiet", "sanctuary", "nothing", "rest", "enough"],
+                renderArt: (i) => `
+                    <circle cx="400" cy="360" r="225" fill="none" stroke="url(#gold-${i})" stroke-width="1.4" opacity="0.65" class="animate-breathe"/>
+                    <circle cx="400" cy="360" r="185" fill="none" stroke="#E9D5FF" stroke-width="1" opacity="0.45"/>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 400 155 L 404 167 L 416 171 L 404 175 L 400 187 L 396 175 L 384 171 L 396 167 Z" fill="#FEF9C3" class="animate-float-1"/>
+                `
+            },
+            {
+                title: "44 · Return to Your Center",
+                tip: "Unclench your jaw, drop your shoulders away from your ears, and take one slow, restorative breath as you return home to yourself.",
+                affirmation: "I release what I cannot control and return to my center.",
+                journalPrompt: "What does returning home to myself look and feel like at the end of today?",
+                tags: ["center", "return", "home", "release", "control", "breath"],
+                renderArt: (i) => `
+                    <g class="animate-spin-halo" opacity="0.65">
+                        <circle cx="400" cy="360" r="250" fill="none" stroke="url(#gold-${i})" stroke-width="1.3" stroke-dasharray="4 8"/>
+                        <circle cx="400" cy="360" r="210" fill="none" stroke="#E9D5FF" stroke-width="1" opacity="0.5"/>
+                    </g>
+                    <g filter="url(#glow-${i})" class="animate-breathe" fill="none" stroke-linecap="round">
+                        <path d="M 335 485 C 235 405, 165 295, 195 215 C 245 270, 295 345, 345 455" stroke="url(#gold-${i})" stroke-width="2"/>
+                        <path d="M 465 485 C 565 405, 635 295, 605 215 C 555 270, 505 345, 455 455" stroke="url(#gold-${i})" stroke-width="2"/>
+                    </g>
+                    <path d="M 215 740 C 235 605, 295 545, 355 520 C 365 490, 368 455, 365 430 C 335 415, 318 380, 320 335 C 322 275, 355 235, 400 235 C 445 235, 478 275, 480 335 C 482 380, 465 415, 435 430 C 432 455, 435 485, 445 520 C 505 545, 565 605, 585 740 Z"
+                          fill="url(#muse-${i})" stroke="url(#gold-${i})" stroke-width="2.5"/>
+                    <path d="M 355 335 Q 370 345, 385 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 415 335 Q 430 345, 445 335" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+                    <g filter="url(#glow-${i})" class="animate-heart">
+                        <circle cx="400" cy="575" r="26" fill="url(#aura-${i})"/>
+                        <path d="M 400 555 L 405 570 L 420 575 L 405 580 L 400 595 L 395 580 L 380 575 L 395 570 Z" fill="#FEF9C3"/>
+                    </g>
+                `
+            }
+        ];
+
+        // --- UI Helpers ---
+        const showScreen = (screenToShow) => {
+            [ritualScreen, personalizeScreen, loadingScreen, revealScreen].forEach(s => s.classList.add('hidden'));
+            screenToShow.classList.remove('hidden');
+        };
+
+        const showNotification = (message, isError = false) => {
+            notification.textContent = message;
+            notification.className = `fixed bottom-5 left-1/2 -translate-x-1/2 translate-y-0 opacity-100 ${isError ? 'bg-red-500' : 'bg-emerald-600'} text-white py-2.5 px-6 rounded-full shadow-xl z-50 text-sm font-medium pointer-events-none`;
+            setTimeout(() => {
+                notification.className = notification.className.replace('translate-y-0 opacity-100', 'translate-y-20 opacity-0');
+            }, 3000);
+        };
+
+        const showJournalModal = (prompt) => {
+            journalPromptText.textContent = prompt;
+            journalModalContainer.classList.remove('opacity-0', 'pointer-events-none');
+        };
+
+        const hideJournalModal = () => {
+            journalModalContainer.classList.add('opacity-0', 'pointer-events-none');
+        };
+
+        // --- Offline Card Selection Logic ---
+        function pickRandomCardIndex(excludeIndex = -1) {
+            if (rituals.length <= 1) return 0;
+            let idx = Math.floor(Math.random() * rituals.length);
+            if (idx === excludeIndex) {
+                idx = (idx + 1) % rituals.length;
+            }
+            return idx;
+        }
+
+        function findMatchingCardIndex(feelingText) {
+            const normalized = feelingText.toLowerCase();
+            const words = normalized.match(/[a-z]+/g) || [];
+            let bestIndex = 0;
+            let bestScore = -1;
+
+            rituals.forEach((card, idx) => {
+                let score = 0;
+                const tags = Array.isArray(card.tags) ? card.tags : [];
+                tags.forEach((tag) => {
+                    if (normalized.includes(tag)) {
+                        score += 3;
+                    }
+                    words.forEach((word) => {
+                        if (word === tag || word.startsWith(tag) || tag.startsWith(word)) {
+                            score += 1;
+                        }
+                    });
+                });
+                if (idx === currentCardIndex && rituals.length > 1) {
+                    score -= 1;
+                }
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestIndex = idx;
+                }
+            });
+
+            if (bestScore <= 0) {
+                return pickRandomCardIndex(currentCardIndex);
+            }
+            return bestIndex;
+        }
+
+        function revealCard(index, messages = ["Calling the muses...", "Weaving your celestial vision..."]) {
+            clearAutoFlipTimer();
+            // Reset flip state to back face before revealing so every draw starts face-down
+            setCardFlipped(false);
+            showScreen(loadingScreen);
+
+            const msgList = Array.isArray(messages) && messages.length > 0
+                ? messages
+                : [String(messages)];
+            let msgIdx = 0;
+            loadingText.textContent = msgList[0];
+
+            const messageInterval = setInterval(() => {
+                msgIdx = (msgIdx + 1) % msgList.length;
+                loadingText.textContent = msgList[msgIdx];
+            }, 1100);
+
+            const minLoadDurationMs = 3000;
+
+            setTimeout(() => {
+                clearInterval(messageInterval);
+                currentCardIndex = index;
+                const card = rituals[index];
+                cardHeaderTitle.textContent = `Harmonia · ${card.title}`;
+                svgArtworkFrame.innerHTML = createSvgWrapper(index, card.renderArt(index));
+                tipText.textContent = `"${card.tip}"`;
+                affirmationText.textContent = card.affirmation;
+
+                showScreen(revealScreen);
+
+                // Give a moment to admire the back of the card, then auto-flip after 5 seconds
+                autoFlipTimer = setTimeout(() => {
+                    setCardFlipped(true);
+                }, 5000);
+            }, minLoadDurationMs);
+        }
+
+        // --- Event Listeners ---
+        oracleFlipCard.addEventListener('click', () => {
+            const currentlyFlipped = oracleFlipCard.classList.contains('is-flipped');
+            setCardFlipped(!currentlyFlipped);
+        });
+
+        oracleFlipCard.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const currentlyFlipped = oracleFlipCard.classList.contains('is-flipped');
+                setCardFlipped(!currentlyFlipped);
+            }
+        });
+
+        generateRandomBtn.addEventListener('click', () => {
+            const nextIndex = pickRandomCardIndex(currentCardIndex);
+            revealCard(nextIndex, [
+                "Calling the muses...",
+                "Drawing from the 44-card deck...",
+                "Weaving your celestial vision..."
+            ]);
+        });
+
+        personalizeBtn.addEventListener('click', () => {
+            showScreen(personalizeScreen);
+        });
+
+        moodChips.forEach((chip) => {
+            chip.addEventListener('click', () => {
+                feelingInput.value = chip.dataset.mood || '';
+                feelingInput.focus();
+            });
+        });
+
+        createPersonalizedBtn.addEventListener('click', () => {
+            const feeling = feelingInput.value.trim();
+            if (!feeling) {
+                showNotification("Please share how you're feeling or pick a mood chip.", true);
+                return;
+            }
+            const matchedIndex = findMatchingCardIndex(feeling);
+            revealCard(matchedIndex, [
+                "Calling the muses...",
+                "Crafting your personal ritual...",
+                "Weaving your celestial vision..."
+            ]);
+        });
+
+        backToRitualBtn.addEventListener('click', () => {
+            clearAutoFlipTimer();
+            showScreen(ritualScreen);
+        });
+
+        backBtn.addEventListener('click', () => {
+            clearAutoFlipTimer();
+            showScreen(ritualScreen);
+        });
+
+        journalPromptBtn.addEventListener('click', () => {
+            const card = rituals[currentCardIndex];
+            showJournalModal(card.journalPrompt);
+        });
+
+        closeJournalModalBtn.addEventListener('click', hideJournalModal);
+        journalModalContainer.addEventListener('click', (e) => {
+            if (e.target === journalModalContainer) hideJournalModal();
+        });
+
+        downloadBtn.addEventListener('click', async () => {
+            try {
+                downloadBtn.disabled = true;
+                const canvas = await html2canvas(cardContainer, {
+                    useCORS: true,
+                    backgroundColor: '#321b4d',
+                    scale: 2
+                });
+                const dataUrl = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = `Harmonia-${rituals[currentCardIndex].title.replace(/[^a-zA-Z0-9]+/g, '-')}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showNotification("Ritual card saved to your device!");
+            } catch (error) {
+                console.error('Error exporting card:', error);
+                showNotification("Could not export card image.", true);
+            } finally {
+                downloadBtn.disabled = false;
+            }
+        });
+    </script>
+<a id="credit" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a>
+</body>
+</html>
