@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Word Mandala</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2A2530; --muted:#9A9299; --line:rgba(42,37,48,0.10);
+    --panel:rgba(255,253,250,0.9); --accent:#B23A7E;
+    --card:#FBF7F0; --card-edge:#EFE7DA; --room:#E5DCD0;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--room);color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none;}
+
+  /* ---- the desk ---- */
+  #room{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    padding-bottom:78px; /* leave room for the always-on mini toolbar */
+    background:
+      radial-gradient(140% 110% at 50% 20%, #F0E8DC 0%, #E2D8C9 55%, #D3C7B5 100%);}
+  #room::after{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:0.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");}
+
+  /* ---- the paper card ---- */
+  #card{position:relative;z-index:2;background:var(--card);border-radius:3px;
+    padding:clamp(14px,2.4vmin,26px);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.9) inset,
+      0 2px 4px rgba(70,55,40,0.10),
+      0 18px 44px -14px rgba(70,55,40,0.34),
+      0 40px 80px -30px rgba(70,55,40,0.3);
+    transform:rotate(-0.4deg);}
+  /* inner letterpress border */
+  #card::before{content:"";position:absolute;inset:clamp(7px,1.2vmin,13px);
+    border:1px solid rgba(42,37,48,0.13);border-radius:2px;pointer-events:none;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.6);}
+  /* paper fibre */
+  #card::after{content:"";position:absolute;inset:0;border-radius:3px;pointer-events:none;mix-blend-mode:multiply;opacity:0.55;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23p)' opacity='0.045'/%3E%3C/svg%3E");}
+
+  canvas{display:block;position:relative;z-index:1;touch-action:none;cursor:crosshair;border-radius:2px;}
+
+  /* card header/footer, printed on the paper */
+  .card-head,.card-foot{position:absolute;left:0;right:0;text-align:center;pointer-events:none;z-index:3;
+    font-family:"Cormorant Garamond",Georgia,serif;color:rgba(42,37,48,0.42);}
+  .card-head{top:clamp(16px,2.6vmin,28px);font-size:clamp(9px,1.25vmin,12px);letter-spacing:0.46em;text-transform:uppercase;padding-left:0.46em;}
+  .card-foot{bottom:clamp(16px,2.6vmin,28px);font-size:clamp(8px,1.1vmin,11px);letter-spacing:0.3em;text-transform:uppercase;font-style:italic;opacity:0.8;}
+
+  /* centre invitation */
+  .hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;pointer-events:none;
+    font-family:"Cormorant Garamond",Georgia,serif;font-size:clamp(12px,1.7vmin,16px);letter-spacing:0.2em;
+    text-transform:uppercase;color:rgba(42,37,48,0.3);text-align:center;line-height:2.1;
+    transition:opacity .6s ease;}
+  .hint.gone{opacity:0;}
+
+  /* ---- tools ---- */
+  /* minimized toolbar — ALWAYS visible below the mandala */
+  .minibar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9;
+    display:flex;align-items:center;gap:10px;flex-wrap:nowrap;padding:9px 12px;max-width:94vw;
+    background:var(--panel);border:1px solid var(--line);border-radius:999px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 12px 30px -14px rgba(70,55,40,0.5);
+    transition:opacity .3s,transform .3s;}
+  body.dock-open .minibar{opacity:0;transform:translateX(-50%) translateY(14px);pointer-events:none;}
+  .mini-scroll{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;
+    overflow-x:auto;scrollbar-width:none;min-width:0;}
+  .mini-scroll::-webkit-scrollbar{display:none;}
+  .mini-swatches{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
+  .mini-sw{width:22px;height:22px;border-radius:50%;border:1.5px solid transparent;cursor:pointer;padding:0;flex:0 0 auto;transition:transform .15s,border-color .15s;}
+  .mini-sw:hover{transform:scale(1.14);} .mini-sw.active{border-color:var(--ink);transform:scale(1.14);}
+  .mini-sep{width:1px;height:22px;background:var(--line);flex:0 0 auto;}
+  .mini-pill{flex:0 0 auto;border:1px solid var(--line);background:rgba(42,37,48,0.03);color:var(--muted);
+    font-size:11px;padding:6px 10px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:all .15s;}
+  .mini-pill:hover{color:var(--ink);border-color:rgba(178,58,126,0.4);}
+  .mini-pill.on{background:rgba(178,58,126,0.11);color:var(--accent);border-color:rgba(178,58,126,0.45);font-weight:600;}
+  .mini-pill.adv{background:rgba(178,58,126,0.14);color:var(--accent);border-color:rgba(178,58,126,0.4);font-weight:600;}
+  .mini-pill.save{background:linear-gradient(180deg,#c04a8c,#9c2f6c);color:#fff;border-color:transparent;font-weight:600;}
+  .mini-pill.save:hover{filter:brightness(1.07);color:#fff;}
+
+  .dock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:8;
+    display:flex;flex-direction:column;gap:12px;width:min(94vw,560px);padding:12px 18px 15px;
+    background:var(--panel);border:1px solid var(--line);border-radius:20px;
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    box-shadow:0 20px 52px -26px rgba(70,55,40,0.5);
+    transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .3s;max-height:80vh;overflow-y:auto;}
+  body:not(.dock-open) .dock{transform:translateX(-50%) translateY(calc(100% + 40px));opacity:0;pointer-events:none;}
+  .grip{display:flex;align-items:center;justify-content:center;margin:-3px 0 0;cursor:pointer;color:var(--muted);}
+  .grip:hover{color:var(--ink);} .grip svg{width:26px;height:16px;}
+
+  .row{display:flex;align-items:center;gap:12px;} .row.wrap{flex-wrap:wrap;}
+  .label{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);min-width:50px;}
+
+  .swatches{display:flex;gap:8px;flex:1;flex-wrap:wrap;}
+  .sw{width:23px;height:23px;border-radius:50%;border:1.5px solid transparent;cursor:pointer;padding:0;position:relative;transition:transform .15s,border-color .15s;}
+  .sw:hover{transform:scale(1.12);} .sw.active{border-color:var(--ink);transform:scale(1.12);}
+  .sw.active::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(42,37,48,0.3);}
+  .sw.pick{background:conic-gradient(from 0deg,#b23a7e,#e0a33c,#5ba88c,#3f7da8,#7e5bb0,#b23a7e);overflow:hidden;}
+  .sw.pick input{opacity:0;width:100%;height:100%;cursor:pointer;}
+
+  .slider-group{flex:1;display:flex;align-items:center;gap:10px;}
+  input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:3px;border-radius:3px;background:rgba(178,58,126,0.22);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px rgba(178,58,126,0.3);}
+  input[type=range]::-moz-range-thumb{width:15px;height:15px;border:none;border-radius:50%;background:var(--accent);cursor:pointer;}
+  .val{font-size:11px;color:var(--muted);min-width:26px;text-align:right;font-variant-numeric:tabular-nums;}
+
+  .pillrow{display:flex;gap:6px;flex-wrap:wrap;}
+  .pill{border:1px solid var(--line);background:rgba(42,37,48,0.03);color:var(--muted);font-size:12px;padding:6px 11px;border-radius:9px;cursor:pointer;transition:all .15s;}
+  .pill:hover{color:var(--ink);border-color:rgba(178,58,126,0.4);}
+  .pill.on{background:rgba(178,58,126,0.11);color:var(--accent);border-color:rgba(178,58,126,0.45);font-weight:600;}
+
+  .wordinput{display:flex;gap:8px;flex:1;}
+  .wordinput input[type=text]{flex:1;border:1px solid var(--line);background:rgba(255,255,255,0.75);border-radius:9px;padding:9px 12px;font-size:13px;color:var(--ink);outline:none;font-family:inherit;}
+  .wordinput input[type=text]:focus{border-color:rgba(178,58,126,0.5);}
+  .wordinput button{border:1px solid var(--line);background:rgba(178,58,126,0.1);color:var(--accent);border-radius:9px;padding:0 14px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;font-weight:600;}
+  .wordinput button:hover{background:rgba(178,58,126,0.18);}
+  .mywords{display:flex;gap:6px;flex-wrap:wrap;}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 9px;border-radius:999px;background:rgba(178,58,126,0.09);color:var(--accent);border:1px solid rgba(178,58,126,0.22);}
+  .chip button{background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;line-height:1;padding:0;opacity:0.6;}
+  .chip button:hover{opacity:1;}
+
+  .actions{display:flex;gap:8px;}
+  .btn{flex:1;border:1px solid var(--line);background:rgba(42,37,48,0.035);color:var(--ink);font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;padding:11px 6px;border-radius:11px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .btn:hover{background:rgba(42,37,48,0.075);border-color:rgba(178,58,126,0.4);}
+  .btn.gold{background:linear-gradient(180deg,#c04a8c,#9c2f6c);color:#fff;border-color:transparent;font-weight:600;}
+  .btn.gold:hover{filter:brightness(1.07);}
+  .btn svg{width:13px;height:13px;}
+  .divider{height:1px;background:var(--line);margin:1px 0;}
+
+  .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-12px);background:var(--panel);border:1px solid var(--line);color:var(--ink);padding:10px 18px;border-radius:11px;font-size:12px;backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:30;max-width:86vw;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .modal-bg{position:fixed;inset:0;z-index:40;background:rgba(60,48,38,0.55);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;width:min(92vw,420px);text-align:center;box-shadow:0 30px 80px -20px rgba(60,48,38,0.55);}
+  .modal h3{margin:0 0 4px;font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:22px;}
+  .modal p{margin:0 0 16px;color:var(--muted);font-size:13px;line-height:1.5;}
+  .modal img{width:180px;height:180px;object-fit:cover;border-radius:6px;margin:0 auto 16px;display:block;box-shadow:0 0 0 1px var(--line);}
+  .modal a.dl{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;text-decoration:none;background:linear-gradient(180deg,#c04a8c,#9c2f6c);color:#fff;font-weight:600;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;padding:13px;border-radius:11px;cursor:pointer;margin-bottom:9px;}
+  .modal .hint2{font-size:11px;color:var(--muted);margin:0;}
+  .modal .close{background:none;border:none;color:var(--muted);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;margin-top:12px;padding:6px;}
+  .modal .close:hover{color:var(--ink);}
+
+  @media (max-width:520px){
+    .label{min-width:42px;}
+    .dock{bottom:10px;gap:10px;padding:10px 12px 13px;}
+    .handle{bottom:14px;}
+    .btn{font-size:9.5px;padding:10px 4px;}
+  }
+  @media (prefers-reduced-motion:reduce){*,*::before{transition:none!important;}}
+  /* artist tag, quiet in the top corner so it clears the toolbar */
+  #credit{position:fixed;left:14px;top:calc(12px + env(safe-area-inset-top));z-index:5;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",sans-serif;font-size:9.5px;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--ink);text-decoration:none;opacity:.4;transition:opacity .6s ease;}
+  #credit:hover,#credit:focus-visible{opacity:.85;}
+</style>
+</head>
+<body>
+  <div id="room">
+    <div id="card">
+      <div class="card-head">Word Mandala</div>
+      <canvas id="c"></canvas>
+      <div class="card-foot">written by hand</div>
+      <div class="hint" id="hint">Draw to write<br>Touch the centre to bloom</div>
+    </div>
+  </div>
+
+  <div class="minibar" id="minibar">
+    <div class="mini-pill adv" id="miniAdvanced" title="Open all tools">⚙ More</div>
+    <div class="mini-scroll">
+      <div class="mini-swatches" id="miniSwatches"></div>
+      <div class="mini-sep"></div>
+      <div class="mini-pill on" id="miniAuto" title="Change colour with every word">🎨 Auto</div>
+      <div class="mini-pill" id="miniUpright" title="Keep words upright">↑ Upright</div>
+      <div class="mini-pill" id="miniBloom" title="Bloom a ring of words">❀ Bloom</div>
+      <div class="mini-pill" id="miniFresh" title="Fresh card">✦ Fresh</div>
+      <div class="mini-pill save" id="miniSave" title="Save as image">↓ Save</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="dock" id="dock">
+    <div class="grip" id="grip" title="Hide tools">
+      <svg viewBox="0 0 26 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6l8 6 8-6"/></svg>
+    </div>
+
+    <div class="row">
+      <span class="label">Words</span>
+      <div class="pillrow" id="groupPills"></div>
+    </div>
+
+    <div class="row">
+      <span class="label">Add</span>
+      <div class="wordinput">
+        <input type="text" id="wordInput" placeholder="your words, separated by commas" maxlength="90">
+        <button id="addWordBtn">Add</button>
+      </div>
+    </div>
+    <div class="row" id="myWordsRow" style="display:none;">
+      <span class="label">Mine</span>
+      <div class="mywords" id="myWords"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="row">
+      <span class="label">Ink</span>
+      <div class="swatches" id="swatches"></div>
+      <label class="sw pick" title="Custom colour"><input type="color" id="picker" value="#b23a7e"></label>
+      <div class="pill on" id="autoColorBtn" title="Change colour with every word">🎨 Auto</div>
+    </div>
+
+    <div class="row wrap">
+      <div class="slider-group" style="min-width:190px;">
+        <span class="label">Scale</span>
+        <input type="range" id="size" min="9" max="40" value="18">
+        <span class="val" id="sizeVal">18</span>
+      </div>
+      <div class="slider-group" style="min-width:190px;">
+        <span class="label">Density</span>
+        <input type="range" id="air" min="0" max="100" value="45">
+        <span class="val" id="airVal">45</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="label">Petals</span>
+      <div class="pillrow" id="segPills"></div>
+      <div class="pill" id="uprightBtn" style="margin-left:auto;" title="Keep words readable">↑ Upright</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="actions">
+      <button class="btn" id="undoBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg>Undo
+      </button>
+      <button class="btn" id="ringBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>Bloom
+      </button>
+      <button class="btn" id="clearBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>Fresh
+      </button>
+      <button class="btn" id="shareBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Share
+      </button>
+      <button class="btn gold" id="saveBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Save
+      </button>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="modalBg">
+    <div class="modal">
+      <h3>Your Card</h3>
+      <p>Tap to download. On phone, press and hold the image to save it.</p>
+      <img id="modalImg" alt="Your finished word mandala card">
+      <a class="dl" id="modalDl" download="word-mandala.png">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+        Download PNG
+      </a>
+      <p class="hint2">Opens in a new tab if your browser blocks the direct download.</p>
+      <button class="close" id="modalClose">Close</button>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
+  const cardEl=document.getElementById('card');
+
+  const GROUPS={
+    Power:['Sovereign','Fierce','Worthy','Rise','Claim','Voice','Lead','Brave','Enough','Bold'],
+    Creativity:['Create','Imagine','Play','Spark','Muse','Dream','Make','Wonder','Curious','Flow'],
+    Community:['Together','Circle','Belong','Hold','Witness','Share','Gather','Support','We','Kin'],
+    Tech:['Prompt','Signal','Build','Automate','Iterate','Loop','Train','Agent','Ship','Model'],
+    Growth:['Begin','Learn','Expand','Bloom','Evolve','Practice','Trust','Root','Reach','Become'],
+  };
+
+  const state={
+    segments:8, upright:false, color:'#b23a7e',
+    size:18, air:45,
+    autoColor:true, colorIdx:0,
+    groups:new Set(Object.keys(GROUPS)), myWords:[],
+    pool:[], wordIdx:0,
+    drawing:false, last:null, distAcc:0,
+  };
+
+  // Every word that has landed. Used for collision + full repaint.
+  // {word, r (radius), a (angle), size, color, born (ms)}
+  let placed=[];
+  const historyStack=[];
+  const MAX_HISTORY=25;
+
+  let DPR=Math.min(window.devicePixelRatio||1,2), S=0; // S = css px canvas size
+  const INK_MS=700; // how long a word takes to ink in
+
+  function buildPool(){
+    let p=[]; state.groups.forEach(g=>{p=p.concat(GROUPS[g]);});
+    p=p.concat(state.myWords);
+    state.pool=p.length?p:['Create'];
+  }
+  function nextWord(){
+    if(!state.pool.length) buildPool();
+    const w=state.pool[state.wordIdx%state.pool.length];
+    state.wordIdx++; return w;
+  }
+
+  // rich, punchy palette for auto-cycling (jewel + vivid tones that pop on paper)
+  const CYCLE=['#B23A7E','#5FBF43','#7E5BB0','#E0862A','#3F9BD8','#D23A5E','#2E9E86','#C7A21E','#6A55C8','#E05FA8'];
+  // pick the colour for the next stamp; advances automatically when autoColor is on
+  function nextColor(){
+    if(!state.autoColor) return state.color;
+    const c=CYCLE[state.colorIdx%CYCLE.length];
+    state.colorIdx++;
+    return c;
+  }
+  // varied word size so the mandala gets big anchors + small fillers (the "pop" look)
+  function nextSize(){
+    const base=state.size;
+    const r=Math.random();
+    // weighted: mostly small/medium, occasional large anchor
+    let mult;
+    if(r<0.55) mult=0.6+Math.random()*0.35;      // small
+    else if(r<0.85) mult=0.95+Math.random()*0.4; // medium
+    else mult=1.5+Math.random()*0.7;             // large anchor
+    return Math.max(9, Math.round(base*mult));
+  }
+
+  function fitCanvas(){
+    // card sizes itself to viewport; canvas is a square inside it
+    const barSpace=78;                         // reserved for the always-on mini toolbar
+    const availH=window.innerHeight-barSpace;
+    const pad=Math.min(window.innerWidth,availH)*0.055;
+    const avail=Math.min(window.innerWidth,availH)-pad*2;
+    S=Math.min(avail*0.94, 760);
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    canvas.style.width=S+'px'; canvas.style.height=S+'px';
+    canvas.width=Math.round(S*DPR); canvas.height=Math.round(S*DPR);
+    ctx.setTransform(1,0,0,1,0,0); ctx.scale(DPR,DPR);
+    render();
+  }
+
+  function paper(){
+    ctx.save(); ctx.setTransform(DPR,0,0,DPR,0,0);
+    const g=ctx.createRadialGradient(S/2,S*0.38,S*0.05,S/2,S/2,S*0.66);
+    g.addColorStop(0,'#FEFBF6'); g.addColorStop(1,'#F7F1E7');
+    ctx.fillStyle=g; ctx.fillRect(0,0,S,S);
+    // faint guide rings, like pencil marks
+    ctx.strokeStyle='rgba(42,37,48,0.045)'; ctx.lineWidth=1;
+    [0.18,0.30,0.42].forEach(f=>{
+      ctx.beginPath(); ctx.arc(S/2,S/2,S*f,0,Math.PI*2); ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  function fontFor(sz){ return `600 ${sz}px "Cormorant Garamond", Georgia, serif`; }
+
+  // darken a hex colour toward black by amount t (0..1)
+  function shade(hex,t){
+    const n=parseInt(hex.slice(1),16);
+    let r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+    r=Math.round(r*(1-t)); g=Math.round(g*(1-t)); b=Math.round(b*(1-t));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  // lighten a hex colour toward the paper tone by amount t (0..1)
+  function tint(hex,t){
+    const n=parseInt(hex.slice(1),16);
+    let r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+    const pr=254,pg=251,pb=246; // paper
+    r=Math.round(r+(pr-r)*t); g=Math.round(g+(pg-g)*t); b=Math.round(b+(pb-b)*t);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function measure(word,sz){
+    ctx.save(); ctx.font=fontFor(sz);
+    const w=ctx.measureText(word).width; ctx.restore();
+    return w;
+  }
+
+  // Draw one placed word (all its petal copies), with ink-in progress p (0..1)
+  function drawPlaced(item, p){
+    const stepA=(Math.PI*2)/state.segments;
+    ctx.save(); ctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.translate(S/2,S/2);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+
+    // ink-in: scale settles, opacity rises, slight drift
+    const ease=1-Math.pow(1-p,3);
+    const scale=0.86+0.14*ease;
+    const drift=(1-ease)*item.size*0.28;
+    const alpha=Math.min(1,ease*1.15)*0.94;
+
+    for(let i=0;i<state.segments;i++){
+      ctx.save();
+      ctx.rotate(stepA*i);
+
+      if(item.mode==='bloom'){
+        // radial ring word, curving with the circle
+        ctx.rotate(item.a);
+        ctx.translate(0,-item.r);
+      } else {
+        // draw word: sits where the finger was, following the stroke direction
+        ctx.translate(item.x, item.y);
+        if(item.upright){
+          ctx.rotate(-stepA*i);         // stay readable/horizontal
+        } else {
+          ctx.rotate(item.ang);         // follow the stroke, all angles (like v1)
+        }
+      }
+
+      ctx.translate(0,drift);
+      ctx.scale(scale,scale);
+      ctx.font=fontFor(item.size);
+      ctx.globalAlpha=alpha;
+
+      // 1) PAPER KNOCKOUT: an opaque paper-coloured outline so each word cleanly
+      //    separates from whatever it overlaps — this is what makes layers readable.
+      ctx.save();
+      ctx.lineJoin='round';
+      ctx.strokeStyle='#FBF7F0';
+      ctx.globalAlpha=alpha;
+      ctx.lineWidth=item.size*0.42;
+      ctx.strokeText(item.word,0,0);
+      ctx.restore();
+
+      // 2) THE WORD itself — bold and solid so it pops
+      ctx.fillStyle=item.color;
+      ctx.globalAlpha=alpha;
+      if(p<1){ ctx.shadowColor=item.color; ctx.shadowBlur=(1-ease)*8; }
+      ctx.fillText(item.word,0,0);
+
+      // 3) CRISP EDGE: a thin darker line of the word's own colour for definition
+      ctx.save();
+      ctx.lineJoin='round';
+      ctx.strokeStyle=shade(item.color,0.22);
+      ctx.globalAlpha=alpha*0.8;
+      ctx.lineWidth=Math.max(0.6,item.size*0.045);
+      ctx.strokeText(item.word,0,0);
+      ctx.restore();
+
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // Full repaint of everything (used every animation frame while words ink in)
+  function render(now){
+    paper();
+    const t=now||performance.now();
+    let animating=false;
+    for(const item of placed){
+      const p=Math.min(1,(t-item.born)/INK_MS);
+      if(p<1) animating=true;
+      drawPlaced(item,p);
+    }
+    return animating;
+  }
+
+  let rafId=null;
+  function loop(now){
+    const animating=render(now);
+    if(animating) rafId=requestAnimationFrame(loop);
+    else rafId=null;
+  }
+  function kick(){ if(!rafId) rafId=requestAnimationFrame(loop); }
+
+  function placeDraw(word,x,y,ang,sz,upright){
+    placed.push({mode:'draw',word,x,y,ang,size:sz,color:nextColor(),upright,born:performance.now()});
+    kick();
+  }
+  function placeBloom(word,r,a,sz){
+    placed.push({mode:'bloom',word,r,a,size:sz,color:nextColor(),born:performance.now()});
+    kick();
+  }
+
+  function pushHistory(){
+    historyStack.push(placed.map(o=>({...o})));
+    if(historyStack.length>MAX_HISTORY) historyStack.shift();
+  }
+
+  // ---- pointer ----
+  function pt(e){
+    const rct=canvas.getBoundingClientRect();
+    const t=e.touches?e.touches[0]:e;
+    return {x:(t.clientX-rct.left)-S/2, y:(t.clientY-rct.top)-S/2};
+  }
+  const hint=document.getElementById('hint');
+  function hideHint(){ hint.classList.add('gone'); }
+
+  // Draw mode: stamp a word wherever the finger is, following the stroke direction.
+  // No limits — layers welcome. The coloured border keeps overlaps readable.
+  function stampAt(p, ang){
+    const r=Math.hypot(p.x,p.y);
+    if(r>S*0.475) return false;          // stay on the card
+    const word=nextWord();
+    placeDraw(word,p.x,p.y,ang,nextSize(),state.upright);
+    return true;
+  }
+
+  // spacing between words along the stroke (lower Density = more space)
+  function gap(){ return state.size*(2.2-(state.air/100)*1.4); }
+
+  function down(e){
+    e.preventDefault(); hideHint(); pushHistory();
+    const p=pt(e);
+    if(Math.hypot(p.x,p.y)<S*0.055){ bloom(); return; }
+    state.drawing=true; state.last=p; state.distAcc=0;
+    // a single tap always writes one word immediately
+    stampAt(p, 0);
+  }
+  function move(e){
+    if(!state.drawing) return;
+    e.preventDefault();
+    const p=pt(e);
+    let dx=p.x-state.last.x, dy=p.y-state.last.y;
+    const seg=Math.hypot(dx,dy);
+    if(seg<0.01){ state.last=p; return; }
+    const ang=Math.atan2(dy,dx);
+    const ux=dx/seg, uy=dy/seg;           // unit direction along this segment
+    const g=gap();
+    // walk the ACTUAL path travelled and drop a word every `g` pixels, so even a
+    // fast flick lays a smooth continuous trail instead of a few scattered words
+    let traveled=state.distAcc;            // leftover distance since the last stamp
+    let d=0;
+    // first stamp lands when traveled + d reaches the gap
+    while(traveled + (seg-d) >= g){
+      const step=g-traveled;
+      d+=step; traveled=0;
+      const sx=state.last.x+ux*d, sy=state.last.y+uy*d;
+      stampAt({x:sx,y:sy}, ang);
+    }
+    state.distAcc=traveled+(seg-d);        // carry the remainder
+    state.last=p;
+  }
+  function up(){ state.drawing=false; state.last=null; }
+
+  canvas.addEventListener('pointerdown',down);
+  canvas.addEventListener('pointermove',move);
+  window.addEventListener('pointerup',up);
+  canvas.addEventListener('pointercancel',up);
+
+  // Bloom: one word echoed around every petal, curving with the ring (never horizontal).
+  function bloom(){
+    pushHistory();
+    const r=S*(0.14+Math.random()*0.28);
+    const word=nextWord();
+    placeBloom(word,r,0,nextSize());
+  }
+
+  // ---- palette: full set in the dock, a trimmed set in the mini bar ----
+  const palette=['#B23A7E','#2A2530','#7E5BB0','#3F7DA8','#2E7D6B','#C2542E','#B8912F','#9A9299'];
+  const miniPalette=['#B23A7E','#7E5BB0','#3F7DA8','#2E7D6B','#2A2530']; // 5 essentials
+  const swWrap=document.getElementById('swatches');
+  const miniSwWrap=document.getElementById('miniSwatches');
+  palette.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='sw'; b.style.background=c; b.dataset.color=c;
+    b.addEventListener('click',()=>pick(c)); swWrap.appendChild(b);
+  });
+  miniPalette.forEach(c=>{
+    const m=document.createElement('button');
+    m.className='mini-sw'; m.style.background=c; m.dataset.color=c;
+    m.addEventListener('click',()=>pick(c)); miniSwWrap.appendChild(m);
+  });
+
+  const autoBtn=document.getElementById('autoColorBtn');
+  const miniAuto=document.getElementById('miniAuto');
+  function setAuto(on){
+    state.autoColor=on;
+    autoBtn.classList.toggle('on',on);
+    miniAuto.classList.toggle('on',on);
+  }
+  autoBtn.addEventListener('click',()=>setAuto(!state.autoColor));
+  miniAuto.addEventListener('click',()=>setAuto(!state.autoColor));
+
+  function pick(c){
+    state.color=c;
+    setAuto(false);            // choosing a colour means "stay in this one"
+    // sync the active ring on BOTH swatch rows by colour value
+    document.querySelectorAll('.sw.active,.mini-sw.active').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.sw,.mini-sw').forEach(s=>{
+      if(s.dataset.color && s.dataset.color.toLowerCase()===c.toLowerCase()) s.classList.add('active');
+    });
+  }
+  const picker=document.getElementById('picker');
+  picker.addEventListener('input',()=>{pick(picker.value);});
+
+  // ---- groups ----
+  const gWrap=document.getElementById('groupPills');
+  Object.keys(GROUPS).forEach(g=>{
+    const p=document.createElement('div'); p.className='pill on'; p.textContent=g;
+    p.addEventListener('click',()=>{
+      if(state.groups.has(g)){
+        if(state.groups.size===1&&!state.myWords.length){toast('Keep at least one group');return;}
+        state.groups.delete(g); p.classList.remove('on');
+      } else { state.groups.add(g); p.classList.add('on'); }
+      state.wordIdx=0; buildPool();
+    });
+    gWrap.appendChild(p);
+  });
+
+  // ---- my words ----
+  const wIn=document.getElementById('wordInput'),
+        mwRow=document.getElementById('myWordsRow'), mwWrap=document.getElementById('myWords');
+  function renderMine(){
+    mwWrap.innerHTML='';
+    state.myWords.forEach((w,i)=>{
+      const c=document.createElement('span'); c.className='chip';
+      c.innerHTML=`${w} <button title="Remove">&times;</button>`;
+      c.querySelector('button').addEventListener('click',()=>{
+        state.myWords.splice(i,1); renderMine(); buildPool();});
+      mwWrap.appendChild(c);
+    });
+    mwRow.style.display=state.myWords.length?'flex':'none';
+  }
+  function addWords(){
+    const raw=wIn.value.trim(); if(!raw) return;
+    raw.split(',').map(s=>s.trim()).filter(Boolean).forEach(w=>{
+      if(!state.myWords.includes(w)) state.myWords.push(w);});
+    wIn.value=''; renderMine(); buildPool(); state.wordIdx=0; toast('Added');
+  }
+  document.getElementById('addWordBtn').addEventListener('click',addWords);
+  wIn.addEventListener('keydown',e=>{if(e.key==='Enter') addWords();});
+
+  // ---- sliders ----
+  const szEl=document.getElementById('size'), szVal=document.getElementById('sizeVal');
+  szEl.addEventListener('input',()=>{state.size=+szEl.value; szVal.textContent=szEl.value;});
+  const airEl=document.getElementById('air'), airVal=document.getElementById('airVal');
+  airEl.addEventListener('input',()=>{state.air=+airEl.value; airVal.textContent=airEl.value;});
+
+  // ---- petals ----
+  const segOpts=[4,6,8,12,16];
+  const segWrap=document.getElementById('segPills');
+  segOpts.forEach(n=>{
+    const p=document.createElement('div');
+    p.className='pill'+(n===state.segments?' on':''); p.textContent=n;
+    p.addEventListener('click',()=>{
+      state.segments=n;
+      document.querySelectorAll('#segPills .pill').forEach(x=>x.classList.remove('on'));
+      p.classList.add('on'); kick(); render();
+    });
+    segWrap.appendChild(p);
+  });
+  const upBtn=document.getElementById('uprightBtn');
+  const miniUpright=document.getElementById('miniUpright');
+  function setUpright(on){
+    state.upright=on;
+    upBtn.classList.toggle('on',on);
+    miniUpright.classList.toggle('on',on);
+    render();
+  }
+  upBtn.addEventListener('click',()=>setUpright(!state.upright));
+  miniUpright.addEventListener('click',()=>setUpright(!state.upright));
+
+  // ---- dock open / minimize ----
+  document.getElementById('grip').addEventListener('click',()=>document.body.classList.remove('dock-open'));
+  document.getElementById('miniAdvanced').addEventListener('click',()=>document.body.classList.add('dock-open'));
+  document.getElementById('miniBloom').addEventListener('click',()=>{hideHint(); bloom();});
+
+  function toast(m){
+    const t=document.getElementById('toast');
+    t.textContent=m; t.classList.add('show');
+    clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2000);
+  }
+
+  document.getElementById('undoBtn').addEventListener('click',()=>{
+    if(historyStack.length){ placed=historyStack.pop(); render(); }
+    else toast('Nothing to undo');
+  });
+  document.getElementById('ringBtn').addEventListener('click',()=>{hideHint(); bloom();});
+  function freshCard(){ pushHistory(); placed=[]; state.wordIdx=0; render(); toast('Fresh card'); }
+  document.getElementById('clearBtn').addEventListener('click',freshCard);
+  document.getElementById('miniFresh').addEventListener('click',freshCard);
+
+  // ---- save / share (captures the card look) ----
+  function exportCanvas(){
+    const pad=Math.round(S*0.075);
+    const out=document.createElement('canvas');
+    out.width=(S+pad*2)*DPR; out.height=(S+pad*2)*DPR;
+    const o=out.getContext('2d');
+    o.scale(DPR,DPR);
+    o.fillStyle='#FBF7F0'; o.fillRect(0,0,S+pad*2,S+pad*2);
+    o.strokeStyle='rgba(42,37,48,0.14)'; o.lineWidth=1;
+    o.strokeRect(pad*0.42,pad*0.42,S+pad*1.16,S+pad*1.16);
+    o.drawImage(canvas,pad,pad,S,S);
+    o.font='400 11px "Cormorant Garamond", Georgia, serif';
+    o.fillStyle='rgba(42,37,48,0.4)'; o.textAlign='center';
+    o.fillText('WORD MANDALA', (S+pad*2)/2, pad*0.78);
+    return out;
+  }
+  const modalBg=document.getElementById('modalBg'), modalImg=document.getElementById('modalImg'),
+        modalDl=document.getElementById('modalDl');
+  function openSave(){
+    const url=exportCanvas().toDataURL('image/png');
+    modalImg.src=url; modalDl.href=url;
+    modalDl.download=`word-mandala-${Date.now()}.png`;
+    modalBg.classList.add('show');
+  }
+  document.getElementById('saveBtn').addEventListener('click',openSave);
+  document.getElementById('miniSave').addEventListener('click',openSave);
+  document.getElementById('modalClose').addEventListener('click',()=>modalBg.classList.remove('show'));
+  modalBg.addEventListener('click',e=>{if(e.target===modalBg) modalBg.classList.remove('show');});
+  document.getElementById('shareBtn').addEventListener('click',()=>{
+    exportCanvas().toBlob(async blob=>{
+      const f=new File([blob],'word-mandala.png',{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){
+        try{await navigator.share({files:[f],title:'My Word Mandala'});}catch(_){}
+      } else {
+        const url=exportCanvas().toDataURL('image/png');
+        modalImg.src=url; modalDl.href=url;
+        modalDl.download=`word-mandala-${Date.now()}.png`;
+        modalBg.classList.add('show'); toast('Sharing not supported here — save instead');
+      }
+    },'image/png');
+  });
+
+  buildPool();
+  window.addEventListener('resize',fitCanvas);
+  fitCanvas();
+})();
+</script>
+<a id="credit" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a>
+</body>
+</html>
