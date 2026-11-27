@@ -6,6 +6,14 @@
 <title>Experience Portal — AI Goddesses</title>
 <meta name="description" content="Every little interactive experience I build, gathered in one place for the AI Goddesses community. Open a door and play — most take a few minutes.">
 <link rel="icon" href="assets/logo-mark.png">
+<!-- installable as a phone app: Android installs from the manifest, iPhone uses the touch icon -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/app/apple-touch-icon.png">
+<meta name="theme-color" content="#fff2f7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Portal">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <script>
 /* Must sit ABOVE the Google Fonts <link>: a classic script placed after a
    pending stylesheet cannot execute until that sheet resolves, which would
@@ -167,6 +175,58 @@
     font-family:var(--font-mono); font-size:10px; letter-spacing:.14em;
     text-transform:uppercase; color:var(--berry); opacity:.6;
   }
+
+  /* ========================================================= GET THE APP
+     A small pill in the header. Hidden until the script knows this browser
+     can install (Android/Chrome) or needs instructions (iPhone/iPad); never
+     shown once the portal is already running as an installed app. */
+  .get-app{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--berry); background:var(--white);
+    border:1px solid var(--pink-200); border-radius:999px;
+    padding:6px 11px 6px 9px; cursor:pointer;
+    transition:background var(--dur-base) var(--ease-soft), border-color var(--dur-base) var(--ease-soft);
+  }
+  .get-app[hidden]{display:none;}
+  .get-app,.topbar-meta .fey{white-space:nowrap;}
+  .get-app-long{display:none;}            /* phones: just "App", the header is tight */
+  @media (min-width:800px){ .get-app-long{display:inline;} }
+  .get-app svg{width:12px; height:12px; flex:none;}
+  .get-app:hover,.get-app:focus-visible{background:var(--rose-50); border-color:var(--berry);}
+
+  .app-sheet{
+    width:min(100vw - 32px, 400px); max-height:calc(100dvh - 32px);
+    margin:auto auto 16px; padding:0; border:0; border-radius:24px;
+    background:var(--white); color:var(--ink-700);
+    box-shadow:0 30px 80px -24px rgba(110,14,61,.45);
+  }
+  .app-sheet::backdrop{background:rgba(74,10,41,.42); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);}
+  .app-sheet-inner{padding:26px 24px 20px; display:flex; flex-direction:column; gap:14px;}
+  .app-sheet-head{display:flex; align-items:center; gap:14px;}
+  .app-sheet-head img{width:56px; height:56px; border-radius:14px; flex:none; box-shadow:0 6px 16px -6px rgba(110,14,61,.5);}
+  .app-sheet h2{margin:0; font-family:var(--font-display); font-size:21px; line-height:1.15; letter-spacing:-.02em; color:var(--ink-900);}
+  .app-sheet .sub{margin:3px 0 0; font-size:13px; color:var(--ink-500);}
+  .app-steps{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px; counter-reset:step;}
+  .app-steps li{
+    counter-increment:step; display:flex; gap:12px; align-items:flex-start;
+    font-size:14px; line-height:1.5; color:var(--ink-700);
+  }
+  .app-steps li::before{
+    content:counter(step); flex:none; width:22px; height:22px; border-radius:50%;
+    display:grid; place-items:center; margin-top:1px;
+    font-family:var(--font-mono); font-size:10px; color:var(--berry); background:var(--soft-rose);
+  }
+  .app-steps b{font-weight:500; color:var(--ink-900);}
+  .app-steps .ico{display:inline-block; width:16px; height:16px; vertical-align:-3px; color:var(--berry);}
+  .app-note{margin:0; font-size:12px; line-height:1.5; color:var(--ink-500);}
+  .app-sheet-close{
+    align-self:stretch; margin-top:4px; padding:12px; border-radius:999px; border:0; cursor:pointer;
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--white); background:var(--berry);
+  }
+  .app-sheet-close:hover,.app-sheet-close:focus-visible{background:var(--berry-800);}
+  @media (min-width:800px){ .app-sheet{margin:auto;} }
 
   /* ================================================================== HERO
      Mobile spec: rose-50 band, gap 13px, h1 38px/1.04/-.03em,
@@ -841,9 +901,28 @@
   </a>
   <div class="topbar-meta">
     <span class="found js-found desktop-only">0 of 8 opened</span>
+    <button class="get-app" id="getApp" type="button" hidden>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="1.5" width="8" height="13" rx="2"/><path d="M8 5v5M5.8 7.8 8 10l2.2-2.2"/></svg>
+      <span class="get-app-long">Get the </span>app
+    </button>
     <a class="fey" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a>
   </div>
 </header>
+
+<dialog class="app-sheet" id="appSheet" aria-labelledby="appSheetTitle">
+  <div class="app-sheet-inner">
+    <div class="app-sheet-head">
+      <img src="assets/app/apple-touch-icon.png" alt="">
+      <div>
+        <h2 id="appSheetTitle">Add the portal to your&nbsp;phone</h2>
+        <p class="sub">It opens like an app, straight from your home screen.</p>
+      </div>
+    </div>
+    <ol class="app-steps" id="appSteps"></ol>
+    <p class="app-note" id="appNote"></p>
+    <button class="app-sheet-close" id="appSheetClose" type="button">Got it</button>
+  </div>
+</dialog>
 
 <main id="top">
   <section class="hero">
@@ -1158,6 +1237,89 @@
   </footer>
 </main>
 
+<script>
+/* Get the app.
+   Android / Chrome-family: the browser hands us an install prompt
+   (beforeinstallprompt) and one tap installs. iPhone / iPad: no browser
+   there allows that, so the button opens step-by-step instructions. */
+(function () {
+  var btn = document.getElementById('getApp');
+  var sheet = document.getElementById('appSheet');
+  if (!btn || !sheet) return;
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
+  }
+
+  var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  if (standalone) return;                                   // already installed and running as the app
+
+  var ua = navigator.userAgent;
+  var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isAndroid = /Android/i.test(ua);
+  var iosOther = isIOS && /CriOS|EdgiOS|FxiOS|OPiOS/.test(ua);   // Chrome, Edge, Firefox, Opera on iOS
+  var deferred = null;
+
+  if (isIOS || isAndroid) btn.hidden = false;
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();                                     // hold it for our own button
+    deferred = e;
+    btn.hidden = false;
+  });
+  window.addEventListener('appinstalled', function () {
+    deferred = null;
+    btn.hidden = true;
+    if (sheet.open) sheet.close();
+  });
+
+  var SHARE = '<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.8v8.4M5.2 4.4 8 1.6l2.8 2.8"/><path d="M5 6.5H3.8v7.7h8.4V6.5H11"/></svg>';
+  var MORE = '<svg class="ico" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="3.5" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="12.5" cy="8" r="1.4"/></svg>';
+  var DOTS = '<svg class="ico" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="3.5" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="12.5" r="1.4"/></svg>';
+
+  function fill(steps, note) {
+    document.getElementById('appSteps').innerHTML = steps.map(function (s) { return '<li><span>' + s + '</span></li>'; }).join('');
+    document.getElementById('appNote').textContent = note || '';
+  }
+
+  function instructions() {
+    if (isIOS && !iosOther) {
+      fill([
+        'Tap the <b>Share</b> button ' + SHARE + '. If you don’t see it, tap ' + MORE + ' first.',
+        'Scroll down and tap <b>Add to Home Screen</b>.',
+        'Leave <b>Open as Web App</b> on, then tap <b>Add</b>.'
+      ], 'The portal icon will appear on your home screen.');
+    } else if (isIOS) {
+      fill([
+        'Tap the <b>Share</b> button ' + SHARE + ' in the address bar.',
+        'Tap <b>Add to Home Screen</b>, then <b>Add</b>.'
+      ], 'Don’t see it? Open this page in Safari and add it from there.');
+    } else {
+      fill([
+        'Open your browser’s menu ' + DOTS + '.',
+        'Tap <b>Install app</b> or <b>Add to Home screen</b>.'
+      ], 'Chrome, Edge and Samsung Internet support this.');
+    }
+    if (sheet.showModal) sheet.showModal(); else sheet.setAttribute('open', '');
+  }
+
+  btn.addEventListener('click', function () {
+    if (deferred) {
+      var p = deferred;
+      deferred = null;                                      // a prompt can only be used once
+      p.prompt();
+      p.userChoice.then(function (r) { if (r.outcome === 'accepted') btn.hidden = true; });
+      return;
+    }
+    instructions();
+  });
+
+  document.getElementById('appSheetClose').addEventListener('click', function () { sheet.close(); });
+  sheet.addEventListener('click', function (e) { if (e.target === sheet) sheet.close(); });   // tap outside
+})();
+</script>
 <script>
 /* Word Mandala door: generated once, seeded, so it is the same card every load */
 (function () {

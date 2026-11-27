@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "Experience Portal — AI Goddesses",
+  "short_name": "Portal",
+  "description": "Little interactive experiences for the AI Goddesses community. Open a door and play.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff2f7",
+  "theme_color": "#fff2f7",
+  "icons": [
+    { "src": "assets/app/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
