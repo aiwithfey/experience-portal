@@ -150,10 +150,11 @@
   }
   @media (prefers-reduced-motion:reduce){*,*::before{transition:none!important;}}
   /* artist tag, quiet in the top corner so it clears the toolbar */
-  #credit{position:fixed;left:14px;top:calc(12px + env(safe-area-inset-top));z-index:5;
+  #feyfoot{position:fixed;left:14px;top:calc(12px + env(safe-area-inset-top));z-index:5;display:flex;gap:1.8em;}
+  #credit,#toPortal{
     font-family:ui-sans-serif,-apple-system,"Segoe UI",sans-serif;font-size:9.5px;letter-spacing:.24em;
     text-transform:uppercase;color:var(--ink);text-decoration:none;opacity:.4;transition:opacity .6s ease;}
-  #credit:hover,#credit:focus-visible{opacity:.85;}
+  #credit:hover,#credit:focus-visible,#toPortal:hover,#toPortal:focus-visible{opacity:.85;}
 </style>
 </head>
 <body>
@@ -723,6 +724,6 @@
   fitCanvas();
 })();
 </script>
-<a id="credit" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a>
+<div id="feyfoot"><a id="toPortal" href="../">&larr; Portal</a><a id="credit" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a></div>
 </body>
 </html>

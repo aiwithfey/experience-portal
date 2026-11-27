@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="34%" r="80%">
+      <stop offset="0" stop-color="#c4216f"/><stop offset=".55" stop-color="#8d0f4e"/><stop offset="1" stop-color="#5c0b33"/>
+    </radialGradient>
+    <linearGradient id="door" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff2f7"/><stop offset="1" stop-color="#ffbad3"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fff6d6" stop-opacity=".95"/><stop offset=".45" stop-color="#eab308" stop-opacity=".55"/><stop offset="1" stop-color="#eab308" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g transform="translate(256 262) scale(1.18) translate(-256 -262)">
+  <!-- the portal's door: an arch, 150/24 radius ratio like the cards -->
+  <path d="M166 382 V214 a90 90 0 0 1 180 0 V382 a10 10 0 0 1 -10 10 H176 a10 10 0 0 1 -10 -10 Z" fill="url(#door)"/>
+  <path d="M184 374 V216 a72 72 0 0 1 144 0 V374 Z" fill="none" stroke="#ab125e" stroke-opacity=".28" stroke-width="3"/>
+  <circle cx="256" cy="262" r="78" fill="url(#glow)"/>
+  <path d="M256 196 C261 240 274 253 318 258 C274 263 261 276 256 320 C251 276 238 263 194 258 C238 253 251 240 256 196 Z" fill="#eab308"/>
+  <path d="M362 128 C364 144 369 149 385 151 C369 153 364 158 362 174 C360 158 355 153 339 151 C355 149 360 144 362 128 Z" fill="#ffbad3"/>
+</g>
+</svg>

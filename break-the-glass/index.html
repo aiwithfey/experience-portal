@@ -75,13 +75,15 @@
      Held back until the glass breaks and shown last, after the reveal has
      finished settling: before that the screen belongs to the question, and
      on a narrow phone a bottom corner sits too close to the hint. */
-  #credit{position:fixed;left:1.4rem;bottom:max(2.2vh,1rem);z-index:11;
+  /* the way back sits beside the credit and shares its look */
+  #feyfoot{position:fixed;left:1.4rem;bottom:max(2.2vh,1rem);z-index:11;display:flex;gap:1.6em;align-items:baseline;}
+  #credit,#toPortal{position:static;
     font-family:inherit;font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;
     color:rgba(220,232,255,.42);text-decoration:none;cursor:pointer;
     opacity:0;pointer-events:none;
     transition:opacity 1.2s ease 4.8s,color .4s ease;}
-  body.broken #credit{opacity:1;pointer-events:auto;}
-  #credit:hover,#credit:focus-visible{color:rgba(220,232,255,.9);}
+  body.broken #credit,body.broken #toPortal{opacity:1;pointer-events:auto;}
+  #credit:hover,#credit:focus-visible,#toPortal:hover,#toPortal:focus-visible{color:rgba(220,232,255,.9);}
 </style>
 </head>
 <body>
@@ -108,7 +110,7 @@
   <button id="again">Again</button>
 </div>
 
-<a id="credit" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a>
+<div id="feyfoot"><a id="toPortal" href="../">&larr; Portal</a><a id="credit" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a></div>
 
 <script>
 (() => {
