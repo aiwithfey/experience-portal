@@ -153,12 +153,12 @@
         .animate-sway { transform-origin: 400px 550px; animation: gentle-sway 7s ease-in-out infinite; }
     
         /* artist tag, kept quiet in the corner like the other experiences */
-        #credit{
-            display:block; width:max-content; margin:28px auto calc(4px + env(safe-area-inset-bottom));
+        #feyfoot{display:flex; justify-content:center; gap:1.8em; margin:28px auto calc(4px + env(safe-area-inset-bottom));}
+        #credit,#toPortal{
             font-family:'Inter',system-ui,sans-serif; font-size:9.5px; letter-spacing:.24em; text-transform:uppercase;
             color:#F3EAD3; text-decoration:none; opacity:.42; transition:opacity .6s ease;
         }
-        #credit:hover,#credit:focus-visible{opacity:.9;}
+        #credit:hover,#credit:focus-visible,#toPortal:hover,#toPortal:focus-visible{opacity:.9;}
     </style>
 </head>
 <body class="bg-brand-gradient text-brand-cream min-h-screen py-8 overflow-y-auto flex flex-col justify-center">
@@ -1599,6 +1599,6 @@
             }
         });
     </script>
-<a id="credit" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a>
+<div id="feyfoot"><a id="toPortal" href="../">&larr; Portal</a><a id="credit" href="https://www.instagram.com/aiwithfey" target="_blank" rel="noopener noreferrer">AI with Fey</a></div>
 </body>
 </html>
